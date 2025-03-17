@@ -251,7 +251,7 @@ void load_music(void)  // FKA NortSong.loadSong
 
 		fread_u16_die(&song_count, 1, music_file);
 
-		song_offset = malloc((song_count + 1) * sizeof(*song_offset));
+		song_offset = (Uint32 *)malloc((song_count + 1) * sizeof(*song_offset));
 
 		fread_u32_die(song_offset, song_count, music_file);
 

@@ -143,7 +143,7 @@ void loadSndFile(bool xmas)
 			goto die;
 
 		free(soundSamples[i]);
-		soundSamples[i] = malloc(soundSampleCount[i]);
+		soundSamples[i] = (Sint16 *)malloc(soundSampleCount[i]);
 
 		fseek(f, sfxPositions[i], SEEK_SET);
 		fread_u8_die((Uint8 *)soundSamples[i], soundSampleCount[i], f);
@@ -184,7 +184,7 @@ void loadSndFile(bool xmas)
 			goto die;
 
 		free(soundSamples[i]);
-		soundSamples[i] = malloc(soundSampleCount[i]);
+		soundSamples[i] = (Sint16 *)malloc(soundSampleCount[i]);
 
 		fseek(f, voicePositions[vi], SEEK_SET);
 		fread_u8_die((Uint8 *)soundSamples[i], soundSampleCount[i], f);
@@ -205,11 +205,13 @@ void loadSndFile(bool xmas)
 		return;
 	}
 
-	size_t maxSampleSize = 0;
-	for (size_t i = 0; i < SOUND_COUNT; ++i)
-		maxSampleSize = MAX(maxSampleSize, soundSampleCount[i]);
+	{
+		size_t maxSampleSize = 0;
+		for (size_t i = 0; i < SOUND_COUNT; ++i)
+			maxSampleSize = MAX(maxSampleSize, soundSampleCount[i]);
 
-	cvt.buf = malloc(maxSampleSize * cvt.len_mult);
+		cvt.buf = (Uint8 *)malloc(maxSampleSize * cvt.len_mult);
+	}
 
 	for (size_t i = 0; i < SOUND_COUNT; ++i)
 	{
@@ -226,7 +228,7 @@ void loadSndFile(bool xmas)
 		}
 
 		free(soundSamples[i]);
-		soundSamples[i] = malloc(cvt.len_cvt);
+		soundSamples[i] = (Sint16 *)malloc(cvt.len_cvt);
 
 		memcpy(soundSamples[i], cvt.buf, cvt.len_cvt);
 		soundSampleCount[i] = cvt.len_cvt / sizeof (Sint16);

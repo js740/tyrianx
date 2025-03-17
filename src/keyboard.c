@@ -107,7 +107,7 @@ void init_keyboard(void)
 
 void mouseSetRelative(bool enable)
 {
-	SDL_SetRelativeMouseMode(enable && windowHasFocus);
+	SDL_SetRelativeMouseMode((SDL_bool)(enable && windowHasFocus));
 
 	mouseRelativeEnabled = enable;
 
@@ -181,7 +181,7 @@ static void service_SDL_events_ex(JE_boolean clear_new, JE_boolean drain_all)
 
 				newkey = true;
 				lastkey_scan = ev.key.keysym.scancode;
-				lastkey_mod = ev.key.keysym.mod;
+				lastkey_mod = (SDL_Keymod)ev.key.keysym.mod;
 				keydown = true;
 
 				mouseInactive = true;

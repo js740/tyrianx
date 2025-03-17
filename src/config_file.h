@@ -572,12 +572,12 @@ static inline unsigned int config_get_value_count(const ConfigOption *option)
  * \param[in] option the option
  */
 #define foreach_option_i_value(i, string_value, option) \
-	for (unsigned int (i) = 0; (i) == 0; (i) = ~0) \
+	for (unsigned int i = 0; (i) == 0; (i) = ~0) \
 	for (ConfigOption *_option = (option); _option != NULL; _option = NULL) \
 	for (ConfigString *_values_begin = _option->values_count == 0 ? &_option->v.value : &_option->v.values[0], \
 	                  *_values_end = _option->values_count == 0 ? _values_begin + 1 : &_option->v.values[_option->values_count], \
 	                  *_value = _values_begin; _value < _values_end; ++_value, (i) = _value - _values_begin) \
-	for (const char *(string_value) = config_string_to_cstr(_value); (string_value) != NULL; (string_value) = NULL)
+	for (const char *string_value = config_string_to_cstr(_value); (string_value) != NULL; (string_value) = NULL)
 
 /*!
  * \brief Remove a value from an option during iteration.  Should be followed by \c continue.
