@@ -61,7 +61,7 @@ static ConfigString string_init_len(const char *s, size_t n)
 		CONFIG_STRING_LONG_TAG(string) = is_long;
 		
 		char *buffer = is_long ?
-			string.long_buf = malloc((n + 1) * sizeof(char)) :
+			string.long_buf = (char *)malloc((n + 1) * sizeof(char)) :
 			string.short_buf;
 		if (buffer == NULL)
 			config_oom();
@@ -151,7 +151,7 @@ ConfigSection *config_add_section_len(Config *config, const char *type, size_t t
 	assert(config != NULL);
 	assert(type != NULL);
 	
-	ConfigSection *sections = realloc(config->sections, (config->sections_count + 1) * sizeof(ConfigSection));
+	ConfigSection *sections = (ConfigSection *)realloc(config->sections, (config->sections_count + 1) * sizeof(ConfigSection));
 	if (sections == NULL)
 		return NULL;
 	
@@ -258,7 +258,7 @@ static void deinit_option(ConfigOption *option)
 
 static ConfigOption *append_option(ConfigSection *section, const char *key, size_t key_len, const char *value, size_t value_len)
 {
-	ConfigOption *options = realloc(section->options, (section->options_count + 1) * sizeof(ConfigSection));
+	ConfigOption *options = (ConfigOption *)realloc(section->options, (section->options_count + 1) * sizeof(ConfigSection));
 	if (options == NULL)
 		return NULL;
 	
@@ -505,7 +505,7 @@ ConfigOption *config_add_value_len(ConfigOption *option, const char *value, size
 	{
 		ConfigString option_value = option->v.value;
 		
-		ConfigString *values = malloc(2 * sizeof(ConfigString));
+		ConfigString *values = (ConfigString *)malloc(2 * sizeof(ConfigString));
 		if (values == NULL)
 			return NULL;
 		
@@ -516,7 +516,7 @@ ConfigOption *config_add_value_len(ConfigOption *option, const char *value, size
 	}
 	else
 	{
-		ConfigString *values = realloc(option->v.values, (option->values_count + 1) * sizeof(ConfigString));
+		ConfigString *values = (ConfigString *)realloc(option->v.values, (option->values_count + 1) * sizeof(ConfigString));
 		if (values == NULL)
 			return NULL;
 		
@@ -554,7 +554,7 @@ ConfigOption *config_remove_value(ConfigOption *option, unsigned int i)
 		}
 		else
 		{
-			ConfigString *values = realloc(option->v.values, (option->values_count - 1) * sizeof(ConfigString));
+			ConfigString *values = (ConfigString *)realloc(option->v.values, (option->values_count - 1) * sizeof(ConfigString));
 			if (values == NULL)
 				return NULL;
 			
@@ -700,6 +700,7 @@ static bool parse_quote_field(char *buffer, size_t *index, size_t *length)
 					buffer[o++] = '\\';
 					break;
 				case 'x':
+				{
 					/* parse two hex digits */
 					c = buffer[++i];
 					char m = (c >= '0' && c <= '9') ? '0' :
@@ -716,6 +717,7 @@ static bool parse_quote_field(char *buffer, size_t *index, size_t *length)
 						return false;
 					buffer[o++] = (h << 4) | (c - m);
 					break;
+				}
 				default:
 					return false;
 				}
@@ -776,7 +778,7 @@ bool config_parse(Config *config, FILE *file)
 	ConfigOption *option = NULL;
 	
 	size_t buffer_cap = 128;
-	char *buffer = malloc(buffer_cap * sizeof(char));
+	char *buffer = (char *)malloc(buffer_cap * sizeof(char));
 	if (buffer == NULL)
 		config_oom();
 	size_t buffer_end = 1;
@@ -803,7 +805,7 @@ bool config_parse(Config *config, FILE *file)
 				{
 					/* need larger capacity */
 					buffer_cap *= 2;
-					char *new_buffer = realloc(buffer, buffer_cap * sizeof(char));
+					char *new_buffer = (char *)realloc(buffer, buffer_cap * sizeof(char));
 					if (new_buffer == NULL)
 						config_oom();
 					buffer = new_buffer;

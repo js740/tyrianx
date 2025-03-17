@@ -82,9 +82,9 @@ void JE_starShowVGA(void)
 	if (!playerEndLevel && !skipStarShowVGA)
 	{
 
-		s = VGAScreenSeg->pixels;
+		s = (Uint8 *)VGAScreenSeg->pixels;
 
-		src = game_screen->pixels;
+		src = (JE_byte *)game_screen->pixels;
 		src += 24;
 
 		if (smoothScroll != 0 /*&& thisPlayerNum != 2*/)
@@ -386,10 +386,12 @@ enemy_still_exists:
 							}
 							break;
 						case 251:; /* Suck-O-Magnet */
+						{
 							const JE_integer attraction = 4 - (abs(player[0].x - tempX) + abs(player[0].y - tempY)) / 100;
 							if (attraction > 0)
 								player[0].x_velocity += (player[0].x > tempX) ? -attraction : attraction;
 							break;
+						}
 						case 253: /* Left ShortRange Magnet */
 							if (abs(player[0].x + 25 - 14 - tempX) < 24 && abs(player[0].y - tempY) < 28)
 							{
@@ -2768,8 +2770,8 @@ new_game:
 							{
 								if (!newkey)
 								{
-									vga = VGAScreen->pixels;
-									vga2 = VGAScreen2->pixels;
+									vga = (Uint8 *)VGAScreen->pixels;
+									vga2 = (Uint8 *)VGAScreen2->pixels;
 									pic = pic_buffer + (199 - z) * 320;
 
 									setDelay(1);
@@ -2819,8 +2821,8 @@ new_game:
 							{
 								if (!newkey)
 								{
-									vga = VGAScreen->pixels;
-									vga2 = VGAScreen2->pixels;
+									vga = (Uint8 *)VGAScreen->pixels;
+									vga2 = (Uint8 *)VGAScreen2->pixels;
 									pic = pic_buffer;
 
 									setDelay(1);
@@ -2871,8 +2873,8 @@ new_game:
 							{
 								if (!newkey)
 								{
-									vga = VGAScreen->pixels;
-									vga2 = VGAScreen2->pixels;
+									vga = (Uint8 *)VGAScreen->pixels;
+									vga2 = (Uint8 *)VGAScreen2->pixels;
 									pic = pic_buffer;
 
 									setDelay(1);
@@ -3494,7 +3496,8 @@ bool titleScreen(void)
 							JE_playSampleNum(V_DATA_CUBE);
 
 							JE_whoa();
-							set_colors((SDL_Color) { 0, 0, 0 }, 0, 255);
+							SDL_Color black = { 0, 0, 0, };
+							set_colors(black, 0, 255);
 
 							newSuperTyrianGame();
 							return true;
@@ -4298,10 +4301,10 @@ void JE_eventSystem(void)
 		{
 			const Uint8 newEnemyShapeTables[] =
 			{
-				eventRec[eventLoc-1].eventdat > 0 ? eventRec[eventLoc-1].eventdat : 0,
-				eventRec[eventLoc-1].eventdat2 > 0 ? eventRec[eventLoc-1].eventdat2 : 0,
-				eventRec[eventLoc-1].eventdat3 > 0 ? eventRec[eventLoc-1].eventdat3 : 0,
-				eventRec[eventLoc-1].eventdat4 > 0 ? eventRec[eventLoc-1].eventdat4 : 0,
+				eventRec[eventLoc-1].eventdat  > (Uint8)0u ? (Uint8)eventRec[eventLoc-1].eventdat  : (Uint8)0u,
+				eventRec[eventLoc-1].eventdat2 > (Uint8)0u ? (Uint8)eventRec[eventLoc-1].eventdat2 : (Uint8)0u,
+				eventRec[eventLoc-1].eventdat3 > (Uint8)0u ? (Uint8)eventRec[eventLoc-1].eventdat3 : (Uint8)0u,
+				eventRec[eventLoc-1].eventdat4 > (Uint8)0u ? (Uint8)eventRec[eventLoc-1].eventdat4 : (Uint8)0u,
 			};
 			
 			for (unsigned int i = 0; i < COUNTOF(newEnemyShapeTables); ++i)
@@ -4724,6 +4727,7 @@ void JE_eventSystem(void)
 		break;
 
 	case 38:
+	{
 		curLoc = eventRec[eventLoc-1].eventdat;
 		int new_event_loc = 1;
 		for (tempW = 0; tempW < maxEvent; tempW++)
@@ -4733,6 +4737,7 @@ void JE_eventSystem(void)
 		}
 		eventLoc = new_event_loc;
 		break;
+	}
 
 	case 39: /* Enemy Global Linknum Change */
 		for (temp = 0; temp < 100; temp++)
@@ -5003,6 +5008,7 @@ void JE_eventSystem(void)
 		break;
 
 	case 75:;
+	{
 		bool temp_no_clue = false; // TODO: figure out what this is doing
 
 		for (temp = 0; temp < 100; temp++)
@@ -5037,6 +5043,7 @@ void JE_eventSystem(void)
 		}
 
 		break;
+	}
 
 	case 76:
 		returnActive = true;
@@ -5108,8 +5115,8 @@ void JE_whoa(void)
 	 * way to get vgascreen as one of the temp buffers), but it's only called
 	 * once so don't worry about it. */
 
-	TempScreen1  = game_screen->pixels;
-	TempScreen2  = VGAScreen2->pixels;
+	TempScreen1  = (Uint8 *)game_screen->pixels;
+	TempScreen2  = (Uint8 *)VGAScreen2->pixels;
 
 	screenSize   = VGAScreenSeg->h * VGAScreenSeg->pitch;
 	topBorder    = VGAScreenSeg->pitch * 4; /* Seems an arbitrary number of lines */
