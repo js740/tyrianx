@@ -138,7 +138,8 @@ void setupMenu(void)
 	} Menu;
 
 	static const Menu menus[] = {
-		[MENU_SETUP] = {
+		{ .header = "", .items = { { (MenuItemId)-1 } } },
+		{
 			.header = "Setup",
 			.items = {
 				{ MENU_ITEM_GRAPHICS, "Graphics...", "Change the graphics settings." },
@@ -146,26 +147,26 @@ void setupMenu(void)
 				{ MENU_ITEM_JUKEBOX, "Jukebox", "Listen to the music of Tyrian." },
 				// { MENU_ITEM_DESTRUCT, "Destruct", "Play a bonus mini-game." },
 				{ MENU_ITEM_DONE, "Done", "Return to the main menu." },
-				{ -1 }
+				{ (MenuItemId)-1 }
 			},
 		},
-		[MENU_GRAPHICS] = {
+		{
 			.header = "Graphics",
 			.items = {
 				{ MENU_ITEM_DISPLAY, "Display:", "Change the display mode.", getDisplayPickerItemsCount, getDisplayPickerItem },
 				{ MENU_ITEM_SCALER, "Scaler:", "Change the pixel art scaling algorithm.", getScalerPickerItemsCount, getScalerPickerItem },
 				{ MENU_ITEM_SCALING_MODE, "Scaling Mode:", "Change the scaling mode.", getScalingModePickerItemsCount, getScalingModePickerItem },
 				{ MENU_ITEM_DONE, "Done", "Return to the previous menu." },
-				{ -1 }
+				{ (MenuItemId)-1 }
 			},
 		},
-		[MENU_SOUND] = {
+		{
 			.header = "Sound",
 			.items = {
 				{ MENU_ITEM_MUSIC_VOLUME, "Music Volume", "Change volume with the left/right arrow keys." },
 				{ MENU_ITEM_SOUND_VOLUME, "Sound Volume", "Change volume with the left/right arrow keys." },
 				{ MENU_ITEM_DONE, "Done", "Return to the previous menu." },
-				{ -1 }
+				{ (MenuItemId)-1 }
 			},
 		},
 	};
@@ -243,6 +244,7 @@ void setupMenu(void)
 			switch (menuItem->id)
 			{
 			case MENU_ITEM_DISPLAY:;
+			{
 				const char *value = "Window";
 				if (fullscreen_display >= 0)
 				{
@@ -252,6 +254,7 @@ void setupMenu(void)
 
 				draw_font_hv_shadow(VGAScreen, xMenuItemValue, y, value, normal_font, left_aligned, 15, -3 + (selected ? 2 : 0) + (disabled ? -4 : 0), false, 2);
 				break;
+			}
 
 			case MENU_ITEM_SCALER:
 				draw_font_hv_shadow(VGAScreen, xMenuItemValue, y, scalers[scaler].name, normal_font, left_aligned, 15, -3 + (selected ? 2 : 0) + (disabled ? -4 : 0), false, 2);
@@ -732,7 +735,7 @@ void setupMenu(void)
 				}
 				case MENU_ITEM_SCALING_MODE:
 				{
-					scaling_mode = pickerSelectedIndex;
+					scaling_mode = (ScalingMode)pickerSelectedIndex;
 					break;
 				}
 				default:

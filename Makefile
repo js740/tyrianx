@@ -17,6 +17,7 @@ WITH_NETWORK := true
 SHELL = /bin/sh
 
 CC ?= gcc
+CXX ?= g++
 INSTALL ?= install
 PKG_CONFIG ?= pkg-config
 
@@ -88,8 +89,8 @@ ALL_CPPFLAGS = -DTARGET_$(PLATFORM) \
                $(EXTRA_CPPFLAGS) \
                $(SDL_CPPFLAGS) \
                $(CPPFLAGS)
-ALL_CFLAGS = -std=iso9899:1999 \
-             $(CFLAGS)
+ALL_CFLAGS = -std=iso9899:1999 $(CFLAGS)
+#ALL_CFLAGS = -std=c++23 $(CFLAGS)
 ALL_LDFLAGS = $(SDL_LDFLAGS) \
               $(LDFLAGS)
 ALL_LDLIBS = -lm \
@@ -152,9 +153,11 @@ clean :
 
 $(TARGET) : $(OBJS)
 	$(CC) $(ALL_CFLAGS) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LDLIBS)
+#	$(CXX) $(ALL_CFLAGS) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LDLIBS)
 
 -include $(DEPS)
 
 obj/%.o : src/%.c
 	@mkdir -p "$(dir $@)"
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -o $@ $<
+#	$(CXX) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -o $@ $<

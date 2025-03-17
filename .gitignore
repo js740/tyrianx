@@ -13,6 +13,9 @@ tyrian.sav
 /src/*.gch
 /opentyrian
 
+# Linux debug history
+*.gdb_history
+
 # Windows build output
 /opentyrian.exe
 /SDL2.dll
