@@ -88,8 +88,17 @@ ALL_CPPFLAGS = -DTARGET_$(PLATFORM) \
                $(EXTRA_CPPFLAGS) \
                $(SDL_CPPFLAGS) \
                $(CPPFLAGS)
-ALL_CFLAGS = -std=iso9899:1999 \
-             $(CFLAGS)
+
+ifeq ($(CC), cc)
+    ALL_CFLAGS = -std=iso9899:1999 $(CFLAGS)
+else ifeq ($(CC), gcc)
+    ALL_CFLAGS = -std=iso9899:1999 $(CFLAGS)
+else ifeq ($(CC), g++)
+    ALL_CFLAGS = -std=c++23 $(CFLAGS)
+else
+    ALL_CFLAGS = -std=iso9899:1999 $(CFLAGS)
+endif
+
 ALL_LDFLAGS = $(SDL_LDFLAGS) \
               $(LDFLAGS)
 ALL_LDLIBS = -lm \

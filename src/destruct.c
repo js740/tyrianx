@@ -526,9 +526,9 @@ static const char *const unit_names[] =
 
 static enum de_unit_t get_unit_by_name(const char *unit_name)
 {
-	for (enum de_unit_t unit = UNIT_FIRST; unit < MAX_UNITS; ++unit)
+	for (int unit = UNIT_FIRST; unit < MAX_UNITS; ++unit)
 		if (strcmp(unit_name, unit_names[unit]) == 0)
-			return unit;
+			return (enum de_unit_t)unit;
 	
 	return UNIT_NONE;
 }
@@ -669,15 +669,15 @@ void JE_destructGame(void)
 	load_destruct_config(&opentyrian_config);
 
 	//malloc things that have customizable sizes
-	shotRec  = malloc(sizeof(struct destruct_shot_s)  * config.max_shots);
-	exploRec = malloc(sizeof(struct destruct_explo_s) * config.max_explosions);
-	world.mapWalls = malloc(sizeof(struct destruct_wall_s) * config.max_walls);
+	shotRec  = (struct destruct_shot_s *)malloc(sizeof(struct destruct_shot_s)  * config.max_shots);
+	exploRec = (struct destruct_explo_s *)malloc(sizeof(struct destruct_explo_s) * config.max_explosions);
+	world.mapWalls = (struct destruct_wall_s *)malloc(sizeof(struct destruct_wall_s) * config.max_walls);
 
 	//Malloc enough structures to cover all of this session's possible needs.
 	for (i = 0; i < 10; i++)
 		config.max_installations = MAX(config.max_installations, basetypes[i][0]);
-	destruct_player[PLAYER_LEFT ].unit = malloc(sizeof(struct destruct_unit_s) * config.max_installations);
-	destruct_player[PLAYER_RIGHT].unit = malloc(sizeof(struct destruct_unit_s) * config.max_installations);
+	destruct_player[PLAYER_LEFT ].unit = (struct destruct_unit_s *)malloc(sizeof(struct destruct_unit_s) * config.max_installations);
+	destruct_player[PLAYER_RIGHT].unit = (struct destruct_unit_s *)malloc(sizeof(struct destruct_unit_s) * config.max_installations);
 
 	destructTempScreen = game_screen;
 	world.VGAScreen = VGAScreen;
@@ -775,13 +775,13 @@ static void DrawModeSelectMenu(enum de_mode_t mode)
 
 static enum de_mode_t JE_modeSelect(void)
 {
-	enum de_mode_t mode;
+	int mode;
 
 	memcpy(VGAScreen2->pixels, VGAScreen->pixels, VGAScreen2->h * VGAScreen2->pitch);
 	mode = MODE_5CARDWAR;
 
 	// Draw the menu and fade us in
-	DrawModeSelectMenu(mode);
+	DrawModeSelectMenu((enum de_mode_t)mode);
 
 	JE_showVGA();
 	fade_palette(colors, 15, 0, 255);
@@ -790,7 +790,7 @@ static enum de_mode_t JE_modeSelect(void)
 	while (true)
 	{
 		/* Re-draw the menu every iteration */
-		DrawModeSelectMenu(mode);
+		DrawModeSelectMenu((enum de_mode_t)mode);
 		JE_showVGA();
 
 		/* Grab keys */
@@ -844,7 +844,7 @@ static enum de_mode_t JE_modeSelect(void)
 	fade_black(15);
 	memcpy(VGAScreen->pixels, VGAScreen2->pixels, VGAScreen->h * VGAScreen->pitch);
 	JE_showVGA();
-	return mode;
+	return (enum de_mode_t)mode;
 }
 
 static void JE_generateTerrain(void)
@@ -973,7 +973,7 @@ static void DE_generateUnits(unsigned int * baseWorld)
 			}
 
 			destruct_player[i].unit[j].unitY = JE_placementPosition(destruct_player[i].unit[j].unitX - 1, 14, baseWorld);
-			destruct_player[i].unit[j].unitType = basetypes[baseLookup[i][world.destructMode]][(mt_rand() % 10) + 1];
+			destruct_player[i].unit[j].unitType = (enum de_unit_t)basetypes[baseLookup[i][world.destructMode]][(mt_rand() % 10) + 1];
 
 			/* Sats are special cases since they are useless.  They don't count
 			 * as active units and we can't have a team of all sats */
@@ -1007,7 +1007,7 @@ static void DE_generateUnits(unsigned int * baseWorld)
 			destruct_player[i].unit[j].isYInAir = false;
 			destruct_player[i].unit[j].angle = 0;
 			destruct_player[i].unit[j].power = (destruct_player[i].unit[j].unitType == UNIT_LASER) ? 6 : 3;
-			destruct_player[i].unit[j].shotType = defaultWeapon[destruct_player[i].unit[j].unitType];
+			destruct_player[i].unit[j].shotType = (enum de_shot_t)defaultWeapon[destruct_player[i].unit[j].unitType];
 			destruct_player[i].unit[j].health = baseDamage[destruct_player[i].unit[j].unitType];
 			destruct_player[i].unit[j].ani_frame = 0;
 		}
@@ -1143,7 +1143,7 @@ static void JE_aliasDirt(SDL_Surface * screen)
 
 	/* This is a pointer to a screen.  If you don't like pointer arithmetic,
 	 * you won't like this function. */
-	Uint8 *s = screen->pixels;
+	Uint8 *s = (Uint8 *)screen->pixels;
 	s += 12 * screen->pitch;
 
 	for (y = 12; y < (unsigned int)screen->h; y++)
@@ -1190,7 +1190,7 @@ static bool JE_stabilityCheck(unsigned int x, unsigned int y)
 	Uint8 * s;
 
 	numDirtPixels = 0;
-	s = destructTempScreen->pixels;
+	s = (Uint8 *)destructTempScreen->pixels;
 	s += x + (y * destructTempScreen->pitch) - 1;
 
 	/* Check the 12 pixels on the bottom border of our object */
@@ -1208,10 +1208,10 @@ static bool JE_stabilityCheck(unsigned int x, unsigned int y)
 
 static void JE_tempScreenChecking(void) /*and copy to vgascreen*/
 {
-	Uint8 *s = VGAScreen->pixels;
+	Uint8 *s = (Uint8 *)VGAScreen->pixels;
 	s += 12 * VGAScreen->pitch;
 
-	Uint8 *temps = destructTempScreen->pixels;
+	Uint8 *temps = (Uint8 *)destructTempScreen->pixels;
 	temps += 12 * destructTempScreen->pitch;
 
 	for (int y = 12; y < VGAScreen->h; y++)
@@ -1277,7 +1277,7 @@ static void JE_makeExplosion(unsigned int tempPosX, unsigned int tempPosY, enum 
 
 		exploRec[i].explomax  = tempExploSize;
 		exploRec[i].explofill = exploDensity[shottype];
-		exploRec[i].exploType = shotDirt[shottype];
+		exploRec[i].exploType = (enum de_expl_t)shotDirt[shottype];
 	}
 	else
 	{
@@ -1325,7 +1325,7 @@ static void JE_superPixel(unsigned int tempPosX, unsigned int tempPosY)
 	maxY = destructTempScreen->h;
 
 	rowLen = destructTempScreen->pitch;
-	s = destructTempScreen->pixels;
+	s = (Uint8 *)destructTempScreen->pixels;
 	s += (rowLen * (tempPosY - 2)) + (tempPosX - 2);
 
 	for (y = 0; y < 5; y++, s += rowLen - 5)
@@ -1489,9 +1489,9 @@ static void DE_ResetAI(void)
 			ptr->power = (ptr->unitType == UNIT_LASER) ? 6 : 4;
 
 			if (world.mapFlags & MAP_WALLS)
-				ptr->shotType = defaultCpuWeaponB[ptr->unitType];
+				ptr->shotType = (enum de_shot_t)defaultCpuWeaponB[ptr->unitType];
 			else
-				ptr->shotType = defaultCpuWeapon[ptr->unitType];
+				ptr->shotType = (enum de_shot_t)defaultCpuWeapon[ptr->unitType];
 		}
 	}
 }
@@ -1661,7 +1661,7 @@ static void DE_RunTickGravity(void)
 			}
 
 			/* Draw the unit. */
-			DE_GravityDrawUnit(i, unit);
+			DE_GravityDrawUnit((enum de_player_t)i, unit);
 		}
 	}
 }
@@ -1858,7 +1858,7 @@ static void DE_TestExplosionCollision(unsigned int PosX, unsigned int PosY)
 			{
 				unit->health--;
 				if (unit->health <= 0)
-					DE_DestroyUnit(i, unit);
+					DE_DestroyUnit((enum de_player_t)i, unit);
 			}
 		}
 	}
@@ -1952,7 +1952,7 @@ static void DE_RunTickShots(void)
 				    tempPosY < unit->unitY && tempPosY > unit->unitY - 13)
 				{
 					shotRec[i].isAvailable = true;
-					JE_makeExplosion(tempPosX, tempPosY, shotRec[i].shottype);
+					JE_makeExplosion(tempPosX, tempPosY, (enum de_shot_t)shotRec[i].shottype);
 				}
 			}
 		}
@@ -1985,7 +1985,7 @@ static void DE_RunTickShots(void)
 					/* Blow up the wall and remove the shot. */
 					world.mapWalls[j].wallExist = false;
 					shotRec[i].isAvailable = true;
-					JE_makeExplosion(tempPosX, tempPosY, shotRec[i].shottype);
+					JE_makeExplosion(tempPosX, tempPosY, (enum de_shot_t)shotRec[i].shottype);
 					continue;
 				}
 				else
@@ -2015,7 +2015,7 @@ static void DE_RunTickShots(void)
 		if ((((Uint8 *)destructTempScreen->pixels)[tempPosX + tempPosY * destructTempScreen->pitch]) == PIXEL_DIRT)
 		{
 			shotRec[i].isAvailable = true;
-			JE_makeExplosion(tempPosX, tempPosY, shotRec[i].shottype);
+			JE_makeExplosion(tempPosX, tempPosY, (enum de_shot_t)shotRec[i].shottype);
 			continue;
 		}
 	}
@@ -2479,12 +2479,12 @@ static void DE_ProcessInput(void)
 					break;
 
 				case EXPL_MAGNET:
-					DE_RunMagnet(player_index, curUnit);
+					DE_RunMagnet((enum de_player_t)player_index, curUnit);
 					break;
 
 				case EXPL_DIRT:
 				case EXPL_NORMAL:
-					DE_MakeShot(player_index, curUnit, direction);
+					DE_MakeShot((enum de_player_t)player_index, curUnit, direction);
 					break;
 
 				default:
@@ -2498,7 +2498,7 @@ static void DE_CycleWeaponUp(struct destruct_unit_s * unit)
 {
 	do
 	{
-		unit->shotType++;
+		unit->shotType = (enum de_shot_t)(unit->shotType + 1);
 		if (unit->shotType > SHOT_LAST)
 			unit->shotType = SHOT_FIRST;
 	} while (weaponSystems[unit->unitType][unit->shotType] == 0);
@@ -2508,7 +2508,7 @@ static void DE_CycleWeaponDown(struct destruct_unit_s * unit)
 {
 	do
 	{
-		unit->shotType--;
+		unit->shotType = (enum de_shot_t)(unit->shotType - 1);
 		if (unit->shotType < SHOT_FIRST)
 			unit->shotType = SHOT_LAST;
 	} while (weaponSystems[unit->unitType][unit->shotType] == 0);

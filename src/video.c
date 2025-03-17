@@ -299,7 +299,7 @@ bool set_scaling_mode_by_name(const char *name)
 	{
 		 if (strcmp(name, scaling_mode_names[i]) == 0)
 		 {
-			 scaling_mode = i;
+			 scaling_mode = (ScalingMode)i;
 			 return true;
 		 }
 	}
