@@ -11,7 +11,10 @@ tyrian.sav
 # Make build output
 /obj/
 /src/*.gch
-/opentyrian
+/tyrianx
+
+# Linux debug history
+*.gdb_history
 
 # Windows build output
 /opentyrian.exe
