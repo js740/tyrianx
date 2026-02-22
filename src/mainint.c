@@ -3633,8 +3633,6 @@ redo:
 					}
 				}
 
-				service_SDL_events(false);
-
 				/* mouse input */
 				if ((inputDevice == 0 || inputDevice == 2) && has_mouse)
 				{
