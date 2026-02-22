@@ -48,7 +48,7 @@ typedef struct
 	JE_byte     shipblastfilter;
 } JE_WeaponType;
 
-typedef struct
+typedef struct JE_WeaponPortStruct
 {
 	char    name[31]; /* string [30] */
 	JE_byte opnum;
@@ -58,7 +58,7 @@ typedef struct
 	JE_word poweruse;
 } JE_WeaponPortType[PORT_NUM + 1]; /* [0..portnum] */
 
-typedef struct
+typedef struct JE_PowerStruct
 {
 	char        name[31]; /* string [30] */
 	JE_word     itemgraphic;
@@ -67,7 +67,7 @@ typedef struct
 	JE_word     cost;
 } JE_PowerType[POWER_NUM + 1]; /* [0..powernum] */
 
-typedef struct
+typedef struct JE_SpecialStruct
 {
 	char    name[31]; /* string [30] */
 	JE_word itemgraphic;
@@ -93,7 +93,7 @@ typedef struct
 	JE_byte     icongr;
 } JE_OptionType;
 
-typedef struct
+typedef struct JE_ShieldStruct
 {
 	char    name[31]; /* string [30] */
 	JE_byte tpwr;
@@ -102,7 +102,7 @@ typedef struct
 	JE_word cost;
 } JE_ShieldType[SHIELD_NUM + 1]; /* [0..shieldnum] */
 
-typedef struct
+typedef struct JE_ShipStruct
 {
 	char        name[31]; /* string [30] */
 	JE_word     shipgraphic;
@@ -115,7 +115,7 @@ typedef struct
 } JE_ShipType[SHIP_NUM + 1]; /* [0..shipnum] */
 
 /* EnemyData */
-typedef struct
+typedef struct JE_EnemyDatStruct
 {
 	JE_byte     ani;
 	JE_byte     tur[3]; /* [1..3] */

@@ -69,7 +69,7 @@ void set_scaler_by_name(const char *name)
 
 void nn_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 {
-	Uint8 *src = src_surface->pixels, *src_temp;
+	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp;
 	Uint8 *dst, *dst_temp;
 
 	int src_pitch = src_surface->pitch;
@@ -86,7 +86,7 @@ void nn_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 	void* tmp_ptr;
 	SDL_LockTexture(dst_texture, NULL, &tmp_ptr, &dst_pitch);
-	dst = tmp_ptr;
+	dst = (Uint8 *)tmp_ptr;
 	
 	for (int y = height; y > 0; y--)
 	{
@@ -118,7 +118,7 @@ void nn_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 void nn_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 {
-	Uint8 *src = src_surface->pixels, *src_temp;
+	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp;
 	Uint8 *dst, *dst_temp;
 
 	int src_pitch = src_surface->pitch;
@@ -135,7 +135,7 @@ void nn_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 	void* tmp_ptr;
 	SDL_LockTexture(dst_texture, NULL, &tmp_ptr, &dst_pitch);
-	dst = tmp_ptr;
+	dst = (Uint8 *)tmp_ptr;
 	
 	for (int y = height; y > 0; y--)
 	{
@@ -167,7 +167,7 @@ void nn_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 void scale2x_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 {
-	Uint8 *src = src_surface->pixels, *src_temp;
+	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp;
 	Uint8 *dst, *dst_temp;
 
 	int src_pitch = src_surface->pitch;
@@ -179,7 +179,7 @@ void scale2x_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 	void* tmp_ptr;
 	SDL_LockTexture(dst_texture, NULL, &tmp_ptr, &dst_pitch);
-	dst = tmp_ptr;
+	dst = (Uint8 *)tmp_ptr;
 	
 	int prevline, nextline;
 	
@@ -230,7 +230,7 @@ void scale2x_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 void scale2x_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 {
-	Uint8 *src = src_surface->pixels, *src_temp;
+	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp;
 	Uint8 *dst, *dst_temp;
 
 	int src_pitch = src_surface->pitch;
@@ -242,7 +242,7 @@ void scale2x_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 	void* tmp_ptr;
 	SDL_LockTexture(dst_texture, NULL, &tmp_ptr, &dst_pitch);
-	dst = tmp_ptr;
+	dst = (Uint8 *)tmp_ptr;
 	
 	int prevline, nextline;
 	
@@ -293,7 +293,7 @@ void scale2x_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 void scale3x_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 {
-	Uint8 *src = src_surface->pixels, *src_temp;
+	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp;
 	Uint8 *dst, *dst_temp;
 
 	int src_pitch = src_surface->pitch;
@@ -305,7 +305,7 @@ void scale3x_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 	void* tmp_ptr;
 	SDL_LockTexture(dst_texture, NULL, &tmp_ptr, &dst_pitch);
-	dst = tmp_ptr;
+	dst = (Uint8 *)tmp_ptr;
 	
 	int prevline, nextline;
 	
@@ -370,7 +370,7 @@ void scale3x_32(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 void scale3x_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 {
-	Uint8 *src = src_surface->pixels, *src_temp;
+	Uint8 *src = (Uint8 *)src_surface->pixels, *src_temp;
 	Uint8 *dst, *dst_temp;
 
 	int src_pitch = src_surface->pitch;
@@ -382,7 +382,7 @@ void scale3x_16(SDL_Surface *src_surface, SDL_Texture *dst_texture)
 
 	void* tmp_ptr;
 	SDL_LockTexture(dst_texture, NULL, &tmp_ptr, &dst_pitch);
-	dst = tmp_ptr;
+	dst = (Uint8 *)tmp_ptr;
 	
 	int prevline, nextline;
 	
