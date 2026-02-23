@@ -50,6 +50,14 @@ SRCS := $(wildcard src/*.c)
 OBJS := $(SRCS:src/%.c=obj/%.o)
 DEPS := $(SRCS:src/%.c=obj/%.d)
 
+ifeq ($(CC), g++)
+    TYRX_SRCS := $(wildcard src/tyrx/*.cpp)
+    TYRX_OBJS := $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.o)
+    TYRX_DEPS := $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.d)
+    OBJS += $(TYRX_OBJS)
+    DEPS += $(TYRX_DEPS)
+endif
+
 ###
 
 ifeq ($(WITH_NETWORK), true)
@@ -165,5 +173,9 @@ $(TARGET) : $(OBJS)
 -include $(DEPS)
 
 obj/%.o : src/%.c
+	@mkdir -p "$(dir $@)"
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -o $@ $<
+
+obj/tyrx/%.o : src/tyrx/%.cpp
 	@mkdir -p "$(dir $@)"
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -o $@ $<

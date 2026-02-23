@@ -9,6 +9,17 @@ insert_final_newline = true
 [Makefile]
 indent_style = tab
 
+[*.{c,h}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+[*.{cpp,hpp}]
+indent_style = space
+indent_size = 2
+tab_width = 2
+trim_trailing_whitespace = true
+
 [*.sln]
 charset = utf-8-bom
 indent_style = tab
