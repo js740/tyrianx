@@ -26,4 +26,21 @@ unsigned long mt_rand(void);
 float mt_rand_1(void);
 float mt_rand_lt1(void);
 
+/* New reentrant API using explicit state for deterministic gameplay checks. */
+
+#define MT_STATE_N 624
+
+typedef struct {
+	unsigned long state[MT_STATE_N];
+	int p0, p1, pm;  /* indices into state[] */
+} MtState;
+
+void mt_srand_r(MtState *mt, unsigned long s);
+unsigned long mt_rand_r(MtState *mt);
+float mt_rand_1_r(MtState *mt);
+float mt_rand_lt1_r(MtState *mt);
+
+void mt_save_state(MtState *out);
+void mt_restore_state(const MtState *in);
+
 #endif /* MTRAND_H */
