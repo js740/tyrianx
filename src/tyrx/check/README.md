@@ -38,13 +38,37 @@ the blocks that differ. Rerun both builds with `TYRX_DUMP_TICK=<tick>` and
 With `TYRX_INPUT_SEED=S` (and `TYRX_VCLOCK`), `input_driver.cpp` plays the game
 with seeded random keys.
 
+### Input that arrives during a tick
+
+Synthetic input normally arrives during the frame-pacing wait, between ticks.
+With `TYRX_INPUT_MIDTICK=1`, the same input arrives at the top of the tick
+before instead, after the game has polled events for that tick, which is where
+real input lands while the game is busy. `TYRX_INPUT_COMMANDS=1` adds a command
+every 300 ticks (Backspace+Minus, which cycles the level filter), so the run
+also exercises the pause/menu/cheat handling (`JE_mainKeyboardInput`).
+
+If the game reads input only once per tick, both runs log the same hashes:
+
+```sh
+tools/run_headless.sh ./opentyrian DATA a.log input 1 20000 TYRX_INPUT_COMMANDS=1
+tools/run_headless.sh ./opentyrian DATA b.log input 1 20000 TYRX_INPUT_COMMANDS=1 TYRX_INPUT_MIDTICK=1
+tools/compare_hashlogs.py a.log b.log
+```
+
+Upstream `level_loop` also polls events in the middle of each tick, before the
+game-over, demo-stop and pause/menu/cheat checks, so there the logs diverge at
+the first command. This branch removes those polls ("Poll events once per level
+loop iteration"), and CI checks that the logs match.
+
 ### Caveats
 
-- Synthetic input arrives only while the virtual clock advances, i.e. during
-  frame-pacing sleeps, never in the middle of a tick. The comparison therefore
-  shows that the simulation is unchanged for tick-aligned input. It does not
-  cover input that arrives mid-tick.
-- Joystick and mouse input are not synthesized yet.
+- Without `TYRX_INPUT_MIDTICK`, synthetic input arrives only during
+  frame-pacing sleeps, so a comparison shows that the simulation is unchanged
+  for input that arrives between ticks.
+- Joystick and mouse input are not synthesized yet. Joysticks are also read in
+  the middle of a tick (`poll_joystick` in `JE_playerMovement`, and
+  `push_joysticks_as_keyboard` in the game-over and demo-stop checks), with key
+  repeat timed by the wall clock.
 
 ## The round-trip test
 
