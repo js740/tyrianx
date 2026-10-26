@@ -23,8 +23,9 @@
 // from game state (backgrounds, superpixels, the starfield), that state as it
 // was at the call.
 //
-// execute() draws a list's calls with the ports in render.hpp.  The checks
-// record the C code's lists (check/draw/) to compare with them.
+// The C++ game code builds the list of a tick (port/draw.hpp) and execute()
+// draws it with the ports in render.hpp.  The checks record the C code's
+// lists (check/draw/) to compare with them.
 //------------------------------------------------------------------------------
 
 #pragma once

@@ -34,6 +34,9 @@
 //                           surfaces as they were at the start of the tick,
 //                           reproduces them, both with the C primitives and
 //                           with their C++ ports in render/
+//
+// While a shadow pass runs the C++ level tick (../shadow.hpp), calls to the C
+// primitives go to the list the C++ code draws into (port/draw.hpp) instead.
 //------------------------------------------------------------------------------
 
 #pragma once
@@ -41,9 +44,8 @@
 #include "../../gold/api.hpp"
 #include "../../render/draw_list.hpp"
 
+#include <cstddef>
 #include <cstdint>
-#include <string>
-#include <vector>
 
 namespace tyrx::check::draw {
 
@@ -55,11 +57,6 @@ bool drawlist_enabled();
 
 // The draw list of the current (or just finished) level tick.
 DrawList const& drawlist_current();
-
-// While shadow recording, calls go to a separate list (for the shadow tick,
-// shadow.hpp), and aren't checked.
-void drawlist_shadow_begin();
-DrawList drawlist_shadow_end();
 
 // Number of failures TYRX_DRAWLIST_CHECK found: pixel changes outside recorded
 // calls, and ticks whose replay differed.
