@@ -16,8 +16,9 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits |
 | [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry, hashing and snapshots |
 | [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, call-by-call checks and round trips |
+| [`check/draw/`](check/draw/README.md) | `tyrx::check::draw` | Recording the C code's draw lists, and checking them |
 | [`sim/`](sim/README.md) | `tyrx::sim` | Game logic whose state is encapsulated |
-| [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs |
+| [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs, and draw lists |
 
 The C++ game is `sim/` and `render/`. `gold/` and `check/` are the scaffolding
 that attaches the C++ game to the C game and checks it against it.
@@ -35,9 +36,9 @@ that attaches the C++ game to the C game and checks it against it.
   `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently covers
   `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock,
   `JE_itemScreen`, `gameplaySelect` and `init_joysticks` for the input driver,
-  and `JE_setupExplosion` and `draw_background_1` for the call-by-call checks.
-  It works for any function called across object files and needs no source
-  changes.
+  `JE_setupExplosion` and `draw_background_1` for the call-by-call checks, and
+  the drawing primitives for the draw lists. It works for any function called
+  across object files and needs no source changes.
 - **State access**: the C++ code reads and writes the C globals directly,
   through their declarations (`gold/api.hpp`). All hashed state has external
   linkage.
@@ -51,6 +52,8 @@ that attaches the C++ game to the C game and checks it against it.
 | `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
 | `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port ([check](check/README.md)) |
 | `TYRX_RENDER_DIFF=1` | Check the C++ drawing ports in `render/` pixel by pixel ([check](check/README.md)) |
+| `TYRX_DRAWLIST=FILE` | Write each level tick's draw calls to FILE ([check/draw](check/draw/README.md)) |
+| `TYRX_DRAWLIST_CHECK=1` | Check that the draw lists are complete and reproduce each tick ([check/draw](check/draw/README.md)) |
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
 | `TYRX_INPUT_COMMANDS=1` | With `TYRX_INPUT_SEED`: also press a command every 300 ticks ([check](check/README.md)) |
 | `TYRX_INPUT_MIDTICK=1` | With `TYRX_INPUT_SEED`: send input while ticks run, not between them ([check](check/README.md)) |
@@ -64,4 +67,4 @@ that attaches the C++ game to the C game and checks it against it.
 
 Exits that Tyrian X initiates return a status that names the first check that
 failed: 3 for `TYRX_DIFF`, 4 for pointers the hashes couldn't describe, 5 for
-round trips and 7 for `TYRX_RENDER_DIFF`.
+round trips, 7 for `TYRX_RENDER_DIFF` and 8 for `TYRX_DRAWLIST_CHECK`.

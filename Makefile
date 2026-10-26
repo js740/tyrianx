@@ -87,7 +87,19 @@ endif
 
 ifeq ($(WITH_TYRX), true)
     EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen,--wrap=gameplaySelect,--wrap=JE_setupExplosion,--wrap=init_joysticks \
-                     -Wl,--wrap=draw_background_1
+                     -Wl,--wrap=draw_background_1 \
+                     -Wl,--wrap=blit_sprite,--wrap=blit_sprite_blend,--wrap=blit_sprite_hv_unsafe \
+                     -Wl,--wrap=blit_sprite_hv,--wrap=blit_sprite_hv_blend,--wrap=blit_sprite_dark,--wrap=blit_sprite2 \
+                     -Wl,--wrap=blit_sprite2_clip,--wrap=blit_sprite2_blend,--wrap=blit_sprite2_darken \
+                     -Wl,--wrap=blit_sprite2_filter,--wrap=blit_sprite2_filter_clip,--wrap=blit_sprite2x2 \
+                     -Wl,--wrap=blit_sprite2x2_clip,--wrap=blit_sprite2x2_blend,--wrap=blit_sprite2x2_darken \
+                     -Wl,--wrap=blit_sprite2x2_filter,--wrap=blit_sprite2x2_filter_clip,--wrap=JE_pix,--wrap=JE_pix3 \
+                     -Wl,--wrap=JE_rectangle,--wrap=fill_rectangle_xy,--wrap=JE_barShade,--wrap=JE_barBright \
+                     -Wl,--wrap=draw_segmented_gauge,--wrap=JE_darkenBackground \
+                     -Wl,--wrap=draw_background_2,--wrap=draw_background_2_blend \
+                     -Wl,--wrap=draw_background_3,--wrap=JE_filterScreen,--wrap=lava_filter,--wrap=water_filter \
+                     -Wl,--wrap=iced_blur_filter,--wrap=blur_filter,--wrap=showHeadlight,--wrap=showFlipped \
+                     -Wl,--wrap=showNormal,--wrap=update_and_draw_starfield,--wrap=JE_drawSP,--wrap=JE_clr256
     LINK = $(CXX) $(ALL_CXXFLAGS)
 else
     LINK = $(CC) $(ALL_CFLAGS)

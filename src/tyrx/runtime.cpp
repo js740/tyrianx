@@ -26,13 +26,15 @@
 //
 // Exits that Tyrian X initiates return status 3 if a C++ port mismatched
 // (TYRX_DIFF), 4 if the hashes may be incomplete because some pointers could
-// not be described, 5 if a round trip failed (TYRX_ROUNDTRIP), and 7 if a C++
-// drawing port drew different pixels (TYRX_RENDER_DIFF).
+// not be described, 5 if a round trip failed (TYRX_ROUNDTRIP), 7 if a C++
+// drawing port drew different pixels (TYRX_RENDER_DIFF), and 8 if a draw list
+// was incomplete or didn't reproduce its tick (TYRX_DRAWLIST_CHECK).
 //------------------------------------------------------------------------------
 
 #include "runtime.hpp"
 
 #include "check/diff.hpp"
+#include "check/draw/record.hpp"
 #include "check/hashlog.hpp"
 #include "check/input_driver.hpp"
 #include "check/render_diff.hpp"
@@ -63,6 +65,9 @@ namespace {
   }
   else if (check::render_diff_mismatches()) {
     status = 7;
+  }
+  else if (check::draw::drawlist_check_failures()) {
+    status = 8;
   }
   std::exit(status);
 }
@@ -96,7 +101,10 @@ struct Runtime {
     check::hashlog_level_start(level_count, tick);
   }
 
+  void level_ended() { check::draw::drawlist_level_ended(); }
+
   void level_tick() {
+    check::draw::drawlist_level_tick();
     if (exit_after_ticks >= 0 && (long)tick >= exit_after_ticks) {
       exit_run();
     }
@@ -142,6 +150,7 @@ namespace {
 [[maybe_unused]] bool const hooks_installed = [] {
   game_hooks.level_initialized = [] { runtime().level_start(); };
   game_hooks.level_tick = [] { runtime().level_tick(); };
+  game_hooks.level_ended = [] { runtime().level_ended(); };
   return true;
 }();
 

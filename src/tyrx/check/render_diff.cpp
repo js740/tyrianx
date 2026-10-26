@@ -22,6 +22,7 @@
 #include "../gold/api.hpp"
 #include "../render/render.hpp"
 #include "../runtime.hpp"
+#include "draw/record.hpp"
 
 #include <cstdio>
 #include <map>
@@ -136,13 +137,13 @@ extern "C" void __real_draw_background_1(SDL_Surface *surface);
 
 extern "C" void __wrap_draw_background_1(SDL_Surface *surface) {
   if (!tyrx::check::render_diff_enabled()) {
-    return __real_draw_background_1(surface);
+    return tyrx::check::draw::drawlist_background_1(surface, __real_draw_background_1);
   }
 
   tyrx::check::SurfaceCopy cxx(surface);
   tyrx::render::draw_background_1(cxx.canvas(), mapYPos, mapXbpPos, mapXPos, backPos);
 
-  __real_draw_background_1(surface);
+  tyrx::check::draw::drawlist_background_1(surface, __real_draw_background_1);
 
   tyrx::check::render_diff_check("draw_background_1", surface, cxx.canvas());
 }

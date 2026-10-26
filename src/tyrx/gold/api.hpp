@@ -44,5 +44,6 @@ extern "C" {
 #include "../../sprite.h"
 #include "../../tyrian2.h"
 #include "../../varz.h"
+#include "../../video.h"
 #include "../../xmas.h"
 }
