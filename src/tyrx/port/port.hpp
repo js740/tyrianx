@@ -36,6 +36,9 @@ void starfield(SDL_Surface *screen, int move_speed);  // update_and_draw_starfie
 void draw_sp();                                               // JE_drawSP
 void filter_screen(JE_shortint col, JE_shortint brightness);  // JE_filterScreen
 
+// enemy.cpp
+void draw_enemy(int enemyOffset);  // JE_drawEnemy
+
 // hud.cpp
 void draw_shield();                          // JE_drawShield
 void draw_boss_bars();                       // draw_boss_bar

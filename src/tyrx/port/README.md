@@ -38,3 +38,5 @@ Ported so far:
   and the darkening.
 - The HUD at the top of the tick: the message bar, the shield
   (`JE_drawShield`), the weapon power and the power bar.
+- The enemies (`enemy.cpp`, `JE_drawEnemy`), which are drawn, then move, fire
+  and launch enemies.
