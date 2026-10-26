@@ -33,16 +33,19 @@ JE_drawSP game_screen 0 0 0 0 0 0 0 0 blob=2424:1c76ae387d01de85
    contents after the previous recorded call, so any pixel written by
    unrecorded code is reported.
 2. That the list is enough to draw the tick. At the end of each tick, it
-   replays the list with the C primitives on copies of the three surfaces as
-   they were at the start of the tick, and compares the result with the
-   surfaces. Game state that a primitive reads is set from the record for the
-   call, and the state it changes (background scrolling, superpixels, stars,
-   the brightness fade) is restored afterwards.
+   replays the list on copies of the three surfaces as they were at the start
+   of the tick, and compares the result with the surfaces. It replays it twice:
+   with the C primitives, setting game state that a primitive reads from the
+   record for the call and restoring the state it changes (background
+   scrolling, superpixels, stars, the brightness fade) afterwards; and with
+   their C++ ports (`../../render/execute.cpp`), which take everything from the
+   record.
 
-Exits that Tyrian X initiates return status 8 if either fails. The five demos
-(2.2 million calls) and 80,000 ticks of synthetic play pass both. The replay
-runs within the tick, so it doesn't show that the list records inputs that
-stay the same for the whole tick, such as sprite data or settings. The in-game
-menu (`JE_inGameSetup`) and help (`JE_helpSystem`) save and restore the screen
-with `memcpy`, which the first check would report; synthetic play doesn't open
-them.
+Exits that Tyrian X initiates return status 8 if either fails, and when the C++
+ports alone fail, the call after which they first differ is reported. The five
+demos (2.2 million calls), 80,000 ticks of synthetic play and 60,000 ticks of
+it with `TYRX_INPUT_CHEATS` (8 million calls) pass both. The replay runs within
+the tick, so it doesn't show that the list records inputs that stay the same
+for the whole tick, such as sprite data or settings. The in-game menu
+(`JE_inGameSetup`) and help (`JE_helpSystem`) save and restore the screen with
+`memcpy`, which the first check would report; synthetic play doesn't open them.

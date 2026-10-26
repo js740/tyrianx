@@ -23,7 +23,8 @@
 // from game state (backgrounds, superpixels, the starfield), that state as it
 // was at the call.
 //
-// The checks record the C code's lists (check/draw/).
+// execute() draws a list's calls with the ports in render.hpp.  The checks
+// record the C code's lists (check/draw/) to compare with them.
 //------------------------------------------------------------------------------
 
 #pragma once
@@ -97,5 +98,8 @@ char const *surface_name(SDL_Surface const *s);
 
 // A call as one line of text, as TYRX_DRAWLIST writes it.
 std::string describe(DrawCall const& call, DrawList const& list);
+
+// Draws a call with the ports in render.hpp (execute.cpp).
+void execute(DrawCall const& call, unsigned char const *blob, Canvas dst, Canvas src);
 
 }  // namespace tyrx::render

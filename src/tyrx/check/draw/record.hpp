@@ -30,9 +30,10 @@
 //   TYRX_DRAWLIST=FILE      write each level tick's draw list to FILE
 //   TYRX_DRAWLIST_CHECK=1   check that the lists are complete and sufficient:
 //                           that no pixels change outside recorded calls, and
-//                           that replaying each tick's list with the C
-//                           primitives, on copies of the surfaces as they were
-//                           at the start of the tick, reproduces them
+//                           that replaying each tick's list, on copies of the
+//                           surfaces as they were at the start of the tick,
+//                           reproduces them, both with the C primitives and
+//                           with their C++ ports in render/
 //------------------------------------------------------------------------------
 
 #pragma once

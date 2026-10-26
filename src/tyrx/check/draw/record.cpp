@@ -136,6 +136,9 @@ class ReplayCheck {
       for (int y = 0; y < real->h; ++y) {
         std::memcpy(row(scratch_[i], y), row(real, y), real->w);
       }
+      Uint8 const *p = static_cast<Uint8 const *>(real->pixels);
+      cxx_[i].assign(p, p + (std::size_t)real->pitch * real->h);
+      start_[i] = cxx_[i];
     }
   }
 
@@ -146,46 +149,68 @@ class ReplayCheck {
         ++unreplayable_;
         continue;
       }
-      drawlist_replay(c, list.blob.data() + c.blob, dst, src);
+      unsigned char const *blob = list.blob.data() + c.blob;
+      drawlist_replay(c, blob, dst, src);
+      render::execute(c, blob, canvas(c.dst), canvas(c.src));
     }
-    bool differed = false;
+    bool differed[2] = {false, false};
     for (int i = 0; i < 3; ++i) {
       SDL_Surface const *real = *kReal[i];
       if (real == nullptr || scratch_[i] == nullptr) {
         continue;
       }
-      std::uint64_t differing = 0;
-      int first_x = 0, first_y = 0;
+      differed[0] |= compare(list.tick, "C", real, [&](int y) { return row(scratch_[i], y); });
+      differed[1] |= compare(list.tick, "C++", real, [&](int y) { return cxx_[i].data() + y * real->pitch; });
+    }
+    ++ticks_;
+    mismatched_ticks_[0] += differed[0];
+    mismatched_ticks_[1] += differed[1];
+    if (differed[1] && !differed[0] && reported_ <= 20) {
+      find_divergence(list);
+    }
+  }
+
+  // Replays the list again with both, call by call, to find the first call
+  // after which the C++ ports' surfaces differ from the C primitives'.
+  void find_divergence(DrawList const& list) {
+    for (int i = 0; i < 3; ++i) {
+      SDL_Surface const *real = *kReal[i];
+      if (real == nullptr || scratch_[i] == nullptr) {
+        continue;
+      }
+      cxx_[i] = start_[i];
       for (int y = 0; y < real->h; ++y) {
-        Uint8 const *r = row(real, y), *s = row(scratch_[i], y);
-        for (int x = 0; x < real->w; ++x) {
-          if (r[x] != s[x] && differing++ == 0) {
-            first_x = x;
-            first_y = y;
+        std::memcpy(row(scratch_[i], y), start_[i].data() + y * real->pitch, real->w);
+      }
+    }
+    for (std::size_t n = 0; n < list.calls.size(); ++n) {
+      DrawCall const& c = list.calls[n];
+      SDL_Surface *dst = map(c.dst), *src = map(c.src);
+      if ((c.dst != nullptr && dst == nullptr) || (c.src != nullptr && src == nullptr)) {
+        continue;
+      }
+      unsigned char const *blob = list.blob.data() + c.blob;
+      drawlist_replay(c, blob, dst, src);
+      render::execute(c, blob, canvas(c.dst), canvas(c.src));
+      for (int i = 0; i < 3; ++i) {
+        SDL_Surface const *real = *kReal[i];
+        if (real == nullptr || scratch_[i] == nullptr) {
+          continue;
+        }
+        for (int y = 0; y < real->h; ++y) {
+          if (std::memcmp(row(scratch_[i], y), cxx_[i].data() + y * real->pitch, real->w) != 0) {
+            std::fprintf(stderr, "tyrx drawlist:   the C++ port first differs after call %zu: %s\n", n,
+                         render::describe(c, list).c_str());
+            return;
           }
         }
       }
-      if (differing == 0) {
-        continue;
-      }
-
-      differed = true;
-      if (++reported_ > 20) {
-        continue;
-      }
-
-      std::fprintf(stderr,
-                   "tyrx drawlist: replaying tick %" PRIu64 " gave %" PRIu64
-                   " different pixels on %s, first at "
-                   "(%d, %d)\n",
-                   list.tick, differing, surface_name(real), first_x, first_y);
     }
-    ++ticks_;
-    mismatched_ticks_ += differed;
   }
 
   std::uint64_t ticks() const { return ticks_; }
-  std::uint64_t mismatched_ticks() const { return mismatched_ticks_; }
+  // Ticks whose replay with the C primitives (0) or the C++ ports (1) differed.
+  std::uint64_t mismatched_ticks(int i) const { return mismatched_ticks_[i]; }
   std::uint64_t unreplayable() const { return unreplayable_; }
 
  private:
@@ -205,8 +230,42 @@ class ReplayCheck {
     return nullptr;
   }
 
+  render::Canvas canvas(SDL_Surface const *real) {
+    for (int i = 0; i < 3; ++i) {
+      if (real != nullptr && real == *kReal[i]) {
+        return {cxx_[i].data(), real->pitch, real->w, real->h};
+      }
+    }
+    return {nullptr, 0, 0, 0};
+  }
+
+  // Compares a surface with a replay of it, whose rows `replayed` returns.
+  template <typename Rows>
+  bool compare(std::uint64_t tick, char const *by, SDL_Surface const *real, Rows replayed) {
+    std::uint64_t differing = 0;
+    int first_x = 0, first_y = 0;
+    for (int y = 0; y < real->h; ++y) {
+      Uint8 const *r = row(real, y), *s = replayed(y);
+      for (int x = 0; x < real->w; ++x) {
+        if (r[x] != s[x] && differing++ == 0) {
+          first_x = x;
+          first_y = y;
+        }
+      }
+    }
+    if (differing != 0 && ++reported_ <= 20) {
+      std::fprintf(stderr,
+                   "tyrx drawlist: replaying tick %" PRIu64 " with the %s primitives gave %" PRIu64
+                   " different pixels on %s, first at (%d, %d)\n",
+                   tick, by, differing, surface_name(real), first_x, first_y);
+    }
+    return differing != 0;
+  }
+
   SDL_Surface *scratch_[3] = {};
-  std::uint64_t ticks_ = 0, mismatched_ticks_ = 0, unreplayable_ = 0, reported_ = 0;
+  std::vector<Uint8> cxx_[3];    // the C++ replay
+  std::vector<Uint8> start_[3];  // the surfaces at the start of the tick
+  std::uint64_t ticks_ = 0, mismatched_ticks_[2] = {}, unreplayable_ = 0, reported_ = 0;
 };
 
 class Recorder {
@@ -248,16 +307,19 @@ class Recorder {
     if (check_) {
       std::fprintf(stderr, "tyrx drawlist: %" PRIu64 " unrecorded pixel changes in %" PRIu64 " ticks\n",
                    audit_.unrecorded_writes(), audit_.unrecorded_ticks());
-      std::fprintf(stderr,
-                   "tyrx drawlist: %" PRIu64 " ticks replayed, %" PRIu64 " differed (%" PRIu64
-                   " calls on other surfaces skipped)\n",
-                   replay_.ticks(), replay_.mismatched_ticks(), replay_.unreplayable());
+      std::fprintf(
+          stderr,
+          "tyrx drawlist: %" PRIu64 " ticks replayed, %" PRIu64 " differed with the C primitives, %" PRIu64
+          " with the C++ ports (%" PRIu64 " calls on other surfaces skipped)\n",
+          replay_.ticks(), replay_.mismatched_ticks(0), replay_.mismatched_ticks(1), replay_.unreplayable());
     }
   }
 
   bool enabled() const { return enabled_; }
 
-  std::uint64_t check_failures() const { return audit_.unrecorded_writes() + replay_.mismatched_ticks(); }
+  std::uint64_t check_failures() const {
+    return audit_.unrecorded_writes() + replay_.mismatched_ticks(0) + replay_.mismatched_ticks(1);
+  }
 
   void level_tick() {
     finish_tick();

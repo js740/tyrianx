@@ -144,7 +144,8 @@ With `TYRX_RENDER_DIFF=1`, each call of a drawing function ported to
 
 Mismatches are printed with the number of differing pixels and the first one. A
 per-function summary is printed at exit, and exits that Tyrian X initiates
-return status 7. Checked so far: `draw_background_1`.
+return status 7. Checked so far: `draw_background_1`; the other ports are
+checked by replaying draw lists (`draw/`).
 
 ```sh
 tools/run_headless.sh ./opentyrian DATA diff.log demos TYRX_RENDER_DIFF=1
