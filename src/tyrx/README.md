@@ -17,7 +17,7 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry, hashing, snapshots and its memory |
 | [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, the shadow tick, call-by-call checks and round trips |
 | [`check/draw/`](check/draw/README.md) | `tyrx::check::draw` | Recording the C code's draw lists, and checking them |
-| [`port/`](port/README.md) | `tyrx::port` | The C level tick ported to C++ as it is, line by line, working on the C globals |
+| [`port/`](port/README.md) | `tyrx::port` | The C level tick ported to C++ as it is, line by line, working on the C globals, with its simulation and drawing separated |
 | [`sim/`](sim/README.md) | `tyrx::sim` | Game logic whose state is encapsulated |
 | [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs, and draw lists |
 
@@ -57,6 +57,7 @@ checks it against it.
 | `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port, call by call ([check](check/README.md)) |
 | `TYRX_RENDER_DIFF=1` | Check the C++ drawing ports in `render/` pixel by pixel ([check](check/README.md)) |
 | `TYRX_SHADOW=1` | Check the C++ level loop against the C code, tick by tick ([check](check/README.md)) |
+| `TYRX_SHADOW_CALLS=1` | With `TYRX_SHADOW`: count the draw calls that C++ code made, and those drawn during the simulation, by kind |
 | `TYRX_DRAWLIST=FILE` | Write each level tick's draw calls to FILE ([check/draw](check/draw/README.md)) |
 | `TYRX_DRAWLIST_CHECK=1` | Check that the draw lists are complete and reproduce each tick ([check/draw](check/draw/README.md)) |
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |

@@ -17,16 +17,19 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The HUD: the gauges and messages on VGAScreenSeg (JE_drawShield, JE_drawArmor
-// and so on in varz.c and mainint.c), the boss bar (draw_boss_bar in tyrian2.c)
-// and the in-game displays (JE_inGameDisplays in mainint.c).
+// The HUD: the gauges and messages on VGAScreenSeg (JE_drawShield,
+// JE_drawArmor and so on in varz.c and mainint.c), which are drawn as they
+// change, the boss bar (draw_boss_bar in tyrian2.c) and the in-game displays
+// (JE_inGameDisplays in mainint.c).
 
 #include "draw.hpp"
 #include "port.hpp"
 
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 namespace tyrx::port {
 
@@ -58,94 +61,52 @@ void dbar3(SDL_Surface *surface, JE_integer x, JE_integer y, JE_integer num, JE_
   }
 }
 
+void log(hud::Draw draw) { draw_record().hud.push_back(std::move(draw)); }
+
 }  // namespace
 
-// Port of JE_drawShield.
-void draw_shield() {
-  if (twoPlayerMode && !galagaMode) {
-    for (uint i = 0; i < COUNTOF(player); ++i) {
-      dbar3(VGAScreen, 270, 60 + 134 * i, roundf(player[i].shield * 0.8f), 144);
-    }
-  }
-  else {
-    dbar3(VGAScreen, 270, 194, player[0].shield, 144);
-    if (player[0].shield != player[0].shield_max) {
-      uint const y = 193 - (player[0].shield_max * 2);
-      draw::JE_rectangle(VGAScreen, 270, y, 278, y, 68);  // <MXD> SEGa000
-    }
-  }
+// JE_drawShield, with the shields as they are now: damage later in the tick
+// can change them.
+void draw_shield_tick() {
+  log(hud::Shield{twoPlayerMode && !galagaMode, {player[0].shield, player[1].shield}, player[0].shield_max});
 }
 
-// Port of JE_drawArmor, which also limits the armor.
-void draw_armor() {
+// JE_drawArmor, which also limits the armor.
+void draw_armor_tick() {
   for (uint i = 0; i < COUNTOF(player); ++i) {
     if (player[i].armor > 28) {
       player[i].armor = 28;
     }
   }
 
-  if (twoPlayerMode && !galagaMode) {
-    for (uint i = 0; i < COUNTOF(player); ++i) {
-      dbar3(VGAScreen, 307, 60 + 134 * i, roundf(player[i].armor * 0.8f), 224);
-    }
-  }
-  else {
-    dbar3(VGAScreen, 307, 194, player[0].armor, 224);
-  }
+  log(hud::Armor{twoPlayerMode && !galagaMode, {player[0].armor, player[1].armor}});
 }
 
-// Port of JE_wipeShieldArmorBars.
-void wipe_shield_armor_bars() {
-  if (!twoPlayerMode || galagaMode) {
-    draw::fill_rectangle_xy(VGAScreenSeg, 270, 137, 278, 194 - player[0].shield * 2, 0);
-  }
-  else {
-    draw::fill_rectangle_xy(VGAScreenSeg, 270, 60 - 44, 278, 60, 0);
-    draw::fill_rectangle_xy(VGAScreenSeg, 270, 194 - 44, 278, 194, 0);
-  }
-  if (!twoPlayerMode || galagaMode) {
-    draw::fill_rectangle_xy(VGAScreenSeg, 307, 137, 315, 194 - player[0].armor * 2, 0);
-  }
-  else {
-    draw::fill_rectangle_xy(VGAScreenSeg, 307, 60 - 44, 315, 60, 0);
-    draw::fill_rectangle_xy(VGAScreenSeg, 307, 194 - 44, 315, 194, 0);
-  }
+// JE_wipeShieldArmorBars
+void wipe_shield_armor_bars_tick() {
+  log(hud::WipeShieldArmor{!twoPlayerMode || galagaMode, player[0].shield, player[0].armor});
 }
 
-// Port of JE_drawPortConfigButtons (rear weapon pattern indicator).
-void draw_port_config_buttons() {
+// JE_drawPortConfigButtons (rear weapon pattern indicator)
+void draw_port_config_buttons_tick() {
   if (twoPlayerMode) {
     return;
   }
 
-  if (player[0].weapon_mode == 1) {
-    draw::blit_sprite(VGAScreenSeg, 285, 44, OPTION_SHAPES, 18);  // lit
-    draw::blit_sprite(VGAScreenSeg, 302, 44, OPTION_SHAPES, 19);  // unlit
-  }
-  // == 2
-  else {
-    draw::blit_sprite(VGAScreenSeg, 285, 44, OPTION_SHAPES, 19);  // unlit
-    draw::blit_sprite(VGAScreenSeg, 302, 44, OPTION_SHAPES, 18);  // lit
-  }
+  log(hud::PortConfig{player[0].weapon_mode});
 }
 
-// Port of JE_drawTextWindow: a message in the message bar, which the HUD
-// erases when textErase runs out.
-void draw_text_window(char const *text) {
-  // erase current text
-  if (textErase > 0) {
-    draw::blit_sprite(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game text area
-  }
+// JE_drawTextWindow: a message in the message bar, which the HUD erases when
+// textErase runs out.
+void draw_text_window_tick(char const *text) {
+  bool const erase = textErase > 0;  // erase current text
 
   textErase = 100;
-  draw::JE_outText(VGAScreenSeg, 20, 190, text, 0, 4);
+  log(hud::TextWindow{erase, text});
 }
 
-// Port of JE_drawOptions: sets up the sidekicks, and draws their HUD.
-void draw_options() {
-  SDL_Surface *temp_surface = VGAScreen;
-  VGAScreen = VGAScreenSeg;
-
+// JE_drawOptions: sets up the sidekicks, and draws their HUD.
+void draw_options_tick() {
   Player *this_player = &player[twoPlayerMode ? 1 : 0];
 
   for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i) {
@@ -166,35 +127,158 @@ void draw_options() {
 
     // draw initial sidekick HUD
     int const y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i];
+    log(hud::Sidekick{y, this_option->icongr, this_player->sidekick[i].ammo_max,
+                      this_player->sidekick[i].ammo});
+  }
 
-    draw::fill_rectangle_xy(VGAScreenSeg, 284, y, 284 + 28, y + 15, 0);
-    if (this_option->icongr > 0) {
-      draw::blit_sprite(VGAScreenSeg, 284, y, OPTION_SHAPES, this_option->icongr - 1);  // sidekick HUD icon
+  draw_option_level_tick();
+}
+
+// JE_drawOptionLevel
+void draw_option_level_tick() {
+  if (twoPlayerMode) {
+    temp = 4;  // the C code counts the levels with temp, from 1 to 3
+    log(hud::OptionLevel{player[1].items.sidekick_level});
+  }
+}
+
+// The parts of the HUD that the level tick and the player functions draw.
+void message_bar_erased_tick() { log(hud::MessageBarErased{}); }
+
+void weapon_power_tick(int x, int y, uint item_power) { log(hud::WeaponPower{x, y, item_power}); }
+
+void power_bar_tick(JE_byte temp, uint lastPower) { log(hud::PowerBar{temp, lastPower}); }
+
+void charge_level_tick(JE_byte color) { log(hud::ChargeLevel{chargeLevel, color}); }
+
+void sidekick_ammo_tick(int y, int ammo_max, int ammo, bool discharged) {
+  log(hud::SidekickAmmo{y, ammo_max, ammo, discharged});
+}
+
+void hud_draw(hud::Draw const& draw) {
+  SDL_Surface *const screen = VGAScreenSeg;
+  struct Visitor {
+    SDL_Surface *screen;
+
+    void operator()(hud::MessageBarErased const&) const {
+      draw::blit_sprite(screen, 16, 189, OPTION_SHAPES, 36);  // in-game message area
     }
-    draw::draw_segmented_gauge(VGAScreenSeg, 284, y + 13, 112, 2, 2,
-                               MAX(1, this_player->sidekick[i].ammo_max / 10), this_player->sidekick[i].ammo);
-  }
 
-  VGAScreen = temp_surface;
+    void operator()(hud::TextWindow const& d) const {
+      if (d.erase) {
+        draw::blit_sprite(screen, 16, 189, OPTION_SHAPES, 36);  // in-game text area
+      }
+      draw::JE_outText(screen, 20, 190, d.text.c_str(), 0, 4);
+    }
 
-  draw_option_level();
+    void operator()(hud::Shield const& d) const {
+      if (d.two) {
+        for (uint i = 0; i < COUNTOF(player); ++i) {
+          dbar3(screen, 270, 60 + 134 * i, roundf(d.shield[i] * 0.8f), 144);
+        }
+      }
+      else {
+        dbar3(screen, 270, 194, d.shield[0], 144);
+        if (d.shield[0] != d.shield_max) {
+          uint const y = 193 - (d.shield_max * 2);
+          draw::JE_rectangle(screen, 270, y, 278, y, 68);  // <MXD> SEGa000
+        }
+      }
+    }
+
+    void operator()(hud::Armor const& d) const {
+      if (d.two) {
+        for (uint i = 0; i < COUNTOF(player); ++i) {
+          dbar3(screen, 307, 60 + 134 * i, roundf(d.armor[i] * 0.8f), 224);
+        }
+      }
+      else {
+        dbar3(screen, 307, 194, d.armor[0], 224);
+      }
+    }
+
+    void operator()(hud::WipeShieldArmor const& d) const {
+      if (d.one) {
+        draw::fill_rectangle_xy(screen, 270, 137, 278, 194 - d.shield * 2, 0);
+      }
+      else {
+        draw::fill_rectangle_xy(screen, 270, 60 - 44, 278, 60, 0);
+        draw::fill_rectangle_xy(screen, 270, 194 - 44, 278, 194, 0);
+      }
+      if (d.one) {
+        draw::fill_rectangle_xy(screen, 307, 137, 315, 194 - d.armor * 2, 0);
+      }
+      else {
+        draw::fill_rectangle_xy(screen, 307, 60 - 44, 315, 60, 0);
+        draw::fill_rectangle_xy(screen, 307, 194 - 44, 315, 194, 0);
+      }
+    }
+
+    void operator()(hud::WeaponPower const& d) const {
+      int x = d.x;
+      draw::fill_rectangle_xy(screen, x, d.y, x + 1 + 10 * 2, d.y + 2, 0);
+
+      for (uint j = 1; j <= d.item_power; ++j) {
+        draw::JE_rectangle(screen, x, d.y, x + 1, d.y + 2, 115 + j);  // SEGa000
+        x += 2;
+      }
+    }
+
+    void operator()(hud::PowerBar const& d) const {
+      if (d.temp > d.lastPower) {
+        draw::fill_rectangle_xy(screen, 269, 113 - 11 - d.temp, 276, 114 - 11 - d.lastPower,
+                                113 + d.temp / 7);
+      }
+      else {
+        draw::fill_rectangle_xy(screen, 269, 113 - 11 - d.lastPower, 276, 114 - 11 - d.temp, 0);
+      }
+    }
+
+    void operator()(hud::PortConfig const& d) const {
+      if (d.weapon_mode == 1) {
+        draw::blit_sprite(screen, 285, 44, OPTION_SHAPES, 18);  // lit
+        draw::blit_sprite(screen, 302, 44, OPTION_SHAPES, 19);  // unlit
+      }
+      // == 2
+      else {
+        draw::blit_sprite(screen, 285, 44, OPTION_SHAPES, 19);  // unlit
+        draw::blit_sprite(screen, 302, 44, OPTION_SHAPES, 18);  // lit
+      }
+    }
+
+    void operator()(hud::Sidekick const& d) const {
+      draw::fill_rectangle_xy(screen, 284, d.y, 284 + 28, d.y + 15, 0);
+      if (d.icongr > 0) {
+        draw::blit_sprite(screen, 284, d.y, OPTION_SHAPES, d.icongr - 1);  // sidekick HUD icon
+      }
+      draw::draw_segmented_gauge(screen, 284, d.y + 13, 112, 2, 2, MAX(1, d.ammo_max / 10), d.ammo);
+    }
+
+    void operator()(hud::OptionLevel const& d) const {
+      for (int temp = 1; temp <= 3; temp++) {
+        draw::fill_rectangle_xy(screen, 268, 127 + (temp - 1) * 6, 269, 127 + 3 + (temp - 1) * 6,
+                                193 + ((d.sidekick_level - 100) == temp) * 11);
+      }
+    }
+
+    void operator()(hud::ChargeLevel const& d) const {
+      draw::fill_rectangle_xy(screen, 269, 107 + (d.chargeLevel - 1) * 3, 275, 108 + (d.chargeLevel - 1) * 3,
+                              d.color);
+    }
+
+    void operator()(hud::SidekickAmmo const& d) const {
+      if (d.discharged) {
+        draw::fill_rectangle_xy(screen, 284, d.y, 312, d.y + 2, 0);
+      }
+      draw::draw_segmented_gauge(screen, 284, d.y, 112, 2, 2, MAX(1, d.ammo_max / 10), d.ammo);
+    }
+  };
+  std::visit(Visitor{screen}, draw);
 }
 
-// Port of JE_drawOptionLevel.
-void draw_option_level() {
-  if (!twoPlayerMode) {
-    return;
-  }
-
-  for (temp = 1; temp <= 3; temp++) {
-    draw::fill_rectangle_xy(VGAScreenSeg, 268, 127 + (temp - 1) * 6, 269, 127 + 3 + (temp - 1) * 6,
-                            193 + ((player[1].items.sidekick_level - 100) == temp) * 11);
-  }
-}
-
-// Port of draw_boss_bar: the bars follow the most damaged enemy of their link
-// group, and flash after a hit.
-void draw_boss_bars() {
+// The bars follow the most damaged enemy of their link group, and flash after
+// a hit; the drawing gets where they are and how they look.
+void boss_bar_tick() {
   for (unsigned b = 0; b < COUNTOF(boss_bar); b++) {
     if (boss_bar[b].link_num == 0) {
       continue;
@@ -227,20 +311,29 @@ void draw_boss_bars() {
     boss_bar[1].link_num = 0;
   }
 
+  BossBarsDrawn drawn{VGAScreen, bars, {}};
   for (unsigned b = 0; b < bars; b++) {
     unsigned const x = (bars == 2) ? ((b == 0) ? 125 : 185)
                                    : ((levelTimer) ? 250 : 155);  // level timer and boss bar would overlap
-    bar_x(VGAScreen, x - 25, 7, x + 25, 12, 115);
-    bar_x(VGAScreen, x - (boss_bar[b].armor / 10), 7, x + (boss_bar[b].armor + 5) / 10, 12,
-          118 + boss_bar[b].color);
+    drawn.bar[b] = {x, boss_bar[b].armor, boss_bar[b].color};
     if (boss_bar[b].color > 0) {
       boss_bar[b].color--;
     }
   }
+  draw_record().boss_bars = drawn;
 }
 
-// Port of JE_inGameDisplays, which only draws.
-void in_game_displays(SDL_Surface *screen) {
+void boss_bar_draw(BossBarsDrawn const& d) {
+  for (unsigned b = 0; b < d.bars; b++) {
+    BossBarsDrawn::Bar const& bar = d.bar[b];
+    bar_x(d.screen, bar.x - 25, 7, bar.x + 25, 12, 115);
+    bar_x(d.screen, bar.x - (bar.armor / 10), 7, bar.x + (bar.armor + 5) / 10, 12, 118 + bar.color);
+  }
+}
+
+// JE_inGameDisplays: only draws, from state that nothing changes later in the
+// tick.
+void in_game_displays_draw(SDL_Surface *screen) {
   char stemp[21];
   char tempstr[256];
 

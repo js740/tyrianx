@@ -18,7 +18,9 @@
 //------------------------------------------------------------------------------
 
 // The game's key commands during a level (JE_mainKeyboardInput in
-// mainint.c): edited ships, help, cheats, debug and screen settings.
+// mainint.c): edited ships, help, cheats, debug and screen settings.  What it
+// draws (the HUD after a ship change, a cheat's message) goes in the HUD log
+// of the draw record.
 
 #include "port.hpp"
 
@@ -68,11 +70,11 @@ void main_keyboard_input() {
 
         SDL_Surface *temp_surface = VGAScreen;
         VGAScreen = VGAScreenSeg;
-        wipe_shield_armor_bars();
-        draw_armor();
-        draw_shield();
+        wipe_shield_armor_bars_tick();
+        draw_armor_tick();
+        draw_shield_tick();
         VGAScreen = temp_surface;
-        draw_options();
+        draw_options_tick();
 
         keysactive[x] = false;
       }
@@ -113,11 +115,11 @@ void main_keyboard_input() {
 
         SDL_Surface *temp_surface = VGAScreen;
         VGAScreen = VGAScreenSeg;
-        wipe_shield_armor_bars();
-        draw_armor();
-        draw_shield();
+        wipe_shield_armor_bars_tick();
+        draw_armor_tick();
+        draw_shield_tick();
         VGAScreen = temp_surface;
-        draw_options();
+        draw_options_tick();
 
         keysactive[x] = false;
       }
@@ -167,7 +169,7 @@ void main_keyboard_input() {
       }
 
       youAreCheating = !youAreCheating;
-      draw_text_window(miscText[63 - 1]);
+      draw_text_window_tick(miscText[63 - 1]);
     }
 
     if (constantPlay && keysactive[SDL_SCANCODE_C]) {

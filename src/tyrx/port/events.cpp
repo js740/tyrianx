@@ -19,7 +19,7 @@
 
 // The level's events (JE_eventSystem, and JE_createNewEventEnemy, JE_eventJump
 // and JE_searchFor, in tyrian2.c).  The one thing an event draws is a message
-// in the message bar (draw_text_window).
+// in the message bar (draw_text_window_tick).
 
 #include "port.hpp"
 
@@ -196,7 +196,7 @@ void event_system() {
                 eventRec[eventLoc - 1].eventtype, id);
         break;
       }
-      draw_text_window(outputs[id - 1]);
+      draw_text_window_tick(outputs[id - 1]);
       soundQueue[3] = windowTextSamples[id - 1];
       break;
     }

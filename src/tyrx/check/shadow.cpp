@@ -28,6 +28,8 @@
 #include "draw/record.hpp"
 #include "vclock.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cinttypes>
 #include <csetjmp>
 #include <cstdarg>
@@ -50,11 +52,39 @@ std::jmp_buf abort_jump;
 
 // The three surfaces the game draws on, and copies of them for the shadow.
 SDL_Surface **const kSurfaces[3] = {&game_screen, &VGAScreen2, &VGAScreenSeg};
+char const *const kSurfaceNames[3] = {"game_screen", "VGAScreen2", "VGAScreenSeg"};
 
 bool same_calls(DrawCall const& a, DrawList const& la, DrawCall const& b, DrawList const& lb) {
   return a.op == b.op && a.dst == b.dst && a.src == b.src && a.sheet.data == b.sheet.data &&
          a.sheet.size == b.sheet.size && a.map == b.map && a.args == b.args && a.blob_size == b.blob_size &&
          std::memcmp(la.blob.data() + a.blob, lb.blob.data() + b.blob, a.blob_size) == 0;
+}
+
+// The calls of a list that touch a surface, drawing on it or reading it, in
+// their order.  Two lists draw the same pixels if each surface's calls are
+// the same: calls touching different surfaces commute.
+std::vector<std::size_t> surface_calls(DrawList const& list, SDL_Surface const *surface) {
+  std::vector<std::size_t> calls;
+  for (std::size_t i = 0; i < list.calls.size(); ++i) {
+    if (list.calls[i].dst == surface || list.calls[i].src == surface) {
+      calls.push_back(i);
+    }
+  }
+  return calls;
+}
+
+// "name count" lines for the kinds of calls counted.
+std::string summary(std::array<std::uint64_t, render::kDrawOps> const& counts) {
+  std::string s;
+  for (std::size_t op = 0; op < counts.size(); ++op) {
+    if (counts[op] != 0) {
+      s += render::op_name(static_cast<DrawOp>(op));
+      s += ' ';
+      s += std::to_string(counts[op]);
+      s += '\n';
+    }
+  }
+  return s;
 }
 
 class Shadow {
@@ -92,12 +122,25 @@ class Shadow {
     for (auto const& [why, n] : aborted_) {
       std::fprintf(stderr, "tyrx shadow: %" PRIu64 " passes abandoned: %s\n", n, why.c_str());
     }
+    if (env("TYRX_SHADOW_CALLS") != nullptr) {
+      auto const print = [](char const *what, std::string const& calls) {
+        for (std::size_t b = 0, e; b < calls.size(); b = e + 1) {
+          e = calls.find('\n', b);
+          std::fprintf(stderr, "tyrx shadow: %s: %.*s\n", what, (int)(e - b), calls.data() + b);
+        }
+      };
+      print("C++ calls", summary(emitted_));
+      print("drawn during the simulation", summary(during_simulation_));
+    }
     for (SDL_Surface *s : shadow_surfaces_) {
       if (s != nullptr) {
         SDL_FreeSurface(s);
       }
     }
   }
+
+  // The pass's simulation is complete, and its drawing begins.
+  void drawing_begins() { simulated_calls_ = pass_list_.calls.size(); }
 
   bool enabled() const { return enabled_; }
   bool active() const { return active_; }
@@ -260,6 +303,7 @@ class Shadow {
     next_poll_ = 0;
     vclock_set_quiet(true);
     pass_list_ = {};
+    simulated_calls_ = SIZE_MAX;
     port::draw::target() = &pass_list_;
     active_ = true;
     bool const completed = setjmp(abort_jump) == 0;
@@ -270,6 +314,13 @@ class Shadow {
     active_ = false;
     port::draw::target() = nullptr;
     DrawList shadow_list = std::move(pass_list_);
+    for (std::size_t i = 0; i < shadow_list.calls.size(); ++i) {
+      std::size_t const op = static_cast<std::size_t>(shadow_list.calls[i].op);
+      ++emitted_[op];
+      if (i < simulated_calls_) {
+        ++during_simulation_[op];
+      }
+    }
     vclock_set_quiet(false);
 
     if (!completed) {
@@ -319,19 +370,37 @@ class Shadow {
     }
 
     DrawList const& c_list = draw::drawlist_current();
-    std::size_t const n = std::min(c_list.calls.size(), shadow_list.calls.size());
-    std::size_t i = 0;
-    while (i < n && same_calls(c_list.calls[i], c_list, shadow_list.calls[i], shadow_list)) {
-      ++i;
+    bool list_differed = false;
+    for (int r = 0; r < 3 && !list_differed; ++r) {
+      std::vector<std::size_t> const c_calls = surface_calls(c_list, real[r]),
+                                     shadow_calls = surface_calls(shadow_list, real[r]);
+      std::size_t const n = std::min(c_calls.size(), shadow_calls.size());
+      std::size_t i = 0;
+      while (i < n &&
+             same_calls(c_list.calls[c_calls[i]], c_list, shadow_list.calls[shadow_calls[i]], shadow_list))
+      {
+        ++i;
+      }
+      if (i >= n && c_calls.size() == shadow_calls.size()) {
+        continue;
+      }
+
+      list_differed = true;
+      report("tick %" PRIu64 ": call %zu of %zu on %s (C++: %zu) differs:\n  C:   %s\n  C++: %s", tick, i,
+             c_calls.size(), kSurfaceNames[r], shadow_calls.size(),
+             i < c_calls.size() ? render::describe(c_list.calls[c_calls[i]], c_list).c_str() : "(none)",
+             i < shadow_calls.size()
+                 ? render::describe(shadow_list.calls[shadow_calls[i]], shadow_list).c_str()
+                 : "(none)");
     }
-    if (i < n || c_list.calls.size() != shadow_list.calls.size()) {
+    if (!list_differed && c_list.calls.size() != shadow_list.calls.size()) {
+      list_differed = true;
+      report("tick %" PRIu64 ": %zu calls (C++: %zu), some on other surfaces", tick, c_list.calls.size(),
+             shadow_list.calls.size());
+    }
+    if (list_differed) {
       differed = true;
       ++list_mismatches_;
-      report("tick %" PRIu64 ": draw call %zu of %zu (C++: %zu) differs:\n  C:   %s\n  C++: %s", tick, i,
-             c_list.calls.size(), shadow_list.calls.size(),
-             i < c_list.calls.size() ? render::describe(c_list.calls[i], c_list).c_str() : "(none)",
-             i < shadow_list.calls.size() ? render::describe(shadow_list.calls[i], shadow_list).c_str()
-                                          : "(none)");
     }
 
     // The frame, drawn from the list by the C++ ports.
@@ -384,8 +453,14 @@ class Shadow {
 
   bool enabled_ = false;
   bool active_ = false;
-  // The pass's draw list, which the C++ code draws into (port/draw.hpp).
+  // The pass's draw list, which the C++ code draws into (port/draw.hpp), and
+  // how many of its calls the simulation made (all, until drawing begins).
   DrawList pass_list_;
+  std::size_t simulated_calls_ = SIZE_MAX;
+  // The calls of each kind in shadow passes, and those made during the
+  // simulation, for TYRX_SHADOW_CALLS.
+  using OpCounts = std::array<std::uint64_t, render::kDrawOps>;
+  OpCounts emitted_ = {}, during_simulation_ = {};
   bool have_pre_ = false;
   char const *skip_reason_ = nullptr;
   char const *abort_reason_ = nullptr;
@@ -477,6 +552,8 @@ std::uint64_t shadow_mismatches() { return shadow().mismatches(); }
 }  // namespace tyrx::check
 
 namespace tyrx::port {
+
+void drawing_begins() { check::shadow().drawing_begins(); }
 
 void present() {
   if (!check::shadow_active()) {

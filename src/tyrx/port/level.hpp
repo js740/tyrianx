@@ -20,8 +20,11 @@
 //------------------------------------------------------------------------------
 // The game's level loop in C++.  level_pass runs one pass of it: one level
 // tick, from the level_loop label in JE_main (tyrian2.c) to the jump back to
-// it, on the C code's globals.  It is checked against the C code by running it
-// in the shadow of each C tick (check/shadow.hpp).
+// it, on the C code's globals.  The tick's simulation is complete before
+// anything is drawn: it keeps a record for the drawing (draw_record.hpp),
+// from which draw_tick then draws the tick, and then the frame is presented
+// and events are polled.  It is checked against the C code by running it in
+// the shadow of each C tick (check/shadow.hpp).
 //------------------------------------------------------------------------------
 
 #pragma once
@@ -41,9 +44,10 @@ struct LevelLocals {
 
 LevelLocals& level_locals();
 
-// Provided by whatever runs the passes (check/shadow.cpp): present the frame,
-// poll events, and a notice just before main_keyboard_input opens the in-game
-// help.
+// Provided by whatever runs the passes (check/shadow.cpp): a notice that the
+// simulation is complete and the drawing begins, present the frame, poll
+// events, and a notice just before main_keyboard_input opens the in-game help.
+void drawing_begins();
 void present();
 void poll_events();
 void in_game_help_ahead();
