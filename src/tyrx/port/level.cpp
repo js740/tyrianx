@@ -728,7 +728,7 @@ void players_tick() {
   }
 
   if (firstGameOver) {
-    JE_mainGamePlayerFunctions();  // --------PLAYER DRAW+MOVEMENT---------
+    main_game_player_functions();  // --------PLAYER DRAW+MOVEMENT---------
   }
 }
 

@@ -41,8 +41,14 @@ void draw_enemy(int enemyOffset);  // JE_drawEnemy
 
 // hud.cpp
 void draw_shield();                          // JE_drawShield
+void draw_armor();                           // JE_drawArmor
+void wipe_shield_armor_bars();               // JE_wipeShieldArmorBars
+void draw_port_config_buttons();             // JE_drawPortConfigButtons
 void draw_boss_bars();                       // draw_boss_bar
 void in_game_displays(SDL_Surface *screen);  // JE_inGameDisplays
+
+// player.cpp
+void main_game_player_functions();  // JE_mainGamePlayerFunctions
 
 // shots.cpp
 // shots.c, called as port::, as the C function keeps its name

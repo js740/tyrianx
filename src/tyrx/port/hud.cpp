@@ -17,9 +17,11 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The HUD: the shield gauge on VGAScreenSeg (JE_drawShield in varz.c), the boss
-// bar (draw_boss_bar in tyrian2.c) and the in-game displays (JE_inGameDisplays
-// in mainint.c).
+// The HUD: the shield and armor gauges and the fire-mode buttons on
+// VGAScreenSeg (JE_drawShield, JE_drawArmor and JE_wipeShieldArmorBars in
+// varz.c, and JE_drawPortConfigButtons in mainint.c), the boss bar
+// (draw_boss_bar in tyrian2.c) and the in-game displays (JE_inGameDisplays in
+// mainint.c).
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -73,6 +75,59 @@ void draw_shield() {
       uint const y = 193 - (player[0].shield_max * 2);
       draw::JE_rectangle(VGAScreen, 270, y, 278, y, 68);  // <MXD> SEGa000
     }
+  }
+}
+
+// Port of JE_drawArmor, which also limits the armor.
+void draw_armor() {
+  for (uint i = 0; i < COUNTOF(player); ++i) {
+    if (player[i].armor > 28) {
+      player[i].armor = 28;
+    }
+  }
+
+  if (twoPlayerMode && !galagaMode) {
+    for (uint i = 0; i < COUNTOF(player); ++i) {
+      dbar3(VGAScreen, 307, 60 + 134 * i, roundf(player[i].armor * 0.8f), 224);
+    }
+  }
+  else {
+    dbar3(VGAScreen, 307, 194, player[0].armor, 224);
+  }
+}
+
+// Port of JE_wipeShieldArmorBars.
+void wipe_shield_armor_bars() {
+  if (!twoPlayerMode || galagaMode) {
+    draw::fill_rectangle_xy(VGAScreenSeg, 270, 137, 278, 194 - player[0].shield * 2, 0);
+  }
+  else {
+    draw::fill_rectangle_xy(VGAScreenSeg, 270, 60 - 44, 278, 60, 0);
+    draw::fill_rectangle_xy(VGAScreenSeg, 270, 194 - 44, 278, 194, 0);
+  }
+  if (!twoPlayerMode || galagaMode) {
+    draw::fill_rectangle_xy(VGAScreenSeg, 307, 137, 315, 194 - player[0].armor * 2, 0);
+  }
+  else {
+    draw::fill_rectangle_xy(VGAScreenSeg, 307, 60 - 44, 315, 60, 0);
+    draw::fill_rectangle_xy(VGAScreenSeg, 307, 194 - 44, 315, 194, 0);
+  }
+}
+
+// Port of JE_drawPortConfigButtons (rear weapon pattern indicator).
+void draw_port_config_buttons() {
+  if (twoPlayerMode) {
+    return;
+  }
+
+  if (player[0].weapon_mode == 1) {
+    draw::blit_sprite(VGAScreenSeg, 285, 44, OPTION_SHAPES, 18);  // lit
+    draw::blit_sprite(VGAScreenSeg, 302, 44, OPTION_SHAPES, 19);  // unlit
+  }
+  // == 2
+  else {
+    draw::blit_sprite(VGAScreenSeg, 285, 44, OPTION_SHAPES, 19);  // unlit
+    draw::blit_sprite(VGAScreenSeg, 302, 44, OPTION_SHAPES, 18);  // lit
   }
 }
 

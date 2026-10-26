@@ -41,3 +41,7 @@ Ported so far:
 - The enemies (`enemy.cpp`, `JE_drawEnemy`), which are drawn, then move, fire
   and launch enemies.
 - The player shots (`shots.cpp`, `player_shot_move_and_draw`).
+- The players (`player.cpp`, `JE_mainGamePlayerFunctions`, `JE_playerMovement`,
+  `JE_doSpecialShot`): input, movement, firing and sidekicks, with the armor,
+  shield and fire-mode HUD they draw (`JE_drawArmor`, `JE_wipeShieldArmorBars`,
+  `JE_drawPortConfigButtons`).

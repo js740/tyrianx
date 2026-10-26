@@ -38,6 +38,7 @@ extern "C" {
 #include "../../loudness.h"
 #include "../../lvllib.h"
 #include "../../mainint.h"
+#include "../../mouse.h"
 #include "../../mtrand.h"
 #include "../../musmast.h"
 #include "../../network.h"
