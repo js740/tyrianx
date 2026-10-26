@@ -720,7 +720,7 @@ void players_tick() {
 
   for (uint i = 0; i < (twoPlayerMode ? 2 : 1); ++i) {
     if (player[i].is_alive && !endLevel) {
-      JE_playerCollide(&player[i], i + 1);
+      player_collide(&player[i], i + 1);
     }
   }
 
@@ -797,7 +797,7 @@ void enemy_shots_tick() {
 
           JE_setupExplosion(tempX, tempY, 0, 0, false, false);
 
-          if (player[i].invulnerable_ticks == 0 && (temp = JE_playerDamage(temp, &player[i])) > 0) {
+          if (player[i].invulnerable_ticks == 0 && (temp = player_damage(temp, &player[i])) > 0) {
             player[i].x_velocity += (enemyShot[z].sxm * temp) / 2;
             player[i].y_velocity += (enemyShot[z].sym * temp) / 2;
           }

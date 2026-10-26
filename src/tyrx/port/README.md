@@ -45,3 +45,6 @@ Ported so far:
   `JE_doSpecialShot`): input, movement, firing and sidekicks, with the armor,
   shield and fire-mode HUD they draw (`JE_drawArmor`, `JE_wipeShieldArmorBars`,
   `JE_drawPortConfigButtons`).
+- The player collisions and damage (`JE_playerCollide`, `JE_playerDamage`),
+  with the message window and the sidekick HUD they draw (`JE_drawTextWindow`,
+  `JE_drawOptions`, `JE_drawOptionLevel`).
