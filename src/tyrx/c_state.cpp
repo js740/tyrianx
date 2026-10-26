@@ -207,23 +207,32 @@ void dump_state(std::FILE *out) {
   }
 }
 
-Snapshot Snapshot::capture(bool (*include)(StateClass)) {
+Snapshot Snapshot::capture(bool (*include)(StateClass), Snapshot const *previous) {
   Snapshot s;
+  std::size_t i = 0;  // index into previous->copies_
   for (StateBlock const& b : state_blocks()) {
-    if (include(b.cls)) {
-      s.blocks_.push_back(&b);
-      auto const *p = static_cast<std::byte const *>(b.addr);
-      s.bytes_.insert(s.bytes_.end(), p, p + b.size);
+    if (!include(b.cls)) {
+      continue;
     }
+    if (previous && i < previous->copies_.size() && previous->copies_[i].block == &b &&
+        std::memcmp(previous->copies_[i].bytes.get(), b.addr, b.size) == 0)
+    {
+      s.copies_.push_back(previous->copies_[i]);
+    }
+    else {
+      auto bytes = std::make_shared_for_overwrite<std::byte[]>(b.size);
+      std::memcpy(bytes.get(), b.addr, b.size);
+      s.copies_.push_back({&b, std::move(bytes)});
+      s.unshared_size_ += b.size;
+    }
+    ++i;
   }
   return s;
 }
 
 void Snapshot::restore() const {
-  std::byte const *p = bytes_.data();
-  for (StateBlock const *b : blocks_) {
-    std::memcpy(b->addr, p, b->size);
-    p += b->size;
+  for (Copy const& c : copies_) {
+    std::memcpy(c.block->addr, c.bytes.get(), c.block->size);
   }
 }
 

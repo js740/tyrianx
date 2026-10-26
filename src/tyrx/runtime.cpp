@@ -29,7 +29,8 @@
 //
 // Exits that Tyrian X initiates return status 3 if a C++ port mismatched
 // (TYRX_DIFF), 4 if the hashes may be incomplete because some pointers could
-// not be described, and 5 if a round trip failed (TYRX_ROUNDTRIP).
+// not be described, 5 if a round trip failed (TYRX_ROUNDTRIP), and 6 if a
+// rewind did not restore the captured state (TYRX_REWIND_VERIFY).
 //------------------------------------------------------------------------------
 
 #include "runtime.hpp"
@@ -38,6 +39,7 @@
 #include "c_state.hpp"
 #include "diff.hpp"
 #include "input_driver.hpp"
+#include "rewind.hpp"
 #include "roundtrip.hpp"
 
 #include <cinttypes>
@@ -60,6 +62,9 @@ namespace {
   }
   else if (round_trip_failed()) {
     status = 5;
+  }
+  else if (rewind_verify_failed()) {
+    status = 6;
   }
   std::exit(status);
 }
@@ -114,6 +119,7 @@ struct Runtime {
   void level_start() {
     ++level_count;
     round_trip_level_start();
+    rewind_level_start();
     if (playDemo && exit_after_demos >= 0 && ++demo_count > exit_after_demos) {
       exit_run();
     }
@@ -128,6 +134,7 @@ struct Runtime {
       exit_run();
     }
     tick = round_trip_begin_tick(tick);  // may restore a snapshot and go back
+    rewind_tick();                       // may restore an earlier game state
     input_driver_level_tick();
 
     std::vector<std::uint64_t> hashes;

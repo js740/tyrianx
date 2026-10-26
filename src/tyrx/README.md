@@ -73,6 +73,7 @@ if there were any, so CI fails until the target is registered.
 | `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port (see below) |
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots (see below) |
+| `TYRX_REWIND=TICKS` | Rewind by holding a key (see below) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 ## Verifying that a C change preserves gameplay
@@ -125,6 +126,32 @@ tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
 
 Demos are skipped because their input comes from a file whose read position
 isn't part of the snapshot.
+
+## Rewind
+
+With `TYRX_REWIND=TICKS`, Tyrian X keeps a snapshot of each of the last TICKS
+level ticks. 350 ticks is about 10 seconds at Normal speed. Unchanged blocks
+are shared between consecutive snapshots, so each tick costs about 20 KB rather
+than 500 KB.
+
+Holding the rewind key (Backspace, or `TYRX_REWIND_KEY=<SDL scancode name>`)
+steps back one tick per frame: each tick drops the newest snapshot and restores
+the one before it, and the game then simulates and draws one tick from there.
+Input isn't restored, so releasing the key resumes play with the keys actually
+held. Rewind is off in demos and network games, and the buffer is cleared at
+each level start.
+
+```sh
+TYRX_REWIND=350 ./opentyrian
+```
+
+Backspace is also the modifier for the game's debug key combinations (e.g.
+Backspace+1 changes the game speed); those still work while rewinding.
+
+For testing, `TYRX_INPUT_REWIND=1` makes the synthetic input hold the rewind
+key for 40 of every 400 ticks. `TYRX_REWIND_VERIFY=1` checks each restored
+state against the hash recorded when it was captured; exits that Tyrian X
+initiates return status 6 on a mismatch.
 
 ## C++ ports of the simulation (`sim/`)
 

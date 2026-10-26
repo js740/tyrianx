@@ -31,6 +31,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <meta>
 #include <span>
 #include <string>
@@ -259,13 +260,22 @@ void dump_state(std::FILE *out);
 // data that is loaded per level (e.g. sprite sheets).
 class Snapshot {
  public:
-  static Snapshot capture(bool (*include)(StateClass));
+  // Copies the blocks of the classes `include` selects.  Blocks that are
+  // unchanged since `previous` (captured with the same `include`) share its
+  // copies, so consecutive snapshots cost only what changed.
+  static Snapshot capture(bool (*include)(StateClass), Snapshot const *previous = nullptr);
   void restore() const;
-  std::size_t size() const { return bytes_.size(); }
+
+  // Bytes copied by this snapshot rather than shared with the previous one.
+  std::size_t unshared_size() const { return unshared_size_; }
 
  private:
-  std::vector<StateBlock const *> blocks_;
-  std::vector<std::byte> bytes_;
+  struct Copy {
+    StateBlock const *block;
+    std::shared_ptr<std::byte const[]> bytes;
+  };
+  std::vector<Copy> copies_;
+  std::size_t unshared_size_ = 0;
 };
 
 }  // namespace tyrx

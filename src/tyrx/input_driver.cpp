@@ -20,6 +20,7 @@
 #include "input_driver.hpp"
 
 #include "c_api.hpp"
+#include "rewind.hpp"
 #include "runtime.hpp"
 #include "vclock.hpp"
 
@@ -34,7 +35,8 @@ bool in_item_screen = false;  // see __wrap_JE_itemScreen
 
 class InputDriver {
  public:
-  explicit InputDriver(long seed) : seed_(static_cast<std::uint64_t>(seed)) {}
+  explicit InputDriver(long seed)
+      : seed_(static_cast<std::uint64_t>(seed)), press_rewind_(env("TYRX_INPUT_REWIND") != nullptr) {}
 
   void advance(Uint32 from, Uint32 to) {
     if (!focused_) {
@@ -70,6 +72,15 @@ class InputDriver {
       if (down != keysactive[kKeys[i]]) {
         key(kKeys[i], down);
       }
+    }
+    if (!press_rewind_) {
+      return;
+    }
+
+    SDL_Scancode const k = rewind_key();
+    bool const down = next_tick % 400 >= 360;
+    if (down != keysactive[k]) {
+      key(k, down);
     }
   }
 
@@ -134,9 +145,13 @@ class InputDriver {
         key(k, false);
       }
     }
+    if (keysactive[rewind_key()]) {
+      key(rewind_key(), false);
+    }
   }
 
   std::uint64_t seed_;
+  bool press_rewind_;
   std::uint64_t pushed_tick_ = UINT64_MAX;
   bool focused_ = false;
   bool tick_ms_valid_ = false;

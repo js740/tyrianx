@@ -20,7 +20,8 @@
 // Deterministic synthetic keyboard input (TYRX_INPUT_SEED=S, with TYRX_VCLOCK):
 // outside levels, a key every 350 ms that heads for the next level through the
 // menus; in levels, gameplay keys whose state is a function of the seed and the
-// tick.
+// tick.  With TYRX_INPUT_REWIND=1, it also holds the rewind key for 40 of every
+// 400 ticks.
 
 #pragma once
 
