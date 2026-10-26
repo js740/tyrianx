@@ -37,6 +37,7 @@ void draw_sp();                                               // JE_drawSP
 void filter_screen(JE_shortint col, JE_shortint brightness);  // JE_filterScreen
 
 // hud.cpp
+void draw_shield();                          // JE_drawShield
 void draw_boss_bars();                       // draw_boss_bar
 void in_game_displays(SDL_Surface *screen);  // JE_inGameDisplays
 

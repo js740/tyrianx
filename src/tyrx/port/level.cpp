@@ -131,7 +131,7 @@ void hud_tick() {
 
   // -----------------------Message Bar------------------------
   if (textErase > 0 && --textErase == 0) {
-    blit_sprite(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game message area
+    draw::blit_sprite(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game message area
   }
 
   // ------------------------Shield Gen-------------------------
@@ -176,7 +176,7 @@ void hud_tick() {
           }
         }
 
-        JE_drawShield();
+        draw_shield();
       }
     }
     else if (player[0].is_alive && player[0].shield < player[0].shield_max && power > shieldT) {
@@ -190,7 +190,7 @@ void hud_tick() {
           ++player[1].shield;
         }
 
-        JE_drawShield();
+        draw_shield();
       }
     }
   }
@@ -207,10 +207,10 @@ void hud_tick() {
 
     int x = twoPlayerMode ? 286 : 289, y = (i == 0) ? (twoPlayerMode ? 6 : 17) : (twoPlayerMode ? 100 : 38);
 
-    fill_rectangle_xy(VGAScreenSeg, x, y, x + 1 + 10 * 2, y + 2, 0);
+    draw::fill_rectangle_xy(VGAScreenSeg, x, y, x + 1 + 10 * 2, y + 2, 0);
 
     for (uint j = 1; j <= item_power; ++j) {
-      JE_rectangle(VGAScreen, x, y, x + 1, y + 2, 115 + j);  // SEGa000
+      draw::JE_rectangle(VGAScreen, x, y, x + 1, y + 2, 115 + j);  // SEGa000
       x += 2;
     }
   }
@@ -229,10 +229,11 @@ void hud_tick() {
 
     if (temp != lastPower) {
       if (temp > lastPower) {
-        fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - temp, 276, 114 - 11 - lastPower, 113 + temp / 7);
+        draw::fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - temp, 276, 114 - 11 - lastPower,
+                                113 + temp / 7);
       }
       else {
-        fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - lastPower, 276, 114 - 11 - temp, 0);
+        draw::fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - lastPower, 276, 114 - 11 - temp, 0);
       }
 
       lastPower = temp;
