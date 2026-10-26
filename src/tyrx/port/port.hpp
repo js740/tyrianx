@@ -44,11 +44,16 @@ void draw_shield();                          // JE_drawShield
 void draw_armor();                           // JE_drawArmor
 void wipe_shield_armor_bars();               // JE_wipeShieldArmorBars
 void draw_port_config_buttons();             // JE_drawPortConfigButtons
+void draw_text_window(char const *text);     // JE_drawTextWindow
+void draw_options();                         // JE_drawOptions
+void draw_option_level();                    // JE_drawOptionLevel
 void draw_boss_bars();                       // draw_boss_bar
 void in_game_displays(SDL_Surface *screen);  // JE_inGameDisplays
 
 // player.cpp
-void main_game_player_functions();  // JE_mainGamePlayerFunctions
+void main_game_player_functions();                             // JE_mainGamePlayerFunctions
+void player_collide(Player *this_player, JE_byte playerNum_);  // JE_playerCollide
+JE_byte player_damage(JE_byte temp, Player *this_player);      // JE_playerDamage
 
 // shots.cpp
 // shots.c, called as port::, as the C function keeps its name

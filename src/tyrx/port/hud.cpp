@@ -17,11 +17,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The HUD: the shield and armor gauges and the fire-mode buttons on
-// VGAScreenSeg (JE_drawShield, JE_drawArmor and JE_wipeShieldArmorBars in
-// varz.c, and JE_drawPortConfigButtons in mainint.c), the boss bar
-// (draw_boss_bar in tyrian2.c) and the in-game displays (JE_inGameDisplays in
-// mainint.c).
+// The HUD: the gauges and messages on VGAScreenSeg (JE_drawShield, JE_drawArmor
+// and so on in varz.c and mainint.c), the boss bar (draw_boss_bar in tyrian2.c)
+// and the in-game displays (JE_inGameDisplays in mainint.c).
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -128,6 +126,69 @@ void draw_port_config_buttons() {
   else {
     draw::blit_sprite(VGAScreenSeg, 285, 44, OPTION_SHAPES, 19);  // unlit
     draw::blit_sprite(VGAScreenSeg, 302, 44, OPTION_SHAPES, 18);  // lit
+  }
+}
+
+// Port of JE_drawTextWindow: a message in the message bar, which the HUD
+// erases when textErase runs out.
+void draw_text_window(char const *text) {
+  // erase current text
+  if (textErase > 0) {
+    draw::blit_sprite(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game text area
+  }
+
+  textErase = 100;
+  draw::JE_outText(VGAScreenSeg, 20, 190, text, 0, 4);
+}
+
+// Port of JE_drawOptions: sets up the sidekicks, and draws their HUD.
+void draw_options() {
+  SDL_Surface *temp_surface = VGAScreen;
+  VGAScreen = VGAScreenSeg;
+
+  Player *this_player = &player[twoPlayerMode ? 1 : 0];
+
+  for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i) {
+    JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
+
+    this_player->sidekick[i].ammo = this_player->sidekick[i].ammo_max = this_option->ammo;
+
+    this_player->sidekick[i].ammo_refill_ticks = this_player->sidekick[i].ammo_refill_ticks_max =
+        (105 - this_player->sidekick[i].ammo) * 4;
+
+    this_player->sidekick[i].style = this_option->tr;
+
+    this_player->sidekick[i].animation_enabled = (this_option->option == 1);
+    this_player->sidekick[i].animation_frame = 0;
+
+    this_player->sidekick[i].charge = 0;
+    this_player->sidekick[i].charge_ticks = 20;
+
+    // draw initial sidekick HUD
+    int const y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i];
+
+    draw::fill_rectangle_xy(VGAScreenSeg, 284, y, 284 + 28, y + 15, 0);
+    if (this_option->icongr > 0) {
+      draw::blit_sprite(VGAScreenSeg, 284, y, OPTION_SHAPES, this_option->icongr - 1);  // sidekick HUD icon
+    }
+    draw::draw_segmented_gauge(VGAScreenSeg, 284, y + 13, 112, 2, 2,
+                               MAX(1, this_player->sidekick[i].ammo_max / 10), this_player->sidekick[i].ammo);
+  }
+
+  VGAScreen = temp_surface;
+
+  draw_option_level();
+}
+
+// Port of JE_drawOptionLevel.
+void draw_option_level() {
+  if (!twoPlayerMode) {
+    return;
+  }
+
+  for (temp = 1; temp <= 3; temp++) {
+    draw::fill_rectangle_xy(VGAScreenSeg, 268, 127 + (temp - 1) * 6, 269, 127 + 3 + (temp - 1) * 6,
+                            193 + ((player[1].items.sidekick_level - 100) == temp) * 11);
   }
 }
 
