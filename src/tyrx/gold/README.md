@@ -6,6 +6,10 @@ against. This directory is how C++ code sees it:
 - `api.hpp`: the C game's declarations, for C++.
 - `state.hpp`: the state registry, hashing, dumping and snapshots of the C
   state.
+- `memory.hpp`: saving and restoring all of the C code's writable data at once
+  (`.data` and `.bss`), for the shadow tick (`../check/shadow.hpp`).
+  `data_end.cpp` marks where that data ends; the Makefile links it first among
+  the C++ objects.
 
 ## State registry
 

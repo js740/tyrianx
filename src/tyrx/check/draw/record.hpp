@@ -42,6 +42,7 @@
 #include "../../render/draw_list.hpp"
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace tyrx::check::draw {
@@ -51,6 +52,14 @@ using render::DrawList;
 using render::DrawOp;
 
 bool drawlist_enabled();
+
+// The draw list of the current (or just finished) level tick.
+DrawList const& drawlist_current();
+
+// While shadow recording, calls go to a separate list (for the shadow tick,
+// shadow.hpp), and aren't checked.
+void drawlist_shadow_begin();
+DrawList drawlist_shadow_end();
 
 // Number of failures TYRX_DRAWLIST_CHECK found: pixel changes outside recorded
 // calls, and ticks whose replay differed.

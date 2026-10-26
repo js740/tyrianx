@@ -205,11 +205,10 @@ uint64_t input_record_misses() { return input_record().misses(); }
 }  // namespace tyrx
 
 //------------------------------------------------------------------------------
-// The input queries that the record answers while replaying, the mouse reads
-// and joystick polls that it records, and event polling, which replays
-// suppress.  Linked with -Wl,--wrap for each: calls from other object files
-// (the level loop, the C++ tick) come here, and those within keyboard.c and
-// joystick.c stay as they are.
+// The input queries that the record answers while replaying, and the mouse
+// reads that it records.  Linked with -Wl,--wrap for each: calls from other
+// object files (the level loop, the C++ tick) come here, and those within
+// keyboard.c stay as they are.
 
 extern "C" {
 
@@ -218,9 +217,6 @@ bool __real_hasInput(InputFlags);
 void __real_keyboardClearInput(void);
 void __real_mouseClearInput(void);
 void __real_mouseGetRelativePosition(Sint32 *, Sint32 *);
-void __real_push_joysticks_as_keyboard(void);
-void __real_poll_joystick(int);
-void __real_handleSdlEvents(void);
 
 bool __wrap_keyboardHasInput(void) {
   if (tyrx::input_record_replaying()) {
@@ -259,24 +255,6 @@ void __wrap_mouseGetRelativePosition(Sint32 *out_x, Sint32 *out_y) {
     return;
   }
   r.mouse_relative_position(out_x, out_y, __real_mouseGetRelativePosition);
-}
-
-// Replays also drop the key events that push_joysticks_as_keyboard sends, as
-// they suppress event polling.
-void __wrap_push_joysticks_as_keyboard(void) {
-  tyrx::input_record_joystick_poll([] { __real_push_joysticks_as_keyboard(); });
-}
-
-void __wrap_poll_joystick(int j) {
-  tyrx::input_record_joystick_poll([j] { __real_poll_joystick(j); });
-}
-
-// Replays play recorded input, and leave the events for after the replay.
-void __wrap_handleSdlEvents(void) {
-  if (tyrx::input_record_replaying()) {
-    return;
-  }
-  __real_handleSdlEvents();
 }
 
 }  // extern "C"

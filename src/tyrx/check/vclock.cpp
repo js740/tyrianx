@@ -30,12 +30,17 @@ namespace {
 
 bool const enabled = env("TYRX_VCLOCK") != nullptr;
 Uint32 now_ms = 0;
+bool quiet = false;
 
 }  // namespace
 
 bool vclock_enabled() { return enabled; }
 
 Uint32 vclock_now() { return now_ms; }
+
+void vclock_set(Uint32 ms) { now_ms = ms; }
+
+void vclock_set_quiet(bool q) { quiet = q; }
 
 }  // namespace tyrx::check
 
@@ -53,7 +58,9 @@ extern "C" void __wrap_SDL_Delay(Uint32 ms) {
   if (tyrx::check::enabled) {
     Uint32 const from = tyrx::check::now_ms;
     tyrx::check::now_ms += ms;
-    tyrx::check::input_driver_advance(from, tyrx::check::now_ms);
+    if (!tyrx::check::quiet) {
+      tyrx::check::input_driver_advance(from, tyrx::check::now_ms);
+    }
   }
   else {
     __real_SDL_Delay(ms);

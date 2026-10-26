@@ -49,3 +49,6 @@ the tick, so it doesn't show that the list records inputs that stay the same
 for the whole tick, such as sprite data or settings. The in-game menu
 (`JE_inGameSetup`) and help (`JE_helpSystem`) save and restore the screen with
 `memcpy`, which the first check would report; synthetic play doesn't open them.
+
+While a shadow pass runs the C++ level tick (`../shadow.hpp`), the recorder
+adds any C primitive called during the pass to the pass's own list instead.
