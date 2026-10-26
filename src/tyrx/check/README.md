@@ -12,6 +12,7 @@ shrinks as the C++ game takes over.
 | `diff.cpp` | Call-by-call checks of the ports in `../sim/` |
 | `render_diff.cpp` | Call-by-call checks of the ports in `../render/` |
 | `roundtrip.cpp` | The round-trip test of snapshots |
+| [`draw/`](draw/README.md) | Recording the C code's draw lists, and checking them |
 
 ## Verifying that a C change preserves gameplay
 
