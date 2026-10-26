@@ -24,15 +24,18 @@
 //   TYRX_EXIT_AFTER_DEMOS=N exit when demo playback starts for the N+1th time
 //   TYRX_EXIT_AFTER_TICKS=N exit at the top of level tick N
 //
-// Exits that Tyrian X initiates return status 4 if the hashes may be incomplete
-// because some pointers could not be described, and 5 if a round trip failed
-// (TYRX_ROUNDTRIP).
+// Exits that Tyrian X initiates return status 3 if a C++ port mismatched
+// (TYRX_DIFF), 4 if the hashes may be incomplete because some pointers could
+// not be described, 5 if a round trip failed (TYRX_ROUNDTRIP), and 7 if a C++
+// drawing port drew different pixels (TYRX_RENDER_DIFF).
 //------------------------------------------------------------------------------
 
 #include "runtime.hpp"
 
+#include "check/diff.hpp"
 #include "check/hashlog.hpp"
 #include "check/input_driver.hpp"
+#include "check/render_diff.hpp"
 #include "check/roundtrip.hpp"
 #include "gold/api.hpp"
 #include "gold/state.hpp"
@@ -49,11 +52,17 @@ namespace {
 [[noreturn]] void exit_run() {
   std::fflush(nullptr);
   int status = EXIT_SUCCESS;
-  if (gold::unresolved_pointers()) {
+  if (check::diff_mismatches()) {
+    status = 3;
+  }
+  else if (gold::unresolved_pointers()) {
     status = 4;
   }
   else if (check::round_trip_failed()) {
     status = 5;
+  }
+  else if (check::render_diff_mismatches()) {
+    status = 7;
   }
   std::exit(status);
 }

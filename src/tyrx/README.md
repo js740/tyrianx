@@ -15,7 +15,12 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 |---|---|---|
 | `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits |
 | [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry, hashing and snapshots |
-| [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock and round trips |
+| [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, call-by-call checks and round trips |
+| [`sim/`](sim/README.md) | `tyrx::sim` | Game logic whose state is encapsulated |
+| [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs |
+
+The C++ game is `sim/` and `render/`. `gold/` and `check/` are the scaffolding
+that attaches the C++ game to the C game and checks it against it.
 
 ## How it attaches to the C code
 
@@ -28,8 +33,9 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
   external linkage for some state, and polling events only once per tick.
 - **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
   `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently covers
-  `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock, and
-  `JE_itemScreen`, `gameplaySelect` and `init_joysticks` for the input driver.
+  `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock,
+  `JE_itemScreen`, `gameplaySelect` and `init_joysticks` for the input driver,
+  and `JE_setupExplosion` and `draw_background_1` for the call-by-call checks.
   It works for any function called across object files and needs no source
   changes.
 - **State access**: the C++ code reads and writes the C globals directly,
@@ -43,6 +49,8 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | `TYRX_HASHLOG=FILE` | Per-tick hash of every hashed block, plus level-start markers ([check](check/README.md)) |
 | `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N ([check](check/README.md)) |
 | `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
+| `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port ([check](check/README.md)) |
+| `TYRX_RENDER_DIFF=1` | Check the C++ drawing ports in `render/` pixel by pixel ([check](check/README.md)) |
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
 | `TYRX_INPUT_COMMANDS=1` | With `TYRX_INPUT_SEED`: also press a command every 300 ticks ([check](check/README.md)) |
 | `TYRX_INPUT_MIDTICK=1` | With `TYRX_INPUT_SEED`: send input while ticks run, not between them ([check](check/README.md)) |
@@ -55,4 +63,5 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that Tyrian X initiates return a status that names the first check that
-failed: 4 for pointers the hashes couldn't describe and 5 for round trips.
+failed: 3 for `TYRX_DIFF`, 4 for pointers the hashes couldn't describe, 5 for
+round trips and 7 for `TYRX_RENDER_DIFF`.
