@@ -39,26 +39,26 @@ bool keysactive[SDL_NUM_SCANCODES];
 const SDL_Keycode lordKeySyms[] = { SDLK_l, SDLK_o, SDLK_r, SDLK_d };
 bool lordKeySymsDown[4] = { 0 };
 
-static KeyboardInput keyboardInputs[32];
-static size_t keyboardInputsFront;
-static size_t keyboardInputsBack;
-static size_t keyboardInputsCount;
+KeyboardInput keyboardInputs[32];
+size_t keyboardInputsFront;
+size_t keyboardInputsBack;
+size_t keyboardInputsCount;
 
 Sint32 mouseX;
 Sint32 mouseY;
 Uint8 mouseButtonsDown;
 
-static MouseInput mouseInputs[4];
-static size_t mouseInputsFront;
-static size_t mouseInputsBack;
-static size_t mouseInputsCount;
-static bool mouseHasMotionInput;
+MouseInput mouseInputs[4];
+size_t mouseInputsFront;
+size_t mouseInputsBack;
+size_t mouseInputsCount;
+bool mouseHasMotionInput;
 
-static bool mouseRelativeEnabled;
+bool mouseRelativeEnabled;
 
 // Relative mouse position in window coordinates.
-static Sint32 mouseWindowXRelative;
-static Sint32 mouseWindowYRelative;
+Sint32 mouseWindowXRelative;
+Sint32 mouseWindowYRelative;
 
 // Mapping from CP437 to UCS for 0x80 to 0xA8.
 static const Uint16 ucsMap[] =

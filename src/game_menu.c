@@ -89,8 +89,8 @@ static JE_boolean firstMenu9, paletteChanged;
 static JE_MenuChoiceType menuChoices;
 static JE_integer col, colC;
 static JE_byte lastCurSel;
-static JE_integer curMenu;
-static JE_byte curSel[MENU_MAX]; /* [1..maxmenu] */
+JE_integer curMenu;
+JE_byte curSel[MENU_MAX]; /* [1..maxmenu] */
 static JE_byte curItemType, curItem, cursor;
 static JE_boolean leftPower, rightPower, rightPowerAfford;
 static JE_byte currentCube;
