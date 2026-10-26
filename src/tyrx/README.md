@@ -18,3 +18,89 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
   linking the C++ objects is all it takes. The C
   changes are all meant for upstream: these hooks, the RNG state refactor,
   external linkage for some state, and polling events only once per tick.
+- **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
+  `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently
+  covers `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock, and
+  `JE_itemScreen` so the input driver knows when the shop is up. It works for
+  any function called across object files and needs no source changes.
+- **State access**: the C++ code reads and writes the C globals directly,
+  through their header declarations. All hashed state has external linkage.
+
+## State registry
+
+Every writable global and static of the C objects has a `StateClass`.
+`c_state_registry.inc` lists the globals Tyrian X registers, as one X macro per
+class: `TYRX_SIM(X)` expands to `X(symbol)` for every gameplay symbol, and so
+on. `c_state_untracked.txt` lists the rest by object.
+`tools/check_c_state_registry.py` runs at link time and fails if a symbol is in
+neither or if registered state is `static`, so a newly added global can't
+silently go missing from snapshots. With `--by-object`, it prints the
+classification object by object.
+
+The classes that matter most:
+- `sim`: gameplay state that changes during play.
+- `present`: state that changes during play but only affects what is shown or
+  heard (explosions, flashes, palette filters, warning colours, sound queue).
+  It is hashed like `sim`, but gameplay doesn't depend on it.
+- `data`: level and episode data loaded from files, including the background
+  maps (`megaData1`-`3`). A few events modify it (e.g. `enemyDat[0]`).
+- `scratch`: Pascal-era temporaries (`temp`, `tempW`, `b`, `x`, ...), always
+  written before being read within a tick, so not hashed.
+
+Blocks of the `sim`, `present` and `data` classes form the hashed game state.
+Hashing and dumping (`c_state.hpp`) walk each block's C type with C++26
+reflection:
+- struct padding is never read
+- pointers are hashed as `block+offset` (e.g. `mapYPos = &megaData1+1234`),
+  where the block is any registered global, so hashes are stable across ASLR
+  and across builds. Globals that hashed state points into but that are not
+  hashed themselves (e.g. the sprite sheets) are registered in `TYRX_POINTEES`
+  just to be pointer targets.
+
+A non-null pointer that doesn't point into any registered block is hashed only
+as "unresolved", which could hide a change. Tyrian X reports the number of such
+pointers at exit, and exits it initiates (`TYRX_EXIT_AFTER_*`) return status 4
+if there were any, so CI fails until the target is registered.
+
+## Runtime controls (environment variables)
+
+| Variable | Effect |
+|---|---|
+| `TYRX_HASHLOG=FILE` | Per-tick hash of every hashed block, plus level-start markers |
+| `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N |
+| `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
+| `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
+| `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
+
+## Verifying that a C change preserves gameplay
+
+```sh
+make WITH_TYRX=true && cp opentyrian /tmp/ot-before
+# ...apply the change...
+make WITH_TYRX=true && cp opentyrian /tmp/ot-after
+
+tools/run_headless.sh /tmp/ot-before DATA before.log demos
+tools/run_headless.sh /tmp/ot-after  DATA after.log  demos
+tools/compare_hashlogs.py before.log after.log     # "identical: 18538 ticks"
+
+tools/run_headless.sh /tmp/ot-before DATA before.log input 1 20000
+tools/run_headless.sh /tmp/ot-after  DATA after.log  input 1 20000
+tools/compare_hashlogs.py before.log after.log
+```
+
+If the logs diverge, `compare_hashlogs.py` names the first diverging tick and
+the blocks that differ. Rerun both builds with `TYRX_DUMP_TICK=<tick>` and
+`diff` the dumps to see the exact fields.
+
+`DATA` is a Tyrian 2.1 data directory (`./get_data.sh` fetches one).
+
+## Caveats
+
+- Synthetic input arrives only while the virtual clock advances, i.e. during
+  frame-pacing sleeps, never in the middle of a tick. The comparison therefore
+  shows that the simulation is unchanged for tick-aligned input. It does not
+  cover input that arrives mid-tick.
+- Joystick and mouse input are not synthesized yet.
+- The registry classification was done by hand and leans towards hashing too
+  much. A symbol hashed by mistake can only cause false divergences, never hide
+  a real one.

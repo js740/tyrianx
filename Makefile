@@ -23,6 +23,8 @@ SHELL = /bin/sh
 CC ?= gcc
 CXX ?= g++
 INSTALL ?= install
+NM ?= nm
+PYTHON ?= python3
 PKG_CONFIG ?= pkg-config
 WINDRES ?= windres
 
@@ -84,6 +86,7 @@ ifeq ($(WITH_NETWORK), true)
 endif
 
 ifeq ($(WITH_TYRX), true)
+    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen
     LINK = $(CXX) $(ALL_CXXFLAGS)
 else
     LINK = $(CC) $(ALL_CFLAGS)
@@ -135,6 +138,7 @@ ALL_CFLAGS = -std=iso9899:1999 \
 ALL_CXXFLAGS = -std=c++26 -freflection \
                $(CXXFLAGS)
 ALL_LDFLAGS = $(SDL_LDFLAGS) \
+              $(EXTRA_LDFLAGS) \
               $(LDFLAGS)
 ALL_LDLIBS = -lm \
              $(SDL_LDLIBS) \
@@ -202,6 +206,16 @@ clean :
 
 $(TARGET) : $(OBJS) $(RES)
 	$(LINK) $(ALL_LDFLAGS) -o $@ $(OBJS) $(RES) $(ALL_LDLIBS)
+
+ifeq ($(WITH_TYRX), true)
+# Check that every writable symbol of the C objects is classified.
+TYRX_REGISTRY := src/tyrx/c_state_registry.inc src/tyrx/c_state_untracked.txt
+$(TARGET) : | obj/tyrx/c_state_registry.ok
+obj/tyrx/c_state_registry.ok : $(SRCS:src/%.c=obj/%.o) $(TYRX_REGISTRY) tools/check_c_state_registry.py
+	NM=$(NM) CXX='$(CXX)' $(PYTHON) tools/check_c_state_registry.py $(TYRX_REGISTRY) $(SRCS:src/%.c=obj/%.o)
+	@mkdir -p $(dir $@)
+	@touch $@
+endif
 
 -include $(DEPS)
 
