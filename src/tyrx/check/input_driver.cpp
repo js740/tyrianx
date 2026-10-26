@@ -73,6 +73,9 @@ class InputDriver {
     }
   }
 
+  // The game's key state was restored, so push the next tick's keys again.
+  void on_snapshot_restored() { pushed_tick_ = UINT64_MAX; }
+
   void on_level_tick() {
     last_tick_ms_ = vclock_now();
     tick_ms_valid_ = true;
@@ -159,6 +162,12 @@ void input_driver_advance(Uint32 from, Uint32 to) {
 void input_driver_level_tick() {
   if (InputDriver *d = input_driver()) {
     d->on_level_tick();
+  }
+}
+
+void input_driver_snapshot_restored() {
+  if (InputDriver *d = input_driver()) {
+    d->on_snapshot_restored();
   }
 }
 

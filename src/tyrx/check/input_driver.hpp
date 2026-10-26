@@ -34,4 +34,7 @@ void input_driver_advance(Uint32 from, Uint32 to);
 // Called at the top of each level tick.
 void input_driver_level_tick();
 
+// Called when the game's key state has been restored from a snapshot.
+void input_driver_snapshot_restored();
+
 }  // namespace tyrx::check

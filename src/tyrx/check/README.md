@@ -9,6 +9,7 @@ shrinks as the C++ game takes over.
 | `hashlog.cpp` | The per-tick state hash log and state dumps |
 | `vclock.cpp` | The virtual clock |
 | `input_driver.cpp` | Seeded synthetic input |
+| `roundtrip.cpp` | The round-trip test of snapshots |
 
 ## Verifying that a C change preserves gameplay
 
@@ -44,3 +45,29 @@ with seeded random keys.
   shows that the simulation is unchanged for tick-aligned input. It does not
   cover input that arrives mid-tick.
 - Joystick and mouse input are not synthesized yet.
+
+## The round-trip test
+
+`TYRX_ROUNDTRIP=K[,P]` tests whether snapshots (`../gold/README.md`) hold
+everything a tick depends on. Every P ticks (default 10×K), outside demos, it
+does the following:
+1. Snapshots the game state and the input state.
+2. Runs K ticks.
+3. Restores the snapshot.
+4. Replays those K ticks, requiring the same hashes as the first time, at the
+   top of each tick and at the end.
+
+Any state left out of the registry shows up as a mismatch that names the
+differing blocks. Exits that Tyrian X initiates return status 5 if any replay
+differed or no round trip completed. A run with round trips logs the same
+hashes as one without:
+
+```sh
+tools/run_headless.sh ./opentyrian DATA plain.log input 1 20000
+tools/run_headless.sh ./opentyrian DATA rt.log input 1 20000 TYRX_ROUNDTRIP=50,200
+# tyrx roundtrip: 98 round trips of 50 ticks, 4900 ticks replayed, 0 mismatched, ...
+tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
+```
+
+Demos are skipped because their input comes from a file whose read position
+isn't part of the snapshot.

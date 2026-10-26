@@ -4,7 +4,8 @@ The C game is the reference, the "gold" version, that the C++ code is checked
 against. This directory is how C++ code sees it:
 
 - `api.hpp`: the C game's declarations, for C++.
-- `state.hpp`: the state registry, hashing, dumping of the C state.
+- `state.hpp`: the state registry, hashing, dumping and snapshots of the C
+  state.
 
 ## State registry
 
@@ -44,3 +45,11 @@ if there were any, so CI fails until the target is registered.
 The registry classification was done by hand and leans towards hashing too
 much. A symbol hashed by mistake can only cause false divergences, never hide a
 real one.
+
+## Snapshots
+
+`Snapshot` (`state.hpp`) copies the registered blocks of chosen classes and
+writes them back. A snapshot is valid only within the level it was taken in,
+because pointers into per-level data (such as sprite sheets) are copied as-is.
+The round-trip test (`../check/README.md`) checks that snapshots hold
+everything a tick depends on.
