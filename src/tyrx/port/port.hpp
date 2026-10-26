@@ -27,6 +27,11 @@
 
 namespace tyrx::port {
 
+// background.cpp
+void background_2(SDL_Surface *screen, bool blend);   // draw_background_2, _blend
+void background_3(SDL_Surface *screen);               // draw_background_3
+void starfield(SDL_Surface *screen, int move_speed);  // update_and_draw_starfield
+
 // effects.cpp
 void draw_sp();                                               // JE_drawSP
 void filter_screen(JE_shortint col, JE_shortint brightness);  // JE_filterScreen

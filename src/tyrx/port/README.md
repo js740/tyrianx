@@ -34,3 +34,5 @@ Ported so far:
 - The explosions, the enemy shots, the low armor warning, the debug display,
   the bonus message, the level timer and game over, which the level loop draws
   itself.
+- The backgrounds and the starfield (`background.cpp`), the smoothie filters
+  and the darkening.

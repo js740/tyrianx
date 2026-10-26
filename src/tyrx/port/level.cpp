@@ -265,10 +265,10 @@ void backgrounds_under_tick() {
 
   // Draw background
   if (astralDuration == 0) {
-    draw_background_1(VGAScreen);
+    draw::draw_background_1(VGAScreen, mapYPos, mapXbpPos, mapXPos, backPos);
   }
   else {
-    JE_clr256(VGAScreen);
+    draw::JE_clr256(VGAScreen);
   }
 
   // Set Movement of background 1
@@ -287,38 +287,38 @@ void backgrounds_under_tick() {
   }
 
   if (starActive || astralDuration > 0) {
-    update_and_draw_starfield(VGAScreen, starfield_speed);
+    starfield(VGAScreen, starfield_speed);
   }
 
   if (processorType > 1 && smoothies[5 - 1]) {
-    iced_blur_filter(game_screen, VGAScreen);
+    draw::iced_blur_filter(game_screen, VGAScreen);
     VGAScreen = game_screen;
   }
 
   // -----------------------BACKGROUNDS------------------------
   // -----------------------BACKGROUND 2------------------------
   if (background2over == 3) {
-    draw_background_2(VGAScreen);
+    background_2(VGAScreen, false);
     background2 = true;
   }
 
   if (background2over == 0) {
     if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
       if (wild && !background2notTransparent) {
-        draw_background_2_blend(VGAScreen);
+        background_2(VGAScreen, true);
       }
       else {
-        draw_background_2(VGAScreen);
+        background_2(VGAScreen, false);
       }
     }
   }
 
   if (smoothies[0] && processorType > 2 && smoothie_data[0] == 0) {
-    lava_filter(game_screen, VGAScreen);
+    draw::lava_filter(game_screen, VGAScreen);
     VGAScreen = game_screen;
   }
   if (smoothies[2 - 1] && processorType > 2) {
-    water_filter(game_screen, VGAScreen);
+    draw::water_filter(game_screen, VGAScreen, smoothie_data[1]);
     VGAScreen = game_screen;
   }
 }
@@ -341,13 +341,13 @@ void enemies_under_tick() {
   }
 
   if (smoothies[0] && processorType > 2 && smoothie_data[0] > 0) {
-    lava_filter(game_screen, VGAScreen);
+    draw::lava_filter(game_screen, VGAScreen);
     VGAScreen = game_screen;
   }
 
   if (superWild) {
     neat += 3;
-    JE_darkenBackground(neat);
+    draw::JE_darkenBackground(VGAScreen, neat);
   }
 
   // -----------------------BACKGROUNDS------------------------
@@ -355,21 +355,21 @@ void enemies_under_tick() {
   if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
     if (background2over == 1) {
       if (wild && !background2notTransparent) {
-        draw_background_2_blend(VGAScreen);
+        background_2(VGAScreen, true);
       }
       else {
-        draw_background_2(VGAScreen);
+        background_2(VGAScreen, false);
       }
     }
   }
 
   if (superWild) {
     neat++;
-    JE_darkenBackground(neat);
+    draw::JE_darkenBackground(VGAScreen, neat);
   }
 
   if (background3over == 2) {
-    draw_background_3(VGAScreen);
+    background_3(VGAScreen);
   }
 
   // New Enemy
@@ -382,11 +382,11 @@ void enemies_under_tick() {
   }
 
   if (processorType > 1 && smoothies[3 - 1]) {
-    iced_blur_filter(game_screen, VGAScreen);
+    draw::iced_blur_filter(game_screen, VGAScreen);
     VGAScreen = game_screen;
   }
   if (processorType > 1 && smoothies[4 - 1]) {
-    blur_filter(game_screen, VGAScreen);
+    draw::blur_filter(game_screen, VGAScreen);
     VGAScreen = game_screen;
   }
 
@@ -404,7 +404,7 @@ void enemies_under_tick() {
   }
 
   if (background3over == 0) {
-    draw_background_3(VGAScreen);
+    background_3(VGAScreen);
   }
 
   // Draw Top Enemy
@@ -823,7 +823,7 @@ void enemy_shots_tick() {
   }
 
   if (background3over == 1) {
-    draw_background_3(VGAScreen);
+    background_3(VGAScreen);
   }
 
   // Draw Top Enemy
@@ -941,10 +941,10 @@ void warning_tick() {
   if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
     if (background2over == 2) {
       if (wild && !background2notTransparent) {
-        draw_background_2_blend(VGAScreen);
+        background_2(VGAScreen, true);
       }
       else {
-        draw_background_2(VGAScreen);
+        background_2(VGAScreen, false);
       }
     }
   }
