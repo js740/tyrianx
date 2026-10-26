@@ -97,8 +97,8 @@ class Shadow {
       std::fprintf(stderr, "tyrx: TYRX_SHADOW needs TYRX_VCLOCK\n");
       return;
     }
-    if (env("TYRX_ROUNDTRIP")) {
-      std::fprintf(stderr, "tyrx: TYRX_SHADOW can't be combined with round trips\n");
+    if (env("TYRX_ROUNDTRIP") || env("TYRX_REWIND")) {
+      std::fprintf(stderr, "tyrx: TYRX_SHADOW can't be combined with round trips or rewind\n");
       return;
     }
     if (!gold::CMemory::available()) {

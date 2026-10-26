@@ -22,6 +22,7 @@
 #include "../gold/api.hpp"
 #include "../gold/state.hpp"
 #include "../runtime.hpp"
+#include "rewind.hpp"
 #include "vclock.hpp"
 
 #include <array>
@@ -46,11 +47,17 @@ class InputDriver {
  public:
   explicit InputDriver(long seed)
       : seed_(static_cast<std::uint64_t>(seed)),
+        press_rewind_(env("TYRX_INPUT_REWIND") != nullptr),
         press_commands_(env("TYRX_INPUT_COMMANDS") != nullptr),
         press_cheats_(env("TYRX_INPUT_CHEATS") != nullptr),
         move_mouse_(env("TYRX_INPUT_MOUSE") != nullptr),
         midtick_(env("TYRX_INPUT_MIDTICK") != nullptr),
-        wants_joystick_(env("TYRX_INPUT_JOYSTICK") != nullptr) {}
+        wants_joystick_(env("TYRX_INPUT_JOYSTICK") != nullptr) {
+    if (press_rewind_ && press_commands_ && rewind_key() == kCommandModifier) {
+      std::fprintf(stderr, "tyrx: TYRX_INPUT_COMMANDS is ignored with TYRX_INPUT_REWIND\n");
+      press_commands_ = false;
+    }
+  }
 
   void advance(Uint32 from, Uint32 to) {
     if (!focused_) {
@@ -133,6 +140,9 @@ class InputDriver {
     pushed_tick_ = next_tick;
     for (std::size_t i = 0; i < kKeys.size(); ++i) {
       set_key(kKeys[i], key_down(i, next_tick));
+    }
+    if (press_rewind_) {
+      set_key(rewind_key(), next_tick % 400 >= 360);
     }
     if (press_commands_) {
       // Backspace+Minus cycles the level filter (JE_mainKeyboardInput): a
@@ -322,7 +332,7 @@ class InputDriver {
         key(k, false);
       }
     }
-    for (SDL_Scancode k : {kCommandModifier, SDL_SCANCODE_MINUS}) {
+    for (SDL_Scancode k : {rewind_key(), kCommandModifier, SDL_SCANCODE_MINUS}) {
       if (keysactive[k]) {
         key(k, false);
       }
@@ -357,6 +367,7 @@ class InputDriver {
   }
 
   std::uint64_t seed_;
+  bool press_rewind_;
   bool press_commands_;
   bool press_cheats_;
   bool move_mouse_;

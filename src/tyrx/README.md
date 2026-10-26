@@ -15,7 +15,7 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 |---|---|---|
 | `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits |
 | [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry, hashing, snapshots and its memory |
-| [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, the shadow tick, call-by-call checks and round trips |
+| [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, the shadow tick, call-by-call checks, round trips and the rewind prototype |
 | [`check/draw/`](check/draw/README.md) | `tyrx::check::draw` | Recording the C code's draw lists, and checking them |
 | [`port/`](port/README.md) | `tyrx::port` | The C level tick ported to C++ as it is, line by line, working on the C globals, with its simulation and drawing separated |
 | [`sim/`](sim/README.md) | `tyrx::sim` | Game logic whose state is encapsulated |
@@ -69,9 +69,10 @@ checks it against it.
 | `TYRX_INPUT_MOUSE=1` | With `TYRX_INPUT_SEED`: also move the mouse and press its buttons ([check](check/README.md)) |
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick ([check](check/README.md)) |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots ([check](check/README.md)) |
+| `TYRX_REWIND=TICKS` | Rewind by holding a key ([check](check/README.md)) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that Tyrian X initiates return a status that names the first check that
 failed: 3 for `TYRX_DIFF`, 4 for pointers the hashes couldn't describe, 5 for
-round trips, 7 for `TYRX_RENDER_DIFF`, 8 for `TYRX_DRAWLIST_CHECK` and 9 for
-`TYRX_SHADOW`.
+round trips, 6 for `TYRX_REWIND_VERIFY`, 7 for `TYRX_RENDER_DIFF`, 8 for
+`TYRX_DRAWLIST_CHECK` and 9 for `TYRX_SHADOW`.
