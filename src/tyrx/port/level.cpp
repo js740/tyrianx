@@ -379,7 +379,7 @@ void enemies_under_tick() {
     if (tempW == 2) {
       soundQueue[3] = S_WEAPON_7;
     }
-    b = JE_newEnemy(0, tempW, 0);
+    b = new_enemy(0, tempW, 0);
   }
 
   if (processorType > 1 && smoothies[3 - 1]) {
@@ -472,8 +472,8 @@ void player_shots_tick() {
 
       if (chain > 0) {
         shotMultiPos[SHOT_MISC] = 0;
-        b = player_shot_create(0, SHOT_MISC, tempShotX, tempShotY, player[0].mouseX, player[0].mouseY, chain,
-                               playerNum);
+        b = port::player_shot_create(0, SHOT_MISC, tempShotX, tempShotY, player[0].mouseX, player[0].mouseY,
+                                     chain, playerNum);
         shotAvail[z] = 0;
         goto draw_player_shot_loop_end;
       }
@@ -527,10 +527,10 @@ void player_shots_tick() {
         if (z != MAX_PWEAPON - 1) {
           if (enemy[b].armorleft != 255) {
             enemy[b].armorleft -= damage;
-            JE_setupExplosion(tempShotX, tempShotY, 0, 0, false, false);
+            setup_explosion(tempShotX, tempShotY, 0, 0, false, false);
           }
           else {
-            JE_doSP(tempShotX + 6, tempShotY + 6, damage / 2 + 3, damage / 4 + 2, temp2);
+            do_sp(tempShotX + 6, tempShotY + 6, damage / 2 + 3, damage / 4 + 2, temp2);
           }
         }
 
@@ -584,17 +584,17 @@ void player_shots_tick() {
             JE_integer tempY = enemy[temp3].ey;
 
             if (enemyDat[enemy[temp3].enemytype].esize != 1) {
-              JE_setupExplosion(tempX, tempY - 6, 0, 1, false, false);
+              setup_explosion(tempX, tempY - 6, 0, 1, false, false);
             }
             else {
-              JE_setupExplosionLarge(enemy[temp3].enemyground, enemy[temp3].explonum / 2, tempX, tempY);
+              setup_explosion_large(enemy[temp3].enemyground, enemy[temp3].explonum / 2, tempX, tempY);
             }
           }
         }
       }
       else {
         if ((temp == 254) && (superEnemy254Jump > 0)) {
-          JE_eventJump(superEnemy254Jump);
+          event_jump(superEnemy254Jump);
         }
 
         for (temp2 = 0; temp2 < 100; temp2++) {
@@ -626,7 +626,7 @@ void player_shots_tick() {
             if (enemyDat[tempW].value > 30000) {
               enemy_offset = 0;
             }
-            b = JE_newEnemy(enemy_offset, tempW, 0);
+            b = new_enemy(enemy_offset, tempW, 0);
             if (b != 0) {
               if ((superArcadeMode != SA_NONE) && (enemy[b - 1].evalue > 30000)) {
                 superArcadePowerUp++;
@@ -677,12 +677,12 @@ void player_shots_tick() {
           }
 
           if (enemyDat[enemy[temp2].enemytype].esize == 1) {
-            JE_setupExplosionLarge(enemy[temp2].enemyground, enemy[temp2].explonum, enemy_screen_x,
-                                   enemy[temp2].ey);
+            setup_explosion_large(enemy[temp2].enemyground, enemy[temp2].explonum, enemy_screen_x,
+                                  enemy[temp2].ey);
             soundQueue[6] = S_EXPLOSION_9;
           }
           else {
-            JE_setupExplosion(enemy_screen_x, enemy[temp2].ey, 0, 1, false, false);
+            setup_explosion(enemy_screen_x, enemy[temp2].ey, 0, 1, false, false);
             soundQueue[6] = S_EXPLOSION_8;
           }
         }
@@ -795,7 +795,7 @@ void enemy_shots_tick() {
 
           enemyShotAvail[z] = true;
 
-          JE_setupExplosion(tempX, tempY, 0, 0, false, false);
+          setup_explosion(tempX, tempY, 0, 0, false, false);
 
           if (player[i].invulnerable_ticks == 0 && (temp = player_damage(temp, &player[i])) > 0) {
             player[i].x_velocity += (enemyShot[z].sxm * temp) / 2;
@@ -875,7 +875,7 @@ void explosions_tick() {
     JE_integer tempY = rep_explosions[i].y + (mt_rand() % 27) - 24;
 
     if (rep_explosions[i].big) {
-      JE_setupExplosionLarge(false, 2, tempX, tempY);
+      setup_explosion_large(false, 2, tempX, tempY);
 
       if (rep_explosions[i].ttl == 1 || mt_rand() % 5 == 1) {
         soundQueue[7] = S_EXPLOSION_11;
@@ -887,7 +887,7 @@ void explosions_tick() {
       rep_explosions[i].delay = 4 + (mt_rand() % 3);
     }
     else {
-      JE_setupExplosion(tempX, tempY, 0, 1, false, false);
+      setup_explosion(tempX, tempY, 0, 1, false, false);
 
       soundQueue[5] = S_EXPLOSION_4;
 
@@ -961,7 +961,7 @@ void warning_tick() {
     }
     else {
       tempW = 560;
-      b = JE_newEnemy(50, tempW, 0);
+      b = new_enemy(50, tempW, 0);
       if (b > 0) {
         enemy[b - 1].enemydie = 560 + (mt_rand() % 3) + 1;
         enemy[b - 1].eyc -= backMove3;
@@ -1005,7 +1005,7 @@ void warning_tick() {
 
   // ------- Random Explosions --------
   if (randomExplosions && mt_rand() % 10 == 1) {
-    JE_setupExplosionLarge(false, 20, mt_rand() % 280, mt_rand() % 180);
+    setup_explosion_large(false, 20, mt_rand() % 280, mt_rand() % 180);
   }
 }
 
@@ -1040,7 +1040,7 @@ void sound_tick() {
   }
 
   if (returnActive && enemyOnScreen == 0) {
-    JE_eventJump(65535);
+    event_jump(65535);
     returnActive = false;
   }
 }
@@ -1095,7 +1095,7 @@ void texts_tick() {
 
   levelTimerCountdown--;
   if (levelTimerCountdown == 0) {
-    JE_eventJump(levelTimerJumpTo);
+    event_jump(levelTimerJumpTo);
   }
 
   if (levelTimerCountdown > 200) {

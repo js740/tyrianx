@@ -54,7 +54,7 @@ checks it against it.
 | `TYRX_HASHLOG=FILE` | Per-tick hash of every hashed block, plus level-start markers ([check](check/README.md)) |
 | `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N ([check](check/README.md)) |
 | `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
-| `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port ([check](check/README.md)) |
+| `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port, call by call ([check](check/README.md)) |
 | `TYRX_RENDER_DIFF=1` | Check the C++ drawing ports in `render/` pixel by pixel ([check](check/README.md)) |
 | `TYRX_SHADOW=1` | Check the C++ level loop against the C code, tick by tick ([check](check/README.md)) |
 | `TYRX_DRAWLIST=FILE` | Write each level tick's draw calls to FILE ([check/draw](check/draw/README.md)) |

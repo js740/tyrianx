@@ -17,10 +17,13 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// C++ ports of game simulation functions.
+// C++ ports of the game logic whose state is encapsulated: each function
+// takes the state it works on instead of using the C globals.  Code moves
+// here from port/ as the globals it uses move into structures.
 //
-// Each function operates on explicit state instead of the C globals, and must
-// match the C function it ports exactly (checked by diff.cpp).
+// Each function must match the C function it ports exactly.  The shadow tick
+// checks that for the code the level tick runs, and check/diff.cpp checks the
+// functions it wraps call by call (TYRX_DIFF).
 
 #pragma once
 
