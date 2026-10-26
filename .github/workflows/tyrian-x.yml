@@ -43,6 +43,10 @@ jobs:
           tools/run_headless.sh ./opentyrian data cmd1.log input 1 10000 TYRX_INPUT_COMMANDS=1
           tools/run_headless.sh ./opentyrian data cmd2.log input 1 10000 TYRX_INPUT_COMMANDS=1 TYRX_INPUT_MIDTICK=1
           tools/compare_hashlogs.py cmd1.log cmd2.log
+      - name: C++ ports match the C code
+        run: |
+          tools/run_headless.sh ./opentyrian data diff-demos.log demos TYRX_DIFF=1 TYRX_RENDER_DIFF=1
+          tools/run_headless.sh ./opentyrian data diff-input.log input 2 10000 TYRX_DIFF=1 TYRX_RENDER_DIFF=1
       - name: Snapshots restore everything a tick depends on
         run: |
           tools/run_headless.sh ./opentyrian data rt.log input 1 10000 TYRX_ROUNDTRIP=7,13

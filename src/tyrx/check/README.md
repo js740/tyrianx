@@ -9,6 +9,8 @@ shrinks as the C++ game takes over.
 | `hashlog.cpp` | The per-tick state hash log and state dumps |
 | `vclock.cpp` | The virtual clock |
 | `input_driver.cpp` | Seeded synthetic input |
+| `diff.cpp` | Call-by-call checks of the ports in `../sim/` |
+| `render_diff.cpp` | Call-by-call checks of the ports in `../render/` |
 | `roundtrip.cpp` | The round-trip test of snapshots |
 
 ## Verifying that a C change preserves gameplay
@@ -103,6 +105,50 @@ reads the joystick directly (`poll_joystick`) in the middle of the tick.
   demo-stop checks), with key repeat timed by the wall clock. The virtual clock
   only advances between ticks, so the repeat timer is deterministic here but
   not in real play.
+
+## Call-by-call checks
+
+`diff.cpp` and `render_diff.cpp` wrap a C function at link time and check a C++
+port of it on every call. Only calls made from *other* object files go through
+a wrapper: calls inside the defining file (e.g. varz.c calling
+`JE_setupExplosion`) bind locally and are not checked.
+
+With `TYRX_DIFF=1`, each call of a function ported to `../sim/` does the
+following:
+1. Copies the state the function owns.
+2. Runs the C function, whose result always stands.
+3. Runs the C++ port on the copy.
+4. Compares the two results field by field.
+
+Mismatches are printed with the differing fields. A per-function summary is
+printed at exit, and exits that Tyrian X initiates return status 3. Checked so
+far: `JE_setupExplosion`.
+
+```sh
+tools/run_headless.sh ./opentyrian DATA diff.log demos TYRX_DIFF=1
+# tyrx diff: JE_setupExplosion   36077 calls, 0 mismatches
+```
+
+To check a new port this way:
+1. Add `--wrap=NAME` to `EXTRA_LDFLAGS` in the Makefile.
+2. Add a `__wrap_NAME` to `diff.cpp` that compares the owned state with
+   `diff_check`. Reflected state structs must be at namespace scope.
+
+With `TYRX_RENDER_DIFF=1`, each call of a drawing function ported to
+`../render/` does the following:
+1. Copies the surface the function draws on.
+2. Has the C++ port draw on the copy, from the state before the call.
+3. Runs the C function, whose result always stands.
+4. Compares every pixel.
+
+Mismatches are printed with the number of differing pixels and the first one. A
+per-function summary is printed at exit, and exits that Tyrian X initiates
+return status 7. Checked so far: `draw_background_1`.
+
+```sh
+tools/run_headless.sh ./opentyrian DATA diff.log demos TYRX_RENDER_DIFF=1
+# tyrx render diff: draw_background_1         18538 calls, 0 mismatches (0 pixels)
+```
 
 ## The round-trip test
 
