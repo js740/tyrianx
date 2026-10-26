@@ -24,6 +24,9 @@
 
 typedef JE_byte JE_MenuChoiceType[MENU_MAX];
 
+extern JE_integer curMenu;
+extern JE_byte curSel[MENU_MAX];
+
 JE_longint JE_cashLeft(void);
 void JE_itemScreen(void);
 
