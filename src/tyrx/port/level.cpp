@@ -431,8 +431,8 @@ void player_shots_tick() {
     JE_word tempX2, tempY2;
     JE_integer damage;
 
-    if (!player_shot_move_and_draw(z, &is_special, &tempShotX, &tempShotY, &damage, &temp2, &chain,
-                                   &playerNum, &tempX2, &tempY2))
+    if (!port::player_shot_move_and_draw(z, &is_special, &tempShotX, &tempShotY, &damage, &temp2, &chain,
+                                         &playerNum, &tempX2, &tempY2))
     {
       goto draw_player_shot_loop_end;
     }

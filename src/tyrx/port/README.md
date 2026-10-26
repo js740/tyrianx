@@ -40,3 +40,4 @@ Ported so far:
   (`JE_drawShield`), the weapon power and the power bar.
 - The enemies (`enemy.cpp`, `JE_drawEnemy`), which are drawn, then move, fire
   and launch enemies.
+- The player shots (`shots.cpp`, `player_shot_move_and_draw`).
