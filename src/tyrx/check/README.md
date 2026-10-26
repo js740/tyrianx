@@ -62,6 +62,28 @@ loop iteration"), and CI checks that the logs match.
 
 ### Touring more of the game
 
+`TYRX_INPUT_CHEATS=1` uses the game's own key commands to show more of it than
+random play, which rarely gets past the first level: in each level, it turns
+on the debug display at the level's tick 30 and off at tick 230, toggles a
+random smoothie (screen effect) every 100 ticks, and skips the level from tick
+500. In about one level in four, it also gives the player the Nort ship, with
+its weapons and the Astral Zone special, for the rest of the game. Between
+levels it moves to the next detail level, as the setup menu would, which
+changes what is drawn (blended backgrounds, darkening, transparent
+explosions), and to the next difficulty, from Wimp to Nortaneous. In 20,000
+ticks, a run visits about 25 levels.
+
+`TYRX_INPUT_TWO_PLAYER=1` plays two-player arcade games instead of the full
+game, and `TYRX_INPUT_ARCADE=1` one-player arcade games, in which pickups give
+special weapons that fire with the main weapon: the game-mode menu makes its
+choice right away (keys sent while it fades in can be lost, so the driver can't
+reliably move to it), and between levels the driver plays the next level.
+Player 2's controller is the mouse: with `TYRX_INPUT_MOUSE=1`, the driver moves
+it and holds its left and right buttons in seeded runs, as it does the keys, so
+player 2 moves, fires and uses its sidekicks; without it, player 2 doesn't
+move, but its ship, gauges and sidekicks are still simulated and drawn. In
+one-player games, the mouse moves player 1 along with the keys.
+
 `TYRX_INPUT_JOYSTICK=1` replaces any real joysticks with one virtual joystick
 (SDL's virtual joystick driver, with the default assignments) and drives its
 stick, fire and sidekick buttons along with the keys, plus a fire-mode change
@@ -74,7 +96,8 @@ reads the joystick directly (`poll_joystick`) in the middle of the tick.
 - Without `TYRX_INPUT_MIDTICK`, synthetic input arrives only during
   frame-pacing sleeps, so a comparison shows that the simulation is unchanged
   for input that arrives between ticks.
-- Mouse input is not synthesized yet.
+- Synthetic mouse input (`TYRX_INPUT_MOUSE`) is only relative motion and the
+  left and right buttons.
 - Joysticks are read in the middle of a tick (`poll_joystick` in
   `JE_playerMovement`, and `push_joysticks_as_keyboard` in the game-over and
   demo-stop checks), with key repeat timed by the wall clock. The virtual clock

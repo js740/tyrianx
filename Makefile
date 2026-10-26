@@ -86,7 +86,7 @@ ifeq ($(WITH_NETWORK), true)
 endif
 
 ifeq ($(WITH_TYRX), true)
-    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen,--wrap=init_joysticks
+    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen,--wrap=gameplaySelect,--wrap=init_joysticks
     EXTRA_LDFLAGS += -Wl,--wrap=keyboardHasInput,--wrap=hasInput,--wrap=keyboardClearInput,--wrap=mouseClearInput \
                      -Wl,--wrap=mouseGetRelativePosition,--wrap=push_joysticks_as_keyboard,--wrap=poll_joystick \
                      -Wl,--wrap=handleSdlEvents
