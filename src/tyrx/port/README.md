@@ -31,3 +31,6 @@ Ported so far:
   `draw_boss_bar`), the in-game displays (`JE_inGameDisplays`) and the copy of
   the playing area to the screen (in `JE_starShowVGA`), with the text drawing
   of `fonthand.c` (`text.cpp`).
+- The explosions, the enemy shots, the low armor warning, the debug display,
+  the bonus message, the level timer and game over, which the level loop draws
+  itself.

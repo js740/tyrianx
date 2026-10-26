@@ -810,12 +810,12 @@ void enemy_shots_tick() {
           }
 
           if (enemyShot[z].sgr >= 500) {
-            blit_sprite2(VGAScreen, enemyShot[z].sx, enemyShot[z].sy, spriteSheet12,
-                         enemyShot[z].sgr + enemyShot[z].animate - 500);
+            draw::blit_sprite2(VGAScreen, enemyShot[z].sx, enemyShot[z].sy, spriteSheet12,
+                               enemyShot[z].sgr + enemyShot[z].animate - 500);
           }
           else {
-            blit_sprite2(VGAScreen, enemyShot[z].sx, enemyShot[z].sy, spriteSheet8,
-                         enemyShot[z].sgr + enemyShot[z].animate);
+            draw::blit_sprite2(VGAScreen, enemyShot[z].sx, enemyShot[z].sy, spriteSheet8,
+                               enemyShot[z].sgr + enemyShot[z].animate);
           }
         }
       }
@@ -917,12 +917,12 @@ void explosions_tick() {
     }
     else {
       if (explosionTransparent) {
-        blit_sprite2_blend(VGAScreen, explosions[j].x, explosions[j].y, explosionSpriteSheet,
-                           explosions[j].sprite + 1);
+        draw::blit_sprite2_blend(VGAScreen, explosions[j].x, explosions[j].y, explosionSpriteSheet,
+                                 explosions[j].sprite + 1);
       }
       else {
-        blit_sprite2(VGAScreen, explosions[j].x, explosions[j].y, explosionSpriteSheet,
-                     explosions[j].sprite + 1);
+        draw::blit_sprite2(VGAScreen, explosions[j].x, explosions[j].y, explosionSpriteSheet,
+                           explosions[j].sprite + 1);
       }
 
       explosions[j].ttl--;
@@ -994,11 +994,11 @@ void warning_tick() {
       else if (warningCol < 113) {
         warningColChange = -warningColChange;
       }
-      fill_rectangle_xy(VGAScreen, 24, 181, 138, 183, warningCol);
-      fill_rectangle_xy(VGAScreen, 175, 181, 287, 183, warningCol);
-      fill_rectangle_xy(VGAScreen, 24, 0, 287, 3, warningCol);
+      draw::fill_rectangle_xy(VGAScreen, 24, 181, 138, 183, warningCol);
+      draw::fill_rectangle_xy(VGAScreen, 175, 181, 287, 183, warningCol);
+      draw::fill_rectangle_xy(VGAScreen, 24, 0, 287, 3, warningCol);
 
-      JE_outText(VGAScreen, 140, 178, "WARNING", 7, (warningCol % 16) / 2);
+      draw::JE_outText(VGAScreen, 140, 178, "WARNING", 7, (warningCol % 16) / 2);
     }
   }
 
@@ -1057,25 +1057,25 @@ void texts_tick() {
     }
     tempStr[9] = '\0';
     sprintf(buffer, "SM = %s", tempStr);
-    JE_outText(VGAScreen, 30, 70, buffer, 4, 0);
+    draw::JE_outText(VGAScreen, 30, 70, buffer, 4, 0);
 
     sprintf(buffer, "Memory left = %d", -1);
-    JE_outText(VGAScreen, 30, 80, buffer, 4, 0);
+    draw::JE_outText(VGAScreen, 30, 80, buffer, 4, 0);
     sprintf(buffer, "Enemies onscreen = %d", enemyOnScreen);
-    JE_outText(VGAScreen, 30, 90, buffer, 6, 0);
+    draw::JE_outText(VGAScreen, 30, 90, buffer, 6, 0);
 
     debugHist += debugTime - lastDebugTime;
     debugHistCount++;
     sprintf(tempStr, "%2.3f", debugHistCount / (debugHist * 1e-3f));
     sprintf(buffer, "X:%d Y:%-5d  %s FPS  %d %d %d %d", (mapX - 1) * 12 + player[0].x, curLoc, tempStr,
             player[0].x_velocity, player[0].y_velocity, player[0].x, player[0].y);
-    JE_outText(VGAScreen, 45, 175, buffer, 15, 3);
+    draw::JE_outText(VGAScreen, 45, 175, buffer, 15, 3);
     lastDebugTime = debugTime;
   }
 
   if (displayTime > 0) {
     displayTime--;
-    JE_outTextAndDarken(VGAScreen, 90, 10, miscText[59], 15, (JE_byte)flash - 8, FONT_SHAPES);
+    draw::JE_outTextAndDarken(VGAScreen, 90, 10, miscText[59], 15, (JE_byte)flash - 8, FONT_SHAPES);
     flash += flashChange;
     if (flash > 4 || flash == 0) {
       flashChange = -flashChange;
@@ -1110,9 +1110,9 @@ void texts_tick() {
     soundQueue[7] = S_WARNING;
   }
 
-  JE_textShade(VGAScreen, 140, 6, miscText[66], 7, (levelTimerCountdown % 20) / 3, FULL_SHADE);
+  draw::JE_textShade(VGAScreen, 140, 6, miscText[66], 7, (levelTimerCountdown % 20) / 3, FULL_SHADE);
   sprintf(buffer, "%.1f", levelTimerCountdown / 100.0f);
-  JE_dString(VGAScreen, 100, 2, buffer, SMALL_FONT_SHAPES);
+  draw::JE_dString(VGAScreen, 100, 2, buffer, SMALL_FONT_SHAPES);
 }
 
 // Game over, and the input for stopping demos, pausing, the menu and cheats.
@@ -1133,7 +1133,7 @@ bool game_over_and_input_tick() {
         reallyEndLevel = true;
       }
       else {
-        JE_dString(VGAScreen, 120, 60, miscText[21], FONT_SHAPES);  // game over
+        draw::JE_dString(VGAScreen, 120, 60, miscText[21], FONT_SHAPES);  // game over
       }
 
       if (firstGameOver) {
