@@ -29,8 +29,8 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 - **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
   `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently covers
   `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock, and
-  `JE_itemScreen` for the input driver. It works for any function called across
-  object files and needs no source changes.
+  `JE_itemScreen` and `init_joysticks` for the input driver. It works for any
+  function called across object files and needs no source changes.
   The input record (`input_record.cpp`) wraps `keyboardHasInput`, `hasInput`,
   `keyboardClearInput`, `mouseClearInput` and `mouseGetRelativePosition`,
   and the joystick polls and event polling.
@@ -48,6 +48,7 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
 | `TYRX_INPUT_COMMANDS=1` | With `TYRX_INPUT_SEED`: also press a command every 300 ticks ([check](check/README.md)) |
 | `TYRX_INPUT_MIDTICK=1` | With `TYRX_INPUT_SEED`: send input while ticks run, not between them ([check](check/README.md)) |
+| `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick ([check](check/README.md)) |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots ([check](check/README.md)) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 

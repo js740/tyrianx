@@ -60,15 +60,26 @@ game-over, demo-stop and pause/menu/cheat checks, so there the logs diverge at
 the first command. This branch removes those polls ("Poll events once per level
 loop iteration"), and CI checks that the logs match.
 
+### Touring more of the game
+
+`TYRX_INPUT_JOYSTICK=1` replaces any real joysticks with one virtual joystick
+(SDL's virtual joystick driver, with the default assignments) and drives its
+stick, fire and sidekick buttons along with the keys, plus a fire-mode change
+every 200 ticks. Joystick runs are deterministic and survive round trips, but
+with `TYRX_INPUT_MIDTICK=1` they diverge at the first tick: `JE_playerMovement`
+reads the joystick directly (`poll_joystick`) in the middle of the tick.
+
 ### Caveats
 
 - Without `TYRX_INPUT_MIDTICK`, synthetic input arrives only during
   frame-pacing sleeps, so a comparison shows that the simulation is unchanged
   for input that arrives between ticks.
-- Joystick and mouse input are not synthesized yet. Joysticks are also read in
-  the middle of a tick (`poll_joystick` in `JE_playerMovement`, and
-  `push_joysticks_as_keyboard` in the game-over and demo-stop checks), with key
-  repeat timed by the wall clock.
+- Mouse input is not synthesized yet.
+- Joysticks are read in the middle of a tick (`poll_joystick` in
+  `JE_playerMovement`, and `push_joysticks_as_keyboard` in the game-over and
+  demo-stop checks), with key repeat timed by the wall clock. The virtual clock
+  only advances between ticks, so the repeat timer is deterministic here but
+  not in real play.
 
 ## The round-trip test
 

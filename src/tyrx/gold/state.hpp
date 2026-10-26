@@ -248,6 +248,11 @@ std::span<StateBlock const> state_blocks();
 // Blocks of hashed classes, in state_blocks() order.
 std::span<StateBlock const *const> hashed_blocks();
 
+// Registers memory that the C code allocates at run time (e.g. the joystick
+// array) as a block of a class that is not hashed, so that snapshots of that
+// class include it.  Must be called before the first snapshot.
+void register_heap_block(std::string_view name, StateClass cls, void *addr, std::size_t size);
+
 // Hashes of every hashed block, in hashed_blocks() order.
 std::vector<std::uint64_t> block_hashes();
 
