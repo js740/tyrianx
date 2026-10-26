@@ -33,4 +33,7 @@ bool vclock_enabled();
 // Milliseconds since startup on the virtual clock.
 Uint32 vclock_now();
 
+// The value that SDL_GetTicks, real or virtual, last returned.
+Uint32 last_sdl_ticks();
+
 }  // namespace tyrx

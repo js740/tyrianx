@@ -39,6 +39,8 @@
 #include "c_state.hpp"
 #include "diff.hpp"
 #include "input_driver.hpp"
+#include "late_sampling.hpp"
+#include "present_timing.hpp"
 #include "rewind.hpp"
 #include "roundtrip.hpp"
 
@@ -129,7 +131,14 @@ struct Runtime {
     }
   }
 
+  void level_ended() {
+    present_timing_level_ended();
+    late_sampling_level_ended();
+  }
+
   void level_tick() {
+    present_timing_level_tick();
+    late_sampling_level_tick();
     if (exit_after_ticks >= 0 && (long)tick >= exit_after_ticks) {
       exit_run();
     }
@@ -203,6 +212,7 @@ namespace {
 [[maybe_unused]] bool const hooks_installed = [] {
   game_hooks.level_initialized = [] { runtime().level_start(); };
   game_hooks.level_tick = [] { runtime().level_tick(); };
+  game_hooks.level_ended = [] { runtime().level_ended(); };
   return true;
 }();
 

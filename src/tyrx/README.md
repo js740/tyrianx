@@ -21,9 +21,11 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 - **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
   `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently
   covers `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock,
-  `JE_itemScreen` and `init_joysticks` for the input driver, and
-  `JE_setupExplosion` for the C++ port check. It works for any function called
-  across object files and needs no source changes.
+  `JE_itemScreen` and `init_joysticks` for the input driver,
+  `JE_setupExplosion` for the C++ port check, and `setFrameSpeed`,
+  `setFrameCount`, `delayUntilElapsed`, `JE_showVGA` and `handleSdlEvents` for
+  present timing and late sampling (`pacing.cpp`). It works for any function
+  called across object files and needs no source changes.
 - **State access**: the C++ code reads and writes the C globals directly,
   through their header declarations. All hashed state has external linkage.
 
@@ -77,6 +79,8 @@ if there were any, so CI fails until the target is registered.
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick (see below) |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots (see below) |
 | `TYRX_REWIND=TICKS` | Rewind by holding a key (see below) |
+| `TYRX_PRESENT_LOG=FILE` | Measure when level frames are presented, in real time (see below) |
+| `TYRX_LATE_SAMPLING=MODE` | Prototype of reading input shortly before each deadline, in real time (see below) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 ## Verifying that a C change preserves gameplay
@@ -188,6 +192,84 @@ For testing, `TYRX_INPUT_REWIND=1` makes the synthetic input hold the rewind
 key for 40 of every 400 ticks. `TYRX_REWIND_VERIFY=1` checks each restored
 state against the hash recorded when it was captured; exits that Tyrian X
 initiates return status 6 on a mismatch.
+
+## Present timing
+
+`TYRX_PRESENT_LOG=FILE` measures, in real time (without `TYRX_VCLOCK`), how
+each level tick's frame is paced and presented. `JE_starShowVGA` waits for the
+tick's deadline (`delayUntilElapsed`) and then presents the frame
+(`JE_showVGA`). For each tick, the log has a line with:
+- the tick and its length in timer periods (`frameCountMax`);
+- the deadline, in milliseconds on `SDL_GetTicks`' clock;
+- when the wait woke up, and when the present started and ended, relative to
+  the deadline;
+- when the poll that read the tick's input ran, relative to the present's
+  start (it follows the previous tick's present);
+- flags: `m` if the tick ran a whole timer period or more late, so the C code
+  moved the deadline, and `s` if a pause, menu or help screen was shown during
+  the tick.
+
+At exit, a summary on stderr gives the mean, standard deviation and
+percentiles of those times over the ticks without flags, of each present
+interval minus its nominal length (the frame-to-frame jitter), and of the time
+from reading input to presenting its result:
+
+```sh
+TYRX_PRESENT_LOG=present.log ./opentyrian
+# tyrx present: 6634 ticks measured, 0 with the deadline moved, ...
+# tyrx present: wake - deadline            mean   0.680  sd  0.406  min  -0.243  ...
+# tyrx present: present start - deadline   mean   0.684  sd  0.406  min  -0.240  ...
+# tyrx present: present duration           mean   0.390  sd  0.075  min   0.193  ...
+# tyrx present: interval - nominal         mean  -0.000  sd  0.664  min  -1.479  ...
+# tyrx present: present start - input      mean  28.359  sd  0.663  min  27.044  ...
+```
+
+The deadline is `frameCountEnd` in `nortsong.c`, which is static, so the wraps
+of `setFrameSpeed` and `setFrameCount` repeat its arithmetic exactly, and each
+wait checks the copy against `getFrameCountTicks`. Times come from
+`SDL_GetPerformanceCounter`, offset to match `SDL_GetTicks`, which the C code
+uses. Run it with a real display; with `SDL_VIDEODRIVER=dummy`, the present
+is only software scaling.
+
+The C code's wait is accurate to about a millisecond: it reads the time in
+whole milliseconds (`SDL_GetTicks`, which drops up to 1 ms) and rounds the
+sleep to whole milliseconds. Each tick's input is read right after the
+previous present, so it reaches the screen a whole tick later.
+
+## Late input sampling
+
+`TYRX_LATE_SAMPLING` (in real time) is a prototype of reading each tick's
+input shortly before its deadline, while still presenting at the deadline. It
+replaces the C code's waits in level ticks, without changing what the game
+computes from its input:
+- `precise`: the wait before each present sleeps until 1 ms before the
+  deadline and then spins.
+- `auto`: also, before the poll that follows each present, it sleeps until a
+  budget before the next deadline. The budget is the longest time, over the
+  last 64 ticks, from that sleep's target to the next tick's wait (sleep
+  overshoot plus the tick's work), plus 0.5 ms, and at least 1 ms.
+- `MS`: the same with a fixed budget of MS milliseconds.
+
+Playing demo 1 (6,634 ticks) on Linux with `SDL_VIDEODRIVER=dummy`:
+
+| | Present start − deadline | Interval − nominal | Input read → present |
+|---|---|---|---|
+| C code's waits | 0.68 ms mean, 0.41 sd | 0.66 ms sd, −1.48 to +1.20 | 28.36 ms mean |
+| `precise` | 0.004 ms mean, 0.003 sd | 0.004 ms sd, −0.11 to +0.11 | 28.37 ms mean |
+| `auto` | 0.003 ms mean, 0.002 sd | 0.002 ms sd, −0.07 to +0.07 | 1.31 ms mean |
+
+The same in a window on a Wayland desktop, with an optimized build:
+
+| | Present start − deadline | Interval − nominal | Input read → present |
+|---|---|---|---|
+| C code's waits | 0.68 ms mean, 0.40 sd | 0.64 ms sd, −1.37 to +1.22 | 28.27 ms mean |
+| `precise` | 0.004 ms mean, 0.011 sd | 0.015 ms sd, −0.86 to +0.86 | 28.25 ms mean |
+| `auto` | 0.003 ms mean, 0.003 sd | 0.004 ms sd, −0.13 to +0.13 | 1.24 ms mean |
+
+No tick ran past its deadline in either case. `SDL_RenderPresent` took about
+0.5 ms on the desktop, and doesn't wait for the display, so these times end
+when the frame is handed to the compositor, not when it appears. Spinning
+costs up to 1 ms of CPU per tick.
 
 ## C++ ports of the simulation (`sim/`)
 

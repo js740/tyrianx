@@ -30,12 +30,15 @@ namespace {
 
 bool const enabled = env("TYRX_VCLOCK") != nullptr;
 Uint32 now_ms = 0;
+Uint32 last_ticks = 0;
 
 }  // namespace
 
 bool vclock_enabled() { return enabled; }
 
 Uint32 vclock_now() { return now_ms; }
+
+Uint32 last_sdl_ticks() { return last_ticks; }
 
 }  // namespace tyrx
 
@@ -45,7 +48,10 @@ extern "C" Uint32 __real_SDL_GetTicks(void);
 extern "C" void __real_SDL_Delay(Uint32 ms);
 extern "C" std::time_t __real_time(std::time_t *t);
 
-extern "C" Uint32 __wrap_SDL_GetTicks(void) { return tyrx::enabled ? tyrx::now_ms : __real_SDL_GetTicks(); }
+extern "C" Uint32 __wrap_SDL_GetTicks(void) {
+  tyrx::last_ticks = tyrx::enabled ? tyrx::now_ms : __real_SDL_GetTicks();
+  return tyrx::last_ticks;
+}
 
 extern "C" void __wrap_SDL_Delay(Uint32 ms) {
   if (tyrx::enabled) {
