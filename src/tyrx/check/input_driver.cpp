@@ -25,6 +25,8 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdio>
+#include <initializer_list>
 
 namespace tyrx::check {
 
@@ -34,7 +36,10 @@ bool in_item_screen = false;  // see __wrap_JE_itemScreen
 
 class InputDriver {
  public:
-  explicit InputDriver(long seed) : seed_(static_cast<std::uint64_t>(seed)) {}
+  explicit InputDriver(long seed)
+      : seed_(static_cast<std::uint64_t>(seed)),
+        press_commands_(env("TYRX_INPUT_COMMANDS") != nullptr),
+        midtick_(env("TYRX_INPUT_MIDTICK") != nullptr) {}
 
   void advance(Uint32 from, Uint32 to) {
     if (!focused_) {
@@ -56,32 +61,56 @@ class InputDriver {
       return;
     }
 
-    // Set the keys for the next tick, once per tick.  Events go out during
-    // the frame-pacing wait, as real input would arrive, and only for keys
-    // whose state differs from the game's, so what the game sees depends only
-    // on the seed and the tick, even after a snapshot is restored.
-    std::uint64_t const next_tick = current_tick();
-    if (next_tick == pushed_tick_) {
-      return;
-    }
-    pushed_tick_ = next_tick;
-    for (std::size_t i = 0; i < kKeys.size(); ++i) {
-      bool const down = key_down(i, next_tick);
-      if (down != keysactive[kKeys[i]]) {
-        key(kKeys[i], down);
-      }
+    if (!midtick_) {
+      push_input(current_tick());
     }
   }
 
   // The game's key state was restored, so push the next tick's keys again.
   void on_snapshot_restored() { pushed_tick_ = UINT64_MAX; }
 
+  // Called at the top of each level tick, before it runs.
   void on_level_tick() {
     last_tick_ms_ = vclock_now();
     tick_ms_valid_ = true;
+    if (midtick_) {
+      push_input(current_tick() + 1);
+    }
   }
 
  private:
+  // Sets the input for tick `next_tick`, once per tick: events go out only for
+  // keys whose state differs from the game's, so what the game sees depends
+  // only on the seed and the tick, even after a snapshot is restored.  They go
+  // out during the frame-pacing wait before the tick, as real input usually
+  // arrives, or with TYRX_INPUT_MIDTICK at the top of the tick before: after
+  // the game has polled events for it, so they arrive while it runs.  That
+  // shows whether the game reads input only at tick boundaries.
+  void push_input(std::uint64_t next_tick) {
+    if (next_tick == pushed_tick_) {
+      return;
+    }
+    pushed_tick_ = next_tick;
+    for (std::size_t i = 0; i < kKeys.size(); ++i) {
+      set_key(kKeys[i], key_down(i, next_tick));
+    }
+    if (press_commands_) {
+      // Backspace+Minus cycles the level filter (JE_mainKeyboardInput): a
+      // command that the game handles in the middle of a tick.
+      bool const down = next_tick % 300 == 150;
+      set_key(kCommandModifier, down);
+      set_key(SDL_SCANCODE_MINUS, down);
+    }
+  }
+
+  static void set_key(SDL_Scancode scancode, bool down) {
+    if (down != keysactive[scancode]) {
+      key(scancode, down);
+    }
+  }
+
+  static constexpr SDL_Scancode kCommandModifier = SDL_SCANCODE_BACKSPACE;
+
   static std::uint64_t mix(std::uint64_t x) {  // splitmix64 finalizer
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ull;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebull;
@@ -134,9 +163,16 @@ class InputDriver {
         key(k, false);
       }
     }
+    for (SDL_Scancode k : {kCommandModifier, SDL_SCANCODE_MINUS}) {
+      if (keysactive[k]) {
+        key(k, false);
+      }
+    }
   }
 
   std::uint64_t seed_;
+  bool press_commands_;
+  bool midtick_;
   std::uint64_t pushed_tick_ = UINT64_MAX;
   bool focused_ = false;
   bool tick_ms_valid_ = false;
