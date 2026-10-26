@@ -17,8 +17,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The level's events (JE_eventSystem in tyrian2.c).  The one thing an event
-// draws is a message in the message bar (draw_text_window).
+// The level's events (JE_eventSystem, and JE_createNewEventEnemy, JE_eventJump
+// and JE_searchFor, in tyrian2.c).  The one thing an event draws is a message
+// in the message bar (draw_text_window).
 
 #include "port.hpp"
 
@@ -112,11 +113,11 @@ void event_system() {
     } break;
 
     case 6:  // Ground Enemy
-      JE_createNewEventEnemy(0, 25, 0);
+      create_new_event_enemy(0, 25, 0);
       break;
 
     case 7:  // Top Enemy
-      JE_createNewEventEnemy(0, 50, 0);
+      create_new_event_enemy(0, 50, 0);
       break;
 
     case 8:
@@ -128,7 +129,7 @@ void event_system() {
       break;
 
     case 10:  // Ground Enemy 2
-      JE_createNewEventEnemy(0, 75, 0);
+      create_new_event_enemy(0, 75, 0);
       break;
 
     case 11:
@@ -160,16 +161,16 @@ void event_system() {
           break;
       }
       eventRec[eventLoc - 1].eventdat6 = 0;  // We use EVENTDAT6 for the background
-      JE_createNewEventEnemy(0, temp, 0);
-      JE_createNewEventEnemy(1, temp, 0);
+      create_new_event_enemy(0, temp, 0);
+      create_new_event_enemy(1, temp, 0);
       if (b > 0) {
         enemy[b - 1].ex += 24;
       }
-      JE_createNewEventEnemy(2, temp, 0);
+      create_new_event_enemy(2, temp, 0);
       if (b > 0) {
         enemy[b - 1].ey -= 28;
       }
-      JE_createNewEventEnemy(3, temp, 0);
+      create_new_event_enemy(3, temp, 0);
       if (b > 0) {
         enemy[b - 1].ex += 24;
         enemy[b - 1].ey -= 28;
@@ -185,7 +186,7 @@ void event_system() {
       break;
 
     case 15:  // Sky Enemy
-      JE_createNewEventEnemy(0, 0, 0);
+      create_new_event_enemy(0, 0, 0);
       break;
 
     case 16: {  // Window Text
@@ -201,14 +202,14 @@ void event_system() {
     }
 
     case 17:  // Ground Bottom
-      JE_createNewEventEnemy(0, 25, 0);
+      create_new_event_enemy(0, 25, 0);
       if (b > 0) {
         enemy[b - 1].ey = 190 + eventRec[eventLoc - 1].eventdat5;
       }
       break;
 
     case 18:  // Sky Enemy on Bottom
-      JE_createNewEventEnemy(0, 0, 0);
+      create_new_event_enemy(0, 0, 0);
       if (b > 0) {
         enemy[b - 1].ey = 190 + eventRec[eventLoc - 1].eventdat5;
       }
@@ -339,7 +340,7 @@ void event_system() {
       break;
 
     case 23:  // Sky Enemy on Bottom
-      JE_createNewEventEnemy(0, 50, 0);
+      create_new_event_enemy(0, 50, 0);
       if (b > 0) {
         enemy[b - 1].ey = 180 + eventRec[eventLoc - 1].eventdat5;
       }
@@ -460,7 +461,7 @@ void event_system() {
       break;
 
     case 32:  // create enemy
-      JE_createNewEventEnemy(0, 50, 0);
+      create_new_event_enemy(0, 50, 0);
       if (b > 0) {
         enemy[b - 1].ey = 190;
       }
@@ -643,7 +644,7 @@ void event_system() {
           temp = 75;
           break;
       }
-      JE_createNewEventEnemy(0, temp, tempDat);
+      create_new_event_enemy(0, temp, tempDat);
       eventRec[eventLoc - 1].eventdat = tempDat2;
       eventRec[eventLoc - 1].eventdat3 = tempDat;
       eventRec[eventLoc - 1].eventdat6 = tempDat3;
@@ -654,7 +655,7 @@ void event_system() {
       break;
 
     case 54:
-      JE_eventJump(eventRec[eventLoc - 1].eventdat);
+      event_jump(eventRec[eventLoc - 1].eventdat);
       break;
 
     case 55:  // Enemy Global AccelRev
@@ -678,7 +679,7 @@ void event_system() {
       break;
 
     case 56:  // Ground2 Bottom
-      JE_createNewEventEnemy(0, 75, 0);
+      create_new_event_enemy(0, 75, 0);
       if (b > 0) {
         enemy[b - 1].ey = 190;
       }
@@ -757,20 +758,19 @@ void event_system() {
         bool found = false;
 
         for (temp = 1; temp <= 19; temp++) {
-          found = found || JE_searchFor(temp, NULL);
+          found = found || search_for(temp, NULL);
         }
 
         if (!found) {
-          JE_eventJump(eventRec[eventLoc - 1].eventdat);
+          event_jump(eventRec[eventLoc - 1].eventdat);
         }
       }
-      else if (!JE_searchFor(eventRec[eventLoc - 1].eventdat2, NULL) &&
+      else if (!search_for(eventRec[eventLoc - 1].eventdat2, NULL) &&
                (eventRec[eventLoc - 1].eventdat3 == 0 ||
-                !JE_searchFor(eventRec[eventLoc - 1].eventdat3, NULL)) &&
-               (eventRec[eventLoc - 1].eventdat4 == 0 ||
-                !JE_searchFor(eventRec[eventLoc - 1].eventdat4, NULL)))
+                !search_for(eventRec[eventLoc - 1].eventdat3, NULL)) &&
+               (eventRec[eventLoc - 1].eventdat4 == 0 || !search_for(eventRec[eventLoc - 1].eventdat4, NULL)))
       {
-        JE_eventJump(eventRec[eventLoc - 1].eventdat);
+        event_jump(eventRec[eventLoc - 1].eventdat);
       }
       break;
 
@@ -778,7 +778,7 @@ void event_system() {
       if (((((intptr_t)mapYPos - (intptr_t)&megaData1.mainmap) / sizeof(JE_byte *)) * 2) <=
           (unsigned)eventRec[eventLoc - 1].eventdat2)
       {
-        JE_eventJump(eventRec[eventLoc - 1].eventdat);
+        event_jump(eventRec[eventLoc - 1].eventdat);
       }
       break;
 
@@ -832,7 +832,7 @@ void event_system() {
         do {
           temp = (mt_rand() % (eventRec[eventLoc - 1].eventdat2 + 1 - eventRec[eventLoc - 1].eventdat)) +
                  eventRec[eventLoc - 1].eventdat;
-        } while (!(JE_searchFor(temp, &enemy_i) && enemy[enemy_i].eyc == 0));
+        } while (!(search_for(temp, &enemy_i) && enemy[enemy_i].eyc == 0));
 
         newPL[eventRec[eventLoc - 1].eventdat3 - 80] = temp;
       }
@@ -904,6 +904,113 @@ void event_system() {
   }
 
   eventLoc++;
+}
+
+// Port of JE_createNewEventEnemy (tyrian2.c).
+void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 uniqueShapeTableI) {
+  int i;
+
+  b = 0;
+
+  for (i = enemyOffset; i < enemyOffset + 25; i++) {
+    if (enemyAvail[i] == 1) {
+      b = i + 1;
+      break;
+    }
+  }
+
+  if (b == 0) {
+    return;
+  }
+
+  tempW = eventRec[eventLoc - 1].eventdat + enemyTypeOfs;
+
+  enemyAvail[b - 1] = make_enemy(&enemy[b - 1], tempW, uniqueShapeTableI);
+
+  if (eventRec[eventLoc - 1].eventdat2 != -99) {
+    switch (enemyOffset) {
+      case 0:
+        enemy[b - 1].ex = eventRec[eventLoc - 1].eventdat2 - (mapX - 1) * 24;
+        enemy[b - 1].ey -= backMove2;
+        break;
+      case 25:
+      case 75:
+        enemy[b - 1].ex = eventRec[eventLoc - 1].eventdat2 - (mapX - 1) * 24 - 12;
+        enemy[b - 1].ey -= backMove;
+        break;
+      case 50:
+        if (background3x1) {
+          enemy[b - 1].ex = eventRec[eventLoc - 1].eventdat2 - (mapX - 1) * 24 - 12;
+        }
+        else {
+          enemy[b - 1].ex = eventRec[eventLoc - 1].eventdat2 - mapX3 * 24 - 24 * 2 + 6;
+        }
+        enemy[b - 1].ey -= backMove3;
+
+        if (background3x1b) {
+          enemy[b - 1].ex -= 6;
+        }
+        break;
+    }
+    enemy[b - 1].ey = -28;
+    if (background3x1b && enemyOffset == 50) {
+      enemy[b - 1].ey += 4;
+    }
+  }
+
+  if (smallEnemyAdjust && enemy[b - 1].size == 0) {
+    enemy[b - 1].ex -= 10;
+    enemy[b - 1].ey -= 7;
+  }
+
+  enemy[b - 1].ey += eventRec[eventLoc - 1].eventdat5;
+  enemy[b - 1].eyc += eventRec[eventLoc - 1].eventdat3;
+  enemy[b - 1].linknum = eventRec[eventLoc - 1].eventdat4;
+  enemy[b - 1].fixedmovey = eventRec[eventLoc - 1].eventdat6;
+}
+
+// Port of JE_eventJump (tyrian2.c).
+void event_jump(JE_word jump) {
+  JE_word tempW;
+
+  if (jump == 65535) {
+    curLoc = returnLoc;
+  }
+  else {
+    returnLoc = curLoc + 1;
+    curLoc = jump;
+  }
+  tempW = 0;
+  do {
+    tempW++;
+  } while (!(eventRec[tempW - 1].eventtime >= curLoc));
+  eventLoc = tempW - 1;
+}
+
+// Port of JE_searchFor (tyrian2.c).
+bool search_for(JE_byte PLType, JE_byte *out_index) {
+  int found_id = -1;
+
+  for (int i = 0; i < 100; i++) {
+    if (enemyAvail[i] != 0 || enemy[i].linknum != PLType) {
+      continue;
+    }
+
+    found_id = i;
+    if (galagaMode) {
+      enemy[i].evalue += enemy[i].evalue;
+    }
+  }
+
+  if (found_id != -1) {
+    if (out_index) {
+      *out_index = found_id;
+    }
+    return true;
+  }
+  else {
+    return false;
+  }
 }
 
 }  // namespace tyrx::port

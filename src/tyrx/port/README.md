@@ -56,3 +56,11 @@ With these, the C++ level tick makes all of its drawing calls itself. A call
 graph of the C sources shows that none of the C functions it still calls can
 draw, apart from the pause screen, the in-game menu and help, which the shadow
 tick doesn't run.
+
+The game logic that the tick calls is ported as well (creating explosions,
+superpixels, enemies and player shots, event jumps, special-move codes, ship
+info and power-ups), checked by the shadow tick's state comparison. What the
+C++ tick still calls in C is the platform layer (input, sound, music, frame
+pacing, sprite loading, the random number generator), the pause screen, the
+in-game menu and help, which are separate loops with their own drawing, and a
+few settings functions.

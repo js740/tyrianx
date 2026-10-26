@@ -53,12 +53,12 @@ void main_keyboard_input() {
         player[0].items.shield = extraShips[z + 8];
         memset(shotMultiPos, 0, sizeof(shotMultiPos));
 
-        if (player[0].weapon_mode > JE_portConfigs()) {
+        if (player[0].weapon_mode > port_configs()) {
           player[0].weapon_mode = 1;
         }
 
         tempW = player[0].armor;
-        JE_getShipInfo();
+        get_ship_info();
         if (player[0].armor > tempW && editShip1) {
           player[0].armor = tempW;
         }
@@ -98,12 +98,12 @@ void main_keyboard_input() {
         player[1].items.shield = extraShips[z + 8];
         memset(shotMultiPos, 0, sizeof(shotMultiPos));
 
-        if (player[1].weapon_mode > JE_portConfigs()) {
+        if (player[1].weapon_mode > port_configs()) {
           player[1].weapon_mode = 1;
         }
 
         tempW = player[1].armor;
-        JE_getShipInfo();
+        get_ship_info();
         if (player[1].armor > tempW && editShip2) {
           player[1].armor = tempW;
         }

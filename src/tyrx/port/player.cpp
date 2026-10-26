@@ -17,10 +17,12 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The players (JE_mainGamePlayerFunctions, JE_playerMovement, JE_playerCollide
-// in mainint.c, and JE_doSpecialShot, JE_specialComplete and JE_playerDamage in
-// varz.c): input, movement, firing, specials, sidekicks, pickups and damage.
-// Network games aren't supported, so the network code is left out.
+// The players (JE_mainGamePlayerFunctions, JE_playerMovement,
+// JE_playerCollide in mainint.c, and JE_doSpecialShot, JE_specialComplete and
+// JE_playerDamage in varz.c): input, movement, firing, specials, sidekicks,
+// pickups and damage, and the game logic they use (JE_SFCodes, JE_getShipInfo
+// and the power-ups of player.c).  Network games aren't supported, so the
+// network code is left out.
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -40,12 +42,12 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
     // Weapon
     case 1:
       if (playerNum == 1) {
-        b = player_shot_create(0, SHOT_SPECIAL2, player[0].x, player[0].y, player[0].mouseX, player[0].mouseY,
-                               special[specialType].wpn, playerNum);
+        b = port::player_shot_create(0, SHOT_SPECIAL2, player[0].x, player[0].y, player[0].mouseX,
+                                     player[0].mouseY, special[specialType].wpn, playerNum);
       }
       else {
-        b = player_shot_create(0, SHOT_SPECIAL2, player[1].x, player[1].y, player[0].mouseX, player[0].mouseY,
-                               special[specialType].wpn, playerNum);
+        b = port::player_shot_create(0, SHOT_SPECIAL2, player[1].x, player[1].y, player[0].mouseX,
+                                     player[0].mouseY, special[specialType].wpn, playerNum);
       }
 
       shotRepeat[SHOT_SPECIAL] = shotRepeat[SHOT_SPECIAL2];
@@ -173,8 +175,8 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
       if (superArcadeMode > 0 && superArcadeMode <= SA) {
         shotRepeat[SHOT_SPECIAL] = 250;
-        b = player_shot_create(0, SHOT_SPECIAL2, player[0].x, player[0].y, player[0].mouseX, player[0].mouseY,
-                               707, 1);
+        b = port::player_shot_create(0, SHOT_SPECIAL2, player[0].x, player[0].y, player[0].mouseX,
+                                     player[0].mouseY, 707, 1);
         player[0].invulnerable_ticks = 100;
       }
       break;
@@ -346,13 +348,13 @@ void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
 
       if (linkToPlayer) {
         if (shotRepeat[SHOT_SPECIAL] == 0) {
-          b = player_shot_create(0, SHOT_SPECIAL, player[0].x, player[0].y, player[0].mouseX,
-                                 player[0].mouseY, specialWeaponWpn, playerNum);
+          b = port::player_shot_create(0, SHOT_SPECIAL, player[0].x, player[0].y, player[0].mouseX,
+                                       player[0].mouseY, specialWeaponWpn, playerNum);
         }
       }
       else {
-        b = player_shot_create(0, SHOT_SPECIAL, mt_rand() % 280, mt_rand() % 180, player[0].mouseX,
-                               player[0].mouseY, specialWeaponWpn, playerNum);
+        b = port::player_shot_create(0, SHOT_SPECIAL, mt_rand() % 280, mt_rand() % 180, player[0].mouseX,
+                                     player[0].mouseY, specialWeaponWpn, playerNum);
       }
 
       if (spraySpecial && b != MAX_PWEAPON) {
@@ -443,8 +445,8 @@ redo:
 
       int explosion_x = this_player->x + (mt_rand() % 32) - 16;
       int explosion_y = this_player->y + (mt_rand() % 32) - 16;
-      JE_setupExplosionLarge(false, 0, explosion_x, explosion_y + 7);
-      JE_setupExplosionLarge(false, 0, this_player->x, this_player->y + 7);
+      setup_explosion_large(false, 0, explosion_x, explosion_y + 7);
+      setup_explosion_large(false, 0, this_player->x, this_player->y + 7);
 
       if (levelEnd > 0) {
         levelEnd--;
@@ -459,7 +461,7 @@ redo:
 
           reallyEndLevel = false;
           shotMultiPos[playerNum_ - 1] = 0;
-          calc_purple_balls_needed(this_player);
+          port::calc_purple_balls_needed(this_player);
           twoPlayerLinked = false;
           if (galagaMode) {
             twoPlayerMode = false;
@@ -691,7 +693,7 @@ redo:
     moveOk = true;
 
     // Street-Fighter codes
-    JE_SFCodes(playerNum_, this_player->x, this_player->y, *mouseX_, *mouseY_);
+    sf_codes(playerNum_, this_player->x, this_player->y, *mouseX_, *mouseY_);
 
     if (moveOk) {
       // END OF MOVEMENT ROUTINES
@@ -885,27 +887,28 @@ redo:
 
       // turret direction marker/shield
       shotMultiPos[SHOT_MISC] = 0;
-      b = player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec + 0.2f) * 26),
-                             this_player->y + roundf(cosf(linkGunDirec + 0.2f) * 26), *mouseX_, *mouseY_, 148,
-                             playerNum_);
+      b = port::player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec + 0.2f) * 26),
+                                   this_player->y + roundf(cosf(linkGunDirec + 0.2f) * 26), *mouseX_,
+                                   *mouseY_, 148, playerNum_);
       shotMultiPos[SHOT_MISC] = 0;
-      b = player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec - 0.2f) * 26),
-                             this_player->y + roundf(cosf(linkGunDirec - 0.2f) * 26), *mouseX_, *mouseY_, 148,
-                             playerNum_);
+      b = port::player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec - 0.2f) * 26),
+                                   this_player->y + roundf(cosf(linkGunDirec - 0.2f) * 26), *mouseX_,
+                                   *mouseY_, 148, playerNum_);
       shotMultiPos[SHOT_MISC] = 0;
-      b = player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec) * 26),
-                             this_player->y + roundf(cosf(linkGunDirec) * 26), *mouseX_, *mouseY_, 147,
-                             playerNum_);
+      b = port::player_shot_create(0, SHOT_MISC, this_player->x + 1 + roundf(sinf(linkGunDirec) * 26),
+                                   this_player->y + roundf(cosf(linkGunDirec) * 26), *mouseX_, *mouseY_, 147,
+                                   playerNum_);
 
       if (shotRepeat[SHOT_REAR] > 0) {
         --shotRepeat[SHOT_REAR];
       }
       else if (button[1 - 1]) {
         shotMultiPos[SHOT_REAR] = 0;
-        b = player_shot_create(0, SHOT_REAR, this_player->x + 1 + roundf(sinf(linkGunDirec) * 20),
-                               this_player->y + roundf(cosf(linkGunDirec) * 20), *mouseX_, *mouseY_,
-                               linkGunWeapons[this_player->items.weapon[REAR_WEAPON].id - 1], playerNum_);
-        player_shot_set_direction(b, this_player->items.weapon[REAR_WEAPON].id, linkGunDirec);
+        b = port::player_shot_create(0, SHOT_REAR, this_player->x + 1 + roundf(sinf(linkGunDirec) * 20),
+                                     this_player->y + roundf(cosf(linkGunDirec) * 20), *mouseX_, *mouseY_,
+                                     linkGunWeapons[this_player->items.weapon[REAR_WEAPON].id - 1],
+                                     playerNum_);
+        port::player_shot_set_direction(b, this_player->items.weapon[REAR_WEAPON].id, linkGunDirec);
       }
     }
   }
@@ -1045,8 +1048,8 @@ redo:
             --shotRepeat[SHOT_NORTSPARKS];
           }
           else {
-            b = player_shot_create(0, SHOT_NORTSPARKS, tempW + (mt_rand() % 8) - 4,
-                                   this_player->y + (mt_rand() % 8) - 4, *mouseX_, *mouseY_, 671, 1);
+            b = port::player_shot_create(0, SHOT_NORTSPARKS, tempW + (mt_rand() % 8) - 4,
+                                         this_player->y + (mt_rand() % 8) - 4, *mouseX_, *mouseY_, 671, 1);
             shotRepeat[SHOT_NORTSPARKS] = abs(ship_banking) - 1;
           }
         }
@@ -1095,7 +1098,7 @@ redo:
                 this_player->weapon_mode = 1;
               }
             }
-            else if (++this_player->weapon_mode > JE_portConfigs()) {
+            else if (++this_player->weapon_mode > port_configs()) {
               this_player->weapon_mode = 1;
             }
 
@@ -1136,8 +1139,8 @@ redo:
               uint const item_power = galagaMode ? 0 : this_player->items.weapon[temp].power - 1,
                          item_mode = (temp == REAR_WEAPON) ? this_player->weapon_mode - 1 : 0;
 
-              b = player_shot_create(item, temp, this_player->x, this_player->y, *mouseX_, *mouseY_,
-                                     weaponPort[item].op[item_mode][item_power], playerNum_);
+              b = port::player_shot_create(item, temp, this_player->x, this_player->y, *mouseX_, *mouseY_,
+                                           weaponPort[item].op[item_mode][item_power], playerNum_);
             }
           }
         }
@@ -1189,9 +1192,9 @@ redo:
           }
           else if (button[1 - 1] && (!twoPlayerLinked || chargeLevel > 0)) {
             shotMultiPos[SHOT_P2_CHARGE] = 0;
-            b = player_shot_create(16, SHOT_P2_CHARGE, this_player->x, this_player->y, *mouseX_, *mouseY_,
-                                   chargeGunWeapons[player[1].items.weapon[REAR_WEAPON].id - 1] + chargeLevel,
-                                   playerNum_);
+            b = port::player_shot_create(
+                16, SHOT_P2_CHARGE, this_player->x, this_player->y, *mouseX_, *mouseY_,
+                chargeGunWeapons[player[1].items.weapon[REAR_WEAPON].id - 1] + chargeLevel, playerNum_);
 
             if (chargeLevel > 0) {
               draw::fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275,
@@ -1216,8 +1219,8 @@ redo:
           else if (button[3 - 1] || button[2 - 1]) {
             --player[temp - 1].superbombs;
             shotMultiPos[SHOT_P1_SUPERBOMB + temp - 1] = 0;
-            b = player_shot_create(16, SHOT_P1_SUPERBOMB + temp - 1, this_player->x, this_player->y, *mouseX_,
-                                   *mouseY_, 535, playerNum_);
+            b = port::player_shot_create(16, SHOT_P1_SUPERBOMB + temp - 1, this_player->x, this_player->y,
+                                         *mouseX_, *mouseY_, 535, playerNum_);
           }
         }
 
@@ -1325,8 +1328,8 @@ redo:
               // sidekick needs to catch up to player
               else {
                 optionAttachmentMove += 1 + optionAttachmentReturn;
-                JE_setupExplosion(this_player->sidekick[RIGHT_SIDEKICK].x + 1,
-                                  this_player->sidekick[RIGHT_SIDEKICK].y + 10, 0, 0, false, false);
+                setup_explosion(this_player->sidekick[RIGHT_SIDEKICK].x + 1,
+                                this_player->sidekick[RIGHT_SIDEKICK].y + 10, 0, 0, false, false);
               }
             }
             else {
@@ -1384,9 +1387,9 @@ redo:
                 }
 
                 if (button[1 + i] && this_player->sidekick[i].ammo > 0) {
-                  b = player_shot_create(this_option->wport, shot_i, this_player->sidekick[i].x,
-                                         this_player->sidekick[i].y, *mouseX_, *mouseY_,
-                                         this_option->wpnum + this_player->sidekick[i].charge, playerNum_);
+                  b = port::player_shot_create(
+                      this_option->wport, shot_i, this_player->sidekick[i].x, this_player->sidekick[i].y,
+                      *mouseX_, *mouseY_, this_option->wpnum + this_player->sidekick[i].charge, playerNum_);
 
                   --this_player->sidekick[i].ammo;
                   if (this_player->sidekick[i].charge > 0) {
@@ -1406,9 +1409,9 @@ redo:
               // has infinite ammo
               else {
                 if (button[0] || button[1 + i]) {
-                  b = player_shot_create(this_option->wport, shot_i, this_player->sidekick[i].x,
-                                         this_player->sidekick[i].y, *mouseX_, *mouseY_,
-                                         this_option->wpnum + this_player->sidekick[i].charge, playerNum_);
+                  b = port::player_shot_create(
+                      this_option->wport, shot_i, this_player->sidekick[i].x, this_player->sidekick[i].y,
+                      *mouseX_, *mouseY_, this_option->wpnum + this_player->sidekick[i].charge, playerNum_);
 
                   if (this_player->sidekick[i].charge > 0) {
                     shotMultiPos[shot_i] = 0;
@@ -1556,17 +1559,17 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
   else {
     this_player->shield -= temp;
 
-    JE_setupExplosion(this_player->x - 17, this_player->y - 12, 0, 14, false, !twoPlayerMode);
-    JE_setupExplosion(this_player->x - 5, this_player->y - 12, 0, 15, false, !twoPlayerMode);
-    JE_setupExplosion(this_player->x + 7, this_player->y - 12, 0, 16, false, !twoPlayerMode);
-    JE_setupExplosion(this_player->x + 19, this_player->y - 12, 0, 17, false, !twoPlayerMode);
+    setup_explosion(this_player->x - 17, this_player->y - 12, 0, 14, false, !twoPlayerMode);
+    setup_explosion(this_player->x - 5, this_player->y - 12, 0, 15, false, !twoPlayerMode);
+    setup_explosion(this_player->x + 7, this_player->y - 12, 0, 16, false, !twoPlayerMode);
+    setup_explosion(this_player->x + 19, this_player->y - 12, 0, 17, false, !twoPlayerMode);
 
-    JE_setupExplosion(this_player->x - 17, this_player->y + 2, 0, 18, false, !twoPlayerMode);
-    JE_setupExplosion(this_player->x + 19, this_player->y + 2, 0, 19, false, !twoPlayerMode);
+    setup_explosion(this_player->x - 17, this_player->y + 2, 0, 18, false, !twoPlayerMode);
+    setup_explosion(this_player->x + 19, this_player->y + 2, 0, 19, false, !twoPlayerMode);
 
-    JE_setupExplosion(this_player->x - 17, this_player->y + 16, 0, 20, false, !twoPlayerMode);
-    JE_setupExplosion(this_player->x - 5, this_player->y + 16, 0, 21, false, !twoPlayerMode);
-    JE_setupExplosion(this_player->x + 7, this_player->y + 16, 0, 22, false, !twoPlayerMode);
+    setup_explosion(this_player->x - 17, this_player->y + 16, 0, 20, false, !twoPlayerMode);
+    setup_explosion(this_player->x - 5, this_player->y + 16, 0, 21, false, !twoPlayerMode);
+    setup_explosion(this_player->x + 7, this_player->y + 16, 0, 22, false, !twoPlayerMode);
   }
 
   wipe_shield_armor_bars();
@@ -1601,7 +1604,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         this_player->cash += 100;
 
         if (!galagaMode) {
-          handle_got_purple_ball(this_player);
+          port::handle_got_purple_ball(this_player);
         }
         else {
           // spawn the dragonwing?
@@ -1626,11 +1629,11 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         // if picked up already-owned weapon, power weapon up
         if (tempW == player[0].items.weapon[FRONT_WEAPON].id) {
           this_player->cash += 1000;
-          power_up_weapon(this_player, FRONT_WEAPON);
+          port::power_up_weapon(this_player, FRONT_WEAPON);
         }
         // else weapon also gives purple ball
         else {
-          handle_got_purple_ball(this_player);
+          port::handle_got_purple_ball(this_player);
         }
 
         player[0].items.weapon[FRONT_WEAPON].id = tempW;
@@ -1829,7 +1832,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         }
         draw_text_window(tempStr);
 
-        power_up_weapon(&player[0], FRONT_WEAPON);
+        port::power_up_weapon(&player[0], FRONT_WEAPON);
         soundQueue[7] = S_POWERUP;
       }
       // got rear weapon powerup
@@ -1845,14 +1848,14 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         }
         draw_text_window(tempStr);
 
-        power_up_weapon(twoPlayerMode ? &player[1] : &player[0], REAR_WEAPON);
+        port::power_up_weapon(twoPlayerMode ? &player[1] : &player[0], REAR_WEAPON);
         soundQueue[7] = S_POWERUP;
       }
       else if (evalue == -3) {
         // picked up orbiting asteroid killer
         shotMultiPos[SHOT_MISC] = 0;
-        b = player_shot_create(0, SHOT_MISC, this_player->x, this_player->y, player[0].mouseX,
-                               player[0].mouseY, 104, playerNum_);
+        b = port::player_shot_create(0, SHOT_MISC, this_player->x, this_player->y, player[0].mouseX,
+                                     player[0].mouseY, 104, playerNum_);
         shotAvail[z] = 0;
       }
       else if (evalue == -4) {
@@ -1882,8 +1885,8 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
       else {
         this_player->cash += evalue;
       }
-      JE_setupExplosion(enemy_screen_x, enemy[z].ey, 0, enemyDat[enemy[z].enemytype].explosiontype, true,
-                        false);
+      setup_explosion(enemy_screen_x, enemy[z].ey, 0, enemyDat[enemy[z].enemytype].explosiontype, true,
+                      false);
     }
     // explosiontype & 1 == 0: not ground enemy
     else if (this_player->invulnerable_ticks == 0 && enemyAvail[z] == 0 &&
@@ -1942,18 +1945,199 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
           enemyAvail[temp2] = 1;
 
           if (enemyDat[enemy[temp2].enemytype].esize == 1) {
-            JE_setupExplosionLarge(enemy[temp2].enemyground, enemy[temp2].explonum, enemy_screen_x,
-                                   enemy[temp2].ey);
+            setup_explosion_large(enemy[temp2].enemyground, enemy[temp2].explonum, enemy_screen_x,
+                                  enemy[temp2].ey);
             soundQueue[6] = S_EXPLOSION_9;
           }
           else {
-            JE_setupExplosion(enemy_screen_x, enemy[temp2].ey, 0, 1, false, false);
+            setup_explosion(enemy_screen_x, enemy[temp2].ey, 0, 1, false, false);
             soundQueue[5] = S_EXPLOSION_4;
           }
         }
         enemyAvail[z] = 1;
       }
     }
+  }
+}
+
+// Port of JE_SFCodes (mainint.c).
+void sf_codes(JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_, JE_integer mouseY_) {
+  JE_byte temp, temp2, temp3, temp4, temp5;
+
+  uint ship = player[playerNum_ - 1].items.ship;
+
+  // Get direction
+  if (playerNum_ == 2 && ship < 15) {
+    ship = 0;
+  }
+
+  if (ship >= 15) {
+    return;
+  }
+
+  temp2 = (mouseY_ > PY_) +     // UP
+          (mouseY_ < PY_) +     // DOWN
+          (PX_ < mouseX_) +     // LEFT
+          (PX_ > mouseX_);      // RIGHT
+  temp = (mouseY_ > PY_) * 1 +  // UP
+         (mouseY_ < PY_) * 2 +  // DOWN
+         (PX_ < mouseX_) * 3 +  // LEFT
+         (PX_ > mouseX_) * 4;   // RIGHT
+
+  // no direction being pressed
+  if (temp == 0) {
+    // if fire button is released
+    if (!button[0]) {
+      temp = 9;
+      temp2 = 1;
+    }
+    else {
+      temp2 = 0;
+      temp = 99;
+    }
+  }
+
+  if (temp2 != 1) {
+    return;
+  }
+
+  // if exactly one direction pressed or fire button is released
+  temp += button[0] * 4;
+
+  temp3 = superTyrian ? 21 : 3;
+  for (temp2 = 0; temp2 < temp3; temp2++) {
+    // Use SuperTyrian ShipCombos or not?
+    temp5 = superTyrian ? shipCombosB[temp2] : shipCombos[ship][temp2];
+
+    // temp5 == selected combo in ship
+    // combo doesn't exists
+    if (temp5 == 0) {
+      // mark twiddles as cancelled/finished
+      SFCurrentCode[playerNum_ - 1][temp2] = 0;
+    }
+    else {
+      // get next combo key
+      temp4 = keyboardCombos[temp5 - 1][SFCurrentCode[playerNum_ - 1][temp2]];
+
+      // correct key
+      if (temp4 == temp) {
+        SFCurrentCode[playerNum_ - 1][temp2]++;
+
+        temp4 = keyboardCombos[temp5 - 1][SFCurrentCode[playerNum_ - 1][temp2]];
+        if (temp4 > 100 && temp4 <= 100 + SPECIAL_NUM) {
+          SFCurrentCode[playerNum_ - 1][temp2] = 0;
+          SFExecuted[playerNum_ - 1] = temp4 - 100;
+        }
+      }
+      else {
+        if ((temp != 9) && (temp4 - 1) % 4 != (temp - 1) % 4 &&
+            (SFCurrentCode[playerNum_ - 1][temp2] == 0 ||
+             keyboardCombos[temp5 - 1][SFCurrentCode[playerNum_ - 1][temp2] - 1] != temp))
+        {
+          SFCurrentCode[playerNum_ - 1][temp2] = 0;
+        }
+      }
+    }
+  }
+}
+
+// Port of JE_SGr (varz.c).
+JE_word s_gr(JE_word ship, Sprite2_array **ptr) {
+  JE_word const GR[15] = {233, 157, 195, 271, 81, 0, 119, 5, 43, 81, 119, 157, 195, 233, 271};  // [1..15]
+
+  JE_word tempW = extraShips[(ship - 1) * 15];
+  if (tempW > 7) {
+    *ptr = &extraShapes;
+  }
+
+  return GR[tempW - 1];
+}
+
+// Port of JE_getShipInfo (varz.c).
+void get_ship_info(void) {
+  JE_boolean extraShip, extraShip2;
+
+  shipGrPtr = &spriteSheet9;
+  shipGr2ptr = &spriteSheet9;
+
+  powerAdd = powerSys[player[0].items.generator].power;
+
+  extraShip = player[0].items.ship > 90;
+  if (extraShip) {
+    JE_byte base = (player[0].items.ship - 91) * 15;
+    shipGr = s_gr(player[0].items.ship - 90, &shipGrPtr);
+    player[0].armor = extraShips[base + 7];
+  }
+  else {
+    shipGr = ships[player[0].items.ship].shipgraphic;
+    player[0].armor = ships[player[0].items.ship].dmg;
+  }
+
+  extraShip2 = player[1].items.ship > 90;
+  if (extraShip2) {
+    JE_byte base2 = (player[1].items.ship - 91) * 15;
+    shipGr2 = s_gr(player[1].items.ship - 90, &shipGr2ptr);
+    player[1].armor = extraShips[base2 + 7];  // bug?
+  }
+  else {
+    shipGr2 = 0;
+    player[1].armor = 10;
+  }
+
+  for (uint i = 0; i < COUNTOF(player); ++i) {
+    player[i].initial_armor = player[i].armor;
+
+    uint temp = ((i == 0 && extraShip) || (i == 1 && extraShip2)) ? 2 : ships[player[i].items.ship].ani;
+
+    if (temp == 0) {
+      player[i].shot_hit_area_x = 12;
+      player[i].shot_hit_area_y = 10;
+    }
+    else {
+      player[i].shot_hit_area_x = 11;
+      player[i].shot_hit_area_y = 14;
+    }
+  }
+}
+
+// Port of JE_portConfigs (varz.c).
+JE_word port_configs(void) {
+  uint const player_index = twoPlayerMode ? 1 : 0;
+  return tempW = weaponPort[player[player_index].items.weapon[REAR_WEAPON].id].opnum;
+}
+
+// Port of calc_purple_balls_needed (player.c).
+void calc_purple_balls_needed(Player *this_player) {
+  static uint const purple_balls_required[12] = {1, 1, 2, 4, 8, 12, 16, 20, 25, 30, 40, 50};
+
+  this_player->purple_balls_needed = purple_balls_required[*this_player->lives];
+}
+
+// Port of power_up_weapon (player.c).
+bool power_up_weapon(Player *this_player, uint port) {
+  bool const can_power_up = this_player->items.weapon[port].id != 0 &&   // not None
+                            this_player->items.weapon[port].power < 11;  // not at max power
+  if (can_power_up) {
+    ++this_player->items.weapon[port].power;
+    shotMultiPos[port] = 0;  // TODO: should be part of Player structure
+
+    port::calc_purple_balls_needed(this_player);
+  }
+  // cash consolation prize
+  else {
+    this_player->cash += 1000;
+  }
+
+  return can_power_up;
+}
+
+// Port of handle_got_purple_ball (player.c).
+void handle_got_purple_ball(Player *this_player) {
+  if (this_player->purple_balls_needed > 1) {
+    --this_player->purple_balls_needed;
+  }
+  else {
+    port::power_up_weapon(this_player, this_player->is_dragonwing ? REAR_WEAPON : FRONT_WEAPON);
   }
 }
 
