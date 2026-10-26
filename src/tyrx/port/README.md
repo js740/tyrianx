@@ -36,3 +36,5 @@ Ported so far:
   itself.
 - The backgrounds and the starfield (`background.cpp`), the smoothie filters
   and the darkening.
+- The HUD at the top of the tick: the message bar, the shield
+  (`JE_drawShield`), the weapon power and the power bar.

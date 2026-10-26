@@ -17,12 +17,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The boss bar (draw_boss_bar in tyrian2.c) and the in-game displays
-// (JE_inGameDisplays in mainint.c), which the level tick draws at its end.
+// The HUD: the shield gauge on VGAScreenSeg (JE_drawShield in varz.c), the boss
+// bar (draw_boss_bar in tyrian2.c) and the in-game displays (JE_inGameDisplays
+// in mainint.c).
 
 #include "draw.hpp"
 #include "port.hpp"
 
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 
@@ -37,7 +39,42 @@ void bar_x(SDL_Surface *screen, JE_word x1, JE_word y1, JE_word x2, JE_word y2, 
   draw::fill_rectangle_xy(screen, x1, y2, x2, y2, col - 1);
 }
 
+// Port of JE_dBar3.
+void dbar3(SDL_Surface *surface, JE_integer x, JE_integer y, JE_integer num, JE_integer col) {
+  JE_byte zWait = 2;
+
+  col += 2;
+
+  for (JE_byte z = 0; z <= num; z++) {
+    draw::JE_rectangle(surface, x, y - 1, x + 8, y, col);  // <MXD> SEGa000
+    if (zWait > 0) {
+      zWait--;
+    }
+    else {
+      col++;
+      zWait = 1;
+    }
+    y -= 2;
+  }
+}
+
 }  // namespace
+
+// Port of JE_drawShield.
+void draw_shield() {
+  if (twoPlayerMode && !galagaMode) {
+    for (uint i = 0; i < COUNTOF(player); ++i) {
+      dbar3(VGAScreen, 270, 60 + 134 * i, roundf(player[i].shield * 0.8f), 144);
+    }
+  }
+  else {
+    dbar3(VGAScreen, 270, 194, player[0].shield, 144);
+    if (player[0].shield != player[0].shield_max) {
+      uint const y = 193 - (player[0].shield_max * 2);
+      draw::JE_rectangle(VGAScreen, 270, y, 278, y, 68);  // <MXD> SEGa000
+    }
+  }
+}
 
 // Port of draw_boss_bar: the bars follow the most damaged enemy of their link
 // group, and flash after a hit.
