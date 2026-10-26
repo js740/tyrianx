@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <initializer_list>
+#include <span>
 
 namespace tyrx::check {
 
@@ -46,6 +47,8 @@ class InputDriver {
   explicit InputDriver(long seed)
       : seed_(static_cast<std::uint64_t>(seed)),
         press_commands_(env("TYRX_INPUT_COMMANDS") != nullptr),
+        press_cheats_(env("TYRX_INPUT_CHEATS") != nullptr),
+        move_mouse_(env("TYRX_INPUT_MOUSE") != nullptr),
         midtick_(env("TYRX_INPUT_MIDTICK") != nullptr),
         wants_joystick_(env("TYRX_INPUT_JOYSTICK") != nullptr) {}
 
@@ -61,6 +64,9 @@ class InputDriver {
     bool const in_level = tick_ms_valid_ && to - last_tick_ms_ < 200;
     if (!in_level) {
       release_all();
+      if (press_cheats_ && !between_levels_) {
+        next_settings();
+      }
       between_levels_ = true;
       for (Uint32 t = from / 350 + 1; t * 350 <= to; ++t) {
         SDL_Scancode const k = menu_key();
@@ -135,10 +141,64 @@ class InputDriver {
       set_key(kCommandModifier, down);
       set_key(SDL_SCANCODE_MINUS, down);
     }
+    if (press_cheats_) {
+      push_cheats(next_tick);
+    }
+    if (move_mouse_) {
+      push_mouse(next_tick);
+    }
     if (joystick_) {
       push_joystick(next_tick);
     }
   }
+
+  // With TYRX_INPUT_CHEATS, the game's own key commands (JE_mainKeyboardInput)
+  // show more of it: in each level, the debug display is on from its tick 30
+  // to 230, a random smoothie is toggled every 100 ticks, and from tick 500 the
+  // level is skipped.  In about one level in four, the player gets the Nort
+  // ship (with its weapons and the Astral Zone special) at tick 20, for the
+  // rest of the game.  Between levels, the detail level goes to the next one,
+  // as the setup menu would set it, and so does the difficulty (Wimp to
+  // Nortaneous).
+  void push_cheats(std::uint64_t next_tick) {
+    std::uint64_t const t = next_tick - level_first_tick_;
+    bool const debug = t == 30 || t == 230;
+    bool const smoothie = t < 500 && t % 100 == 60;
+    bool const skip = t >= 500 && t < 503;
+    bool const nort = t == 20 && mix(seed_ ^ mix(level_first_tick_)) % 4 == 0;
+    SDL_Scancode const digit = kSmoothieKeys[mix(seed_ ^ mix(level_first_tick_ + t)) % kSmoothieKeys.size()];
+    bool const command = press_commands_ && next_tick % 300 == 150;  // as above
+    set_key(kCommandModifier, debug || smoothie || command);
+    set_key(SDL_SCANCODE_F10, debug);
+    set_key(SDL_SCANCODE_F12, smoothie);
+    set_key(SDL_SCANCODE_SCROLLLOCK, smoothie);
+    for (SDL_Scancode k : kSmoothieKeys) {
+      set_key(k, smoothie && k == digit);
+    }
+    set_key(SDL_SCANCODE_F2, skip || nort);
+    set_key(SDL_SCANCODE_F6, skip || nort);
+    set_key(SDL_SCANCODE_F7, skip || nort);
+    for (SDL_Scancode k : {SDL_SCANCODE_F4, SDL_SCANCODE_F9, SDL_SCANCODE_BACKSLASH, SDL_SCANCODE_SLASH}) {
+      set_key(k, nort);
+    }
+  }
+
+  static void next_settings() {
+    processorType = processorType % 6 + 1;
+    JE_initProcessorType();
+    difficultyLevel = (difficultyLevel + 1) % DIFFICULTY_10;
+  }
+
+  // Backspace+F12+Scroll Lock with 2-9 toggles smoothies[0-7], with 0
+  // smoothies[8].
+  static constexpr std::array kSmoothieKeys = {
+      SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4, SDL_SCANCODE_5, SDL_SCANCODE_6,
+      SDL_SCANCODE_7, SDL_SCANCODE_8, SDL_SCANCODE_9, SDL_SCANCODE_0,
+  };
+  static constexpr std::array kCheatKeys = {
+      SDL_SCANCODE_F10, SDL_SCANCODE_F12, SDL_SCANCODE_SCROLLLOCK, SDL_SCANCODE_F2,        SDL_SCANCODE_F6,
+      SDL_SCANCODE_F7,  SDL_SCANCODE_F4,  SDL_SCANCODE_F9,         SDL_SCANCODE_BACKSLASH, SDL_SCANCODE_SLASH,
+  };
 
   // The virtual joystick's stick and its fire and sidekick buttons follow runs
   // like the keys' (with seeds of their own), and the change-fire button is
@@ -153,6 +213,44 @@ class InputDriver {
     SDL_JoystickSetVirtualButton(joystick_, 2, down(5));                     // left sidekick
     SDL_JoystickSetVirtualButton(joystick_, 3, down(6));                     // right sidekick
   }
+
+  // With TYRX_INPUT_MOUSE, the mouse moves left, right, up and down, and its
+  // left and right buttons are held, in runs like the keys' (with seeds of
+  // their own).  Motion goes out once per tick, as relative motion.
+  void push_mouse(std::uint64_t tick) {
+    auto const down = [tick, this](std::size_t i) {
+      return key_down(kKeys.size() + kJoystickInputs + i, tick);
+    };
+    int const xrel = (down(1) - down(0)) * kMouseStep, yrel = (down(3) - down(2)) * kMouseStep;
+    if (xrel != 0 || yrel != 0) {
+      SDL_Event ev{};
+      ev.type = SDL_MOUSEMOTION;
+      ev.motion.x = 160;
+      ev.motion.y = 100;
+      ev.motion.xrel = xrel;
+      ev.motion.yrel = yrel;
+      SDL_PushEvent(&ev);
+    }
+    set_mouse_button(SDL_BUTTON_LEFT, down(4));
+    set_mouse_button(SDL_BUTTON_RIGHT, down(5));
+  }
+
+  static void set_mouse_button(Uint8 button, bool down) {
+    if (down == ((mouseButtonsDown & SDL_BUTTON(button)) != 0)) {
+      return;
+    }
+
+    SDL_Event ev{};
+    ev.type = down ? SDL_MOUSEBUTTONDOWN : SDL_MOUSEBUTTONUP;
+    ev.button.button = button;
+    ev.button.state = down ? SDL_PRESSED : SDL_RELEASED;
+    ev.button.x = 160;
+    ev.button.y = 100;
+    SDL_PushEvent(&ev);
+  }
+
+  static constexpr std::size_t kJoystickInputs = 7;  // the stick's four directions and three buttons
+  static constexpr int kMouseStep = 8;
 
   static Sint16 axis_value(bool negative, bool positive) {
     return static_cast<Sint16>((positive - negative) * SDL_JOYSTICK_AXIS_MAX);
@@ -185,20 +283,26 @@ class InputDriver {
       SDL_SCANCODE_SPACE, SDL_SCANCODE_RETURN, SDL_SCANCODE_LCTRL, SDL_SCANCODE_LALT,
   };
 
-  // In the item screen, go to "Play Next Level" and pick the first planet;
-  // elsewhere (title screen, episode and difficulty selection, ...), Enter.
+  // In the item screen, go to "Play Next Level" and pick the first planet (in
+  // arcade modes, play the next level); elsewhere (title screen, episode and
+  // difficulty selection, ...), Enter.
   static SDL_Scancode menu_key() {
     if (!in_item_screen) {
       return SDL_SCANCODE_RETURN;
     }
     JE_integer const menu = curMenu;
     JE_byte const sel = curSel[menu];
-    constexpr JE_integer kFullGame = 0, kPlayNextLevel = 3;  // game_menu.c
+    constexpr JE_integer kFullGame = 0, kPlayNextLevel = 3, k2PlayerArcade = 9,
+                         k1PlayerArcade = 10;  // game_menu.c
     if (menu == kFullGame) {
       return sel == 6 ? SDL_SCANCODE_RETURN : SDL_SCANCODE_DOWN;
     }
     if (menu == kPlayNextLevel) {
       return SDL_SCANCODE_RETURN;
+    }
+    // "Play Next Level" is item 2
+    if (menu == k2PlayerArcade || menu == k1PlayerArcade) {
+      return sel == 2 ? SDL_SCANCODE_RETURN : SDL_SCANCODE_UP;
     }
     return SDL_SCANCODE_ESCAPE;
   }
@@ -223,8 +327,23 @@ class InputDriver {
         key(k, false);
       }
     }
+    if (press_cheats_) {
+      for (auto const& keys :
+           {std::span<SDL_Scancode const>(kCheatKeys), std::span<SDL_Scancode const>(kSmoothieKeys)})
+      {
+        for (SDL_Scancode k : keys) {
+          if (keysactive[k]) {
+            key(k, false);
+          }
+        }
+      }
+    }
     if (joystick_) {
       release_joystick();
+    }
+    if (move_mouse_) {
+      set_mouse_button(SDL_BUTTON_LEFT, false);
+      set_mouse_button(SDL_BUTTON_RIGHT, false);
     }
   }
 
@@ -239,6 +358,8 @@ class InputDriver {
 
   std::uint64_t seed_;
   bool press_commands_;
+  bool press_cheats_;
+  bool move_mouse_;
   bool midtick_;
   bool wants_joystick_;
   SDL_Joystick *joystick_ = nullptr;
@@ -289,6 +410,25 @@ extern "C" void __wrap_JE_itemScreen(void) {
   tyrx::check::in_item_screen = true;
   __real_JE_itemScreen();
   tyrx::check::in_item_screen = false;
+}
+
+// Linked with -Wl,--wrap=gameplaySelect.  With TYRX_INPUT_TWO_PLAYER or
+// TYRX_INPUT_ARCADE (and synthetic input), the game-mode menu makes its
+// "2 Player Arcade" or "1 Player Arcade" choice right away, as it does when
+// that is picked: keys sent while the menu fades in can be lost, so the driver
+// can't reliably move to it.
+extern "C" bool __real_gameplaySelect(void);
+
+extern "C" bool __wrap_gameplaySelect(void) {
+  bool const two_player = tyrx::env("TYRX_INPUT_TWO_PLAYER") != nullptr,
+             arcade = tyrx::env("TYRX_INPUT_ARCADE") != nullptr;
+  if (tyrx::check::input_driver() == nullptr || (!two_player && !arcade)) {
+    return __real_gameplaySelect();
+  }
+  fade_black(10);
+  onePlayerAction = !two_player;
+  twoPlayerMode = two_player;
+  return true;
 }
 
 // Linked with -Wl,--wrap=init_joysticks, to register the joystick array, which
