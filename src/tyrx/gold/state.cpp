@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <cstring>
 
 namespace tyrx::gold {
 
@@ -60,17 +61,20 @@ std::vector<StateBlock> resolve_blocks() {
 #define TYRX_REGISTER_SIM(sym) TYRX_REGISTER(sym, sim)
 #define TYRX_REGISTER_PRESENT(sym) TYRX_REGISTER(sym, present)
 #define TYRX_REGISTER_DATA(sym) TYRX_REGISTER(sym, data)
+#define TYRX_REGISTER_INPUT(sym) TYRX_REGISTER(sym, input)
 #define TYRX_REGISTER_POINTEE(sym) TYRX_REGISTER(sym, render)
 
   TYRX_SIM(TYRX_REGISTER_SIM)
   TYRX_PRESENT(TYRX_REGISTER_PRESENT)
   TYRX_DATA(TYRX_REGISTER_DATA)
+  TYRX_INPUT(TYRX_REGISTER_INPUT)
   TYRX_POINTEES(TYRX_REGISTER_POINTEE)
 
 #undef TYRX_REGISTER
 #undef TYRX_REGISTER_SIM
 #undef TYRX_REGISTER_PRESENT
 #undef TYRX_REGISTER_DATA
+#undef TYRX_REGISTER_INPUT
 #undef TYRX_REGISTER_POINTEE
 
   return blocks;
@@ -200,6 +204,35 @@ void dump_state(std::FILE *out) {
     d.push(b->name);
     b->dump(d, b->addr);
     d.pop();
+  }
+}
+
+Snapshot Snapshot::capture(bool (*include)(StateClass), Snapshot const *previous) {
+  Snapshot s;
+  std::size_t i = 0;  // index into previous->copies_
+  for (StateBlock const& b : state_blocks()) {
+    if (!include(b.cls)) {
+      continue;
+    }
+    if (previous && i < previous->copies_.size() && previous->copies_[i].block == &b &&
+        std::memcmp(previous->copies_[i].bytes.get(), b.addr, b.size) == 0)
+    {
+      s.copies_.push_back(previous->copies_[i]);
+    }
+    else {
+      auto bytes = std::make_shared_for_overwrite<std::byte[]>(b.size);
+      std::memcpy(bytes.get(), b.addr, b.size);
+      s.copies_.push_back({&b, std::move(bytes)});
+      s.unshared_size_ += b.size;
+    }
+    ++i;
+  }
+  return s;
+}
+
+void Snapshot::restore() const {
+  for (Copy const& c : copies_) {
+    std::memcpy(c.block->addr, c.bytes.get(), c.block->size);
   }
 }
 

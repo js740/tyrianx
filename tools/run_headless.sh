@@ -54,6 +54,7 @@ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 TYRX_VCLOCK=1 TYRX_HASHLOG="$log" \
 env "${vars[@]}" "$@" timeout 600 "$bin" --no-sound --no-joystick --no-xmas --data="$data" \
     > "$tmp/out.txt" 2>&1 || status=$?
+grep -E '^(tyrx|  C)' "$tmp/out.txt" >&2 || true
 if [ $status -ne 0 ]; then
     cat "$tmp/out.txt" >&2
     echo "run_headless.sh: exited with status $status" >&2

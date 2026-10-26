@@ -20,6 +20,7 @@
 #include "input_driver.hpp"
 
 #include "../gold/api.hpp"
+#include "../input_record.hpp"
 #include "../runtime.hpp"
 #include "vclock.hpp"
 
@@ -37,6 +38,10 @@ class InputDriver {
   explicit InputDriver(long seed) : seed_(static_cast<std::uint64_t>(seed)) {}
 
   void advance(Uint32 from, Uint32 to) {
+    // A replay plays recorded input.
+    if (input_record_replaying()) {
+      return;
+    }
     if (!focused_) {
       SDL_Event ev{};
       ev.type = SDL_WINDOWEVENT;

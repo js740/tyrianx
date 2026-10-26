@@ -87,6 +87,9 @@ endif
 
 ifeq ($(WITH_TYRX), true)
     EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen
+    EXTRA_LDFLAGS += -Wl,--wrap=keyboardHasInput,--wrap=hasInput,--wrap=keyboardClearInput,--wrap=mouseClearInput \
+                     -Wl,--wrap=mouseGetRelativePosition,--wrap=push_joysticks_as_keyboard,--wrap=poll_joystick \
+                     -Wl,--wrap=handleSdlEvents
     LINK = $(CXX) $(ALL_CXXFLAGS)
 else
     LINK = $(CC) $(ALL_CFLAGS)

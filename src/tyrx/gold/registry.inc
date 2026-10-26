@@ -76,6 +76,12 @@
   X(levelEnemyFrequency) X(levelEnemyMax) X(levelFilename) X(lvlNum) X(lvlPos) X(megaData1) X(megaData2) \
   X(megaData3) X(options) X(powerSys) X(shields) X(ships) X(special) X(weaponPort) X(weapons)
 
+// Input state at a tick boundary: not hashed, but recorded for replays
+// (../input_record.hpp).
+#define TYRX_INPUT(X) \
+  X(ESCPressed) X(ingamemenu_pressed) X(keysactive) X(lordKeySymsDown) X(mouseButtonsDown) X(mouseX) X(mouseY) \
+  X(pause_pressed) X(windowHasFocus)
+
 // Not hashed; registered so that pointers into them can be described.
 #define TYRX_POINTEES(X) \
   X(destructSpriteSheet) X(enemySpriteSheets) X(explosionSpriteSheet) X(shopSpriteSheet) X(spriteSheet8) \
