@@ -249,4 +249,23 @@ std::span<StateBlock const *const> hashed_blocks();
 
 void dump_state(std::FILE *out);
 
+//------------------------------------------------------------------------------
+// Snapshots
+//------------------------------------------------------------------------------
+
+// A copy of the registered blocks of some classes, taken at a tick boundary,
+// that can be written back.  Restoring is only valid within the level the
+// snapshot was taken in: pointers are copied as they are, and some point into
+// data that is loaded per level (e.g. sprite sheets).
+class Snapshot {
+ public:
+  static Snapshot capture(bool (*include)(StateClass));
+  void restore() const;
+  std::size_t size() const { return bytes_.size(); }
+
+ private:
+  std::vector<StateBlock const *> blocks_;
+  std::vector<std::byte> bytes_;
+};
+
 }  // namespace tyrx

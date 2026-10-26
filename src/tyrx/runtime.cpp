@@ -28,8 +28,8 @@
 //   TYRX_EXIT_AFTER_TICKS=N exit at the top of level tick N
 //
 // Exits that Tyrian X initiates return status 3 if a C++ port mismatched
-// (TYRX_DIFF), and 4 if the hashes may be incomplete because some pointers
-// could not be described.
+// (TYRX_DIFF), 4 if the hashes may be incomplete because some pointers could
+// not be described, and 5 if a round trip failed (TYRX_ROUNDTRIP).
 //------------------------------------------------------------------------------
 
 #include "runtime.hpp"
@@ -38,6 +38,7 @@
 #include "c_state.hpp"
 #include "diff.hpp"
 #include "input_driver.hpp"
+#include "roundtrip.hpp"
 
 #include <cinttypes>
 #include <cstdio>
@@ -56,6 +57,9 @@ namespace {
   }
   else if (unresolved_pointers()) {
     status = 4;
+  }
+  else if (round_trip_failed()) {
+    status = 5;
   }
   std::exit(status);
 }
@@ -109,6 +113,7 @@ struct Runtime {
 
   void level_start() {
     ++level_count;
+    round_trip_level_start();
     if (playDemo && exit_after_demos >= 0 && ++demo_count > exit_after_demos) {
       exit_run();
     }
@@ -122,14 +127,24 @@ struct Runtime {
     if (exit_after_ticks >= 0 && (long)tick >= exit_after_ticks) {
       exit_run();
     }
+    tick = round_trip_begin_tick(tick);  // may restore a snapshot and go back
     input_driver_level_tick();
+
+    std::vector<std::uint64_t> hashes;
+    if (hashlog || round_trip_active()) {
+      hashes = block_hashes();
+    }
+    if (round_trip_end_tick(tick, hashes)) {
+      ++tick;  // replayed ticks are not logged or dumped again
+      return;
+    }
 
     if (hashlog) {
       Hasher total;
       std::fprintf(hashlog, "T %" PRIu64, tick);
       std::string line;
       char buf[24];
-      for (std::uint64_t const h : block_hashes()) {
+      for (std::uint64_t const h : hashes) {
         total.u64(h);
         std::snprintf(buf, sizeof buf, " %016" PRIx64, h);
         line += buf;

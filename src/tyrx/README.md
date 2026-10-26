@@ -72,6 +72,7 @@ if there were any, so CI fails until the target is registered.
 | `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
 | `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port (see below) |
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
+| `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots (see below) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 ## Verifying that a C change preserves gameplay
@@ -95,6 +96,35 @@ the blocks that differ. Rerun both builds with `TYRX_DUMP_TICK=<tick>` and
 `diff` the dumps to see the exact fields.
 
 `DATA` is a Tyrian 2.1 data directory (`./get_data.sh` fetches one).
+
+## Snapshots and the round-trip test
+
+`Snapshot` (`c_state.hpp`) copies the registered blocks of chosen classes and
+writes them back. A snapshot is valid only within the level it was taken in,
+because pointers into per-level data (such as sprite sheets) are copied as-is.
+
+`TYRX_ROUNDTRIP=K[,P]` tests whether snapshots hold everything a tick depends
+on. Every P ticks (default 10×K), outside demos, it does the following:
+1. Snapshots the game state and the input state.
+2. Runs K ticks.
+3. Restores the snapshot.
+4. Replays those K ticks, requiring the same hashes as the first time, at the
+   top of each tick and at the end.
+
+Any state left out of the registry shows up as a mismatch that names the
+differing blocks. Exits that Tyrian X initiates return status 5 if any replay
+differed or no round trip completed. A run with round trips logs the same
+hashes as one without:
+
+```sh
+tools/run_headless.sh ./opentyrian DATA plain.log input 1 20000
+tools/run_headless.sh ./opentyrian DATA rt.log input 1 20000 TYRX_ROUNDTRIP=50,200
+# tyrx roundtrip: 98 round trips of 50 ticks, 4900 ticks replayed, 0 mismatched, ...
+tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
+```
+
+Demos are skipped because their input comes from a file whose read position
+isn't part of the snapshot.
 
 ## C++ ports of the simulation (`sim/`)
 

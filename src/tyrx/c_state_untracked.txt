@@ -21,10 +21,8 @@ fonthand          ui       textGlowBrightness textGlowFont
 game_menu         ui       *
 helptext          ui       *
 joystick          input    *
-keyboard          input    *
 lds_play          audio    *
 loudness          audio    *
-mainint           input    ingamemenu_pressed pause_pressed
 mainint           ui       downgradeCost performSave upgradeCost
 menus             ui       *
 mouse             input    *

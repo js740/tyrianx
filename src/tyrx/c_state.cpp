@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <cstring>
 
 namespace tyrx {
 
@@ -60,17 +61,20 @@ std::vector<StateBlock> resolve_blocks() {
 #define TYRX_REGISTER_SIM(sym) TYRX_REGISTER(sym, sim)
 #define TYRX_REGISTER_PRESENT(sym) TYRX_REGISTER(sym, present)
 #define TYRX_REGISTER_DATA(sym) TYRX_REGISTER(sym, data)
+#define TYRX_REGISTER_INPUT(sym) TYRX_REGISTER(sym, input)
 #define TYRX_REGISTER_POINTEE(sym) TYRX_REGISTER(sym, render)
 
   TYRX_SIM(TYRX_REGISTER_SIM)
   TYRX_PRESENT(TYRX_REGISTER_PRESENT)
   TYRX_DATA(TYRX_REGISTER_DATA)
+  TYRX_INPUT(TYRX_REGISTER_INPUT)
   TYRX_POINTEES(TYRX_REGISTER_POINTEE)
 
 #undef TYRX_REGISTER
 #undef TYRX_REGISTER_SIM
 #undef TYRX_REGISTER_PRESENT
 #undef TYRX_REGISTER_DATA
+#undef TYRX_REGISTER_INPUT
 #undef TYRX_REGISTER_POINTEE
 
   return blocks;
@@ -200,6 +204,26 @@ void dump_state(std::FILE *out) {
     d.push(b->name);
     b->dump(d, b->addr);
     d.pop();
+  }
+}
+
+Snapshot Snapshot::capture(bool (*include)(StateClass)) {
+  Snapshot s;
+  for (StateBlock const& b : state_blocks()) {
+    if (include(b.cls)) {
+      s.blocks_.push_back(&b);
+      auto const *p = static_cast<std::byte const *>(b.addr);
+      s.bytes_.insert(s.bytes_.end(), p, p + b.size);
+    }
+  }
+  return s;
+}
+
+void Snapshot::restore() const {
+  std::byte const *p = bytes_.data();
+  for (StateBlock const *b : blocks_) {
+    std::memcpy(b->addr, p, b->size);
+    p += b->size;
   }
 }
 

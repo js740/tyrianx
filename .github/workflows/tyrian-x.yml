@@ -42,3 +42,7 @@ jobs:
         run: |
           tools/run_headless.sh ./opentyrian data diff-demos.log demos TYRX_DIFF=1
           tools/run_headless.sh ./opentyrian data diff-input.log input 2 10000 TYRX_DIFF=1
+      - name: Snapshots restore everything a tick depends on
+        run: |
+          tools/run_headless.sh ./opentyrian data rt.log input 1 10000 TYRX_ROUNDTRIP=7,13
+          tools/compare_hashlogs.py input1.log rt.log
