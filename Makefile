@@ -11,6 +11,9 @@ endif
 # true, false, or auto (true if pkg-config can find SDL2_net)
 WITH_NETWORK := auto
 
+# true or false (build the C++ extensions in src/tyrx; requires GCC 16+ for C++26 reflection)
+WITH_TYRX ?= false
+
 ################################################################################
 
 # see https://www.gnu.org/prep/standards/html_node/Makefile-Conventions.html
@@ -18,6 +21,7 @@ WITH_NETWORK := auto
 SHELL = /bin/sh
 
 CC ?= gcc
+CXX ?= g++
 INSTALL ?= install
 PKG_CONFIG ?= pkg-config
 WINDRES ?= windres
@@ -58,6 +62,12 @@ SRCS := $(wildcard src/*.c)
 OBJS := $(SRCS:src/%.c=obj/%.o)
 DEPS := $(SRCS:src/%.c=obj/%.d)
 
+ifeq ($(WITH_TYRX), true)
+    TYRX_SRCS := $(wildcard src/tyrx/*.cpp src/tyrx/*/*.cpp src/tyrx/*/*/*.cpp)
+    OBJS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.o)
+    DEPS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.d)
+endif
+
 ###
 
 ifeq ($(WITH_NETWORK), auto)
@@ -71,6 +81,12 @@ endif
 
 ifeq ($(WITH_NETWORK), true)
     EXTRA_CPPFLAGS += -DWITH_NETWORK
+endif
+
+ifeq ($(WITH_TYRX), true)
+    LINK = $(CXX) $(ALL_CXXFLAGS)
+else
+    LINK = $(CC) $(ALL_CFLAGS)
 endif
 
 OPENTYRIAN_VERSION := $(shell $(VCS_IDREV) 2>/dev/null && \
@@ -92,6 +108,10 @@ CFLAGS ?= -pedantic \
           $(WNO_FORMAT_TRUNCATION) \
           -Wno-missing-field-initializers \
           -O2
+CXXFLAGS ?= -Wall \
+            -Wextra \
+            -Wno-missing-field-initializers \
+            -O2
 LDFLAGS ?=
 LDLIBS ?=
 
@@ -112,6 +132,8 @@ ALL_CPPFLAGS = -DTARGET_$(PLATFORM) \
                $(CPPFLAGS)
 ALL_CFLAGS = -std=iso9899:1999 \
              $(CFLAGS)
+ALL_CXXFLAGS = -std=c++26 -freflection \
+               $(CXXFLAGS)
 ALL_LDFLAGS = $(SDL_LDFLAGS) \
               $(LDFLAGS)
 ALL_LDLIBS = -lm \
@@ -128,6 +150,9 @@ debug : CPPFLAGS += -UNDEBUG
 debug : CFLAGS += -Werror
 debug : CFLAGS += -O0
 debug : CFLAGS += -g3
+debug : CXXFLAGS += -Werror
+debug : CXXFLAGS += -O0
+debug : CXXFLAGS += -g3
 debug : all
 
 .PHONY : installdirs
@@ -172,15 +197,30 @@ clean :
 	rm -f $(DEPS)
 	rm -f $(RES)
 	rm -f $(TARGET)
+	rm -rf obj/tyrx
+	rm -f obj/.with_tyrx_*
 
 $(TARGET) : $(OBJS) $(RES)
-	$(CC) $(ALL_CFLAGS) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LDLIBS)
+	$(LINK) $(ALL_LDFLAGS) -o $@ $(OBJS) $(RES) $(ALL_LDLIBS)
 
 -include $(DEPS)
+
+# Relink when WITH_TYRX changes, since it changes which objects are linked.
+TYRX_STAMP := obj/.with_tyrx_$(WITH_TYRX)
+$(TYRX_STAMP) :
+	@mkdir -p "$(dir $@)"
+	@rm -f obj/.with_tyrx_*
+	@touch $@
+$(TARGET) : $(TYRX_STAMP)
 
 obj/%.o : src/%.c
 	@mkdir -p "$(dir $@)"
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -o $@ $<
+
+# -MP adds an empty rule for each header, so deleting one doesn't break the build.
+obj/tyrx/%.o : src/tyrx/%.cpp
+	@mkdir -p "$(dir $@)"
+	$(CXX) $(ALL_CPPFLAGS) -MP $(ALL_CXXFLAGS) -c -o $@ $<
 
 obj/resources.o : visualc/resources.rc visualc/tyrian.ico
 	@mkdir -p "$(dir $@)"
