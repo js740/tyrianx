@@ -18,7 +18,10 @@
 //------------------------------------------------------------------------------
 
 // The player shots (player_shot_move_and_draw, player_shot_create and
-// player_shot_set_direction in shots.c).
+// player_shot_set_direction in shots.c).  A shot that hits can be freed, and
+// its slot taken by a chain-reaction shot later in the same loop, so the draw
+// record gets each drawn shot's position and frame, and whether it has a
+// shadow.
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -39,11 +42,12 @@ JE_word const linkMult2Gr[17] = {78,  299, 295, 297, 2,   278, 276, 280, 59,  //
 
 }  // namespace
 
-// Port of player_shot_move_and_draw (shots.c).
-bool player_shot_move_and_draw(int shot_id, bool *out_is_special, int *out_shotx, int *out_shoty,
-                               JE_integer *out_shot_damage, JE_byte *out_blast_filter, JE_byte *out_chain,
-                               JE_byte *out_playerNum, JE_word *out_special_radiusw,
-                               JE_word *out_special_radiush) {
+// Port of player_shot_move_and_draw (shots.c), which adds the shot to `drawn`
+// instead of drawing it.
+bool player_shot_move(int shot_id, bool *out_is_special, int *out_shotx, int *out_shoty,
+                      JE_integer *out_shot_damage, JE_byte *out_blast_filter, JE_byte *out_chain,
+                      JE_byte *out_playerNum, JE_word *out_special_radiusw, JE_word *out_special_radiush,
+                      std::vector<PlayerShotDrawn>& drawn) {
   PlayerShotDataType *shot = &playerShotData[shot_id];
 
   shotAvail[shot_id]--;
@@ -149,7 +153,7 @@ bool player_shot_move_and_draw(int shot_id, bool *out_is_special, int *out_shotx
     *out_is_special = sprite_frame > 60000;
 
     if (*out_is_special) {
-      draw::blit_sprite_blend(VGAScreen, *out_shotx + 1, *out_shoty, OPTION_SHAPES, sprite_frame - 60001);
+      drawn.push_back({*out_shotx, *out_shoty, sprite_frame, false});
 
       *out_special_radiusw = sprite(OPTION_SHAPES, sprite_frame - 60001)->width / 2;
       *out_special_radiush = sprite(OPTION_SHAPES, sprite_frame - 60001)->height / 2;
@@ -159,24 +163,35 @@ bool player_shot_move_and_draw(int shot_id, bool *out_is_special, int *out_shotx
         do_sp(*out_shotx + 1 + 6, *out_shoty + 6, 5, 3, (sprite_frame / 1000) << 4);
         sprite_frame = sprite_frame % 1000;
       }
-      if (sprite_frame > 500) {
-        if (background2 && *out_shoty + shadowYDist < 190 && tmp_shotXM < 100) {
-          draw::blit_sprite2_darken(VGAScreen, *out_shotx + 1, *out_shoty + shadowYDist, spriteSheet12,
-                                    sprite_frame - 500);
-        }
-        draw::blit_sprite2(VGAScreen, *out_shotx + 1, *out_shoty, spriteSheet12, sprite_frame - 500);
-      }
-      else {
-        if (background2 && *out_shoty + shadowYDist < 190 && tmp_shotXM < 100) {
-          draw::blit_sprite2_darken(VGAScreen, *out_shotx + 1, *out_shoty + shadowYDist, spriteSheet8,
-                                    sprite_frame);
-        }
-        draw::blit_sprite2(VGAScreen, *out_shotx + 1, *out_shoty, spriteSheet8, sprite_frame);
-      }
+      drawn.push_back({*out_shotx, *out_shoty, sprite_frame,
+                       background2 && *out_shoty + shadowYDist < 190 && tmp_shotXM < 100});
     }
   }
 
   return true;
+}
+
+void player_shots_draw(PlayerShotsDrawn const& d) {
+  SDL_Surface *const surface = d.screen;
+  for (PlayerShotDrawn const& shot : d.drawn) {
+    JE_word const sprite_frame = shot.sprite_frame;
+    int const x = shot.x + 1, y = shot.y;
+    if (sprite_frame > 60000) {
+      draw::blit_sprite_blend(surface, x, y, OPTION_SHAPES, sprite_frame - 60001);
+    }
+    else if (sprite_frame > 500) {
+      if (shot.shadow) {
+        draw::blit_sprite2_darken(surface, x, y + shadowYDist, spriteSheet12, sprite_frame - 500);
+      }
+      draw::blit_sprite2(surface, x, y, spriteSheet12, sprite_frame - 500);
+    }
+    else {
+      if (shot.shadow) {
+        draw::blit_sprite2_darken(surface, x, y + shadowYDist, spriteSheet8, sprite_frame);
+      }
+      draw::blit_sprite2(surface, x, y, spriteSheet8, sprite_frame);
+    }
+  }
 }
 
 // Port of player_shot_create (shots.c).

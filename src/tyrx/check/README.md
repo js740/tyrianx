@@ -124,9 +124,11 @@ tick, after the C code has run the previous one, it:
    the C tick's polls left (the next tick's input has already arrived). The
    pass draws into a draw list of its own (`../port/draw.hpp`).
 4. Compares the hashed state, the draw list and the pixels with the C tick's
-   (`draw/`). The lists must have the same calls, in the same order. The
-   pixels are drawn from the C++ pass's list by the C++ ports (`../render/`),
-   on copies of the surfaces as they were at the start of the tick.
+   (`draw/`). The lists are compared surface by surface: for each surface, the
+   calls that draw on it or read it (copies and filters) must be the same, in
+   the same order. Calls that touch different surfaces commute. The pixels are
+   drawn from the C++ pass's list by the C++ ports (`../render/`), on copies of
+   the surfaces as they were at the start of the tick.
 5. Restores the data saved in step 1.
 
 Ticks in which the C code loaded sprites or opened the pause screen or the
@@ -134,8 +136,12 @@ in-game menu aren't checked, and a pass that would open one, or present or
 poll in some other way, is abandoned. Network games aren't supported. A
 summary goes to stderr at exit, and exits that Tyrian X initiates return
 status 9 if a tick differed. The five demos pass (18,528 ticks checked, 5
-skipped for sprite loading), and so do 20,000 ticks each of synthetic play
-with seeds 1-3 with `TYRX_INPUT_CHEATS`.
+skipped for sprite loading), and so do over 600,000 ticks of synthetic play:
+with seeds 1-7 with `TYRX_INPUT_CHEATS` or `TYRX_INPUT_COMMANDS`, and in
+one- and two-player arcade games, with the mouse moving player 2.
+
+`TYRX_SHADOW_CALLS=1` also prints the calls of each kind that the passes drew,
+and those drawn during the simulation.
 
 ## Call-by-call checks
 

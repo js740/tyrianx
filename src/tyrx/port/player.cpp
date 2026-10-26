@@ -21,8 +21,10 @@
 // JE_playerCollide in mainint.c, and JE_doSpecialShot, JE_specialComplete and
 // JE_playerDamage in varz.c): input, movement, firing, specials, sidekicks,
 // pickups and damage, and the game logic they use (JE_SFCodes, JE_getShipInfo
-// and the power-ups of player.c).  Network games aren't supported, so the
-// network code is left out.
+// and the power-ups of player.c).  The draw record gets the values that each
+// part is drawn with where the simulation goes on to change them (positions,
+// animation frames and charge), and the HUD log the gauges and messages they
+// draw.  Network games aren't supported, so the network code is left out.
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -203,13 +205,13 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
         shotMultiPos[LEFT_SIDEKICK] = 0;
       }
 
-      draw_options();
+      draw_options_tick();
       break;
 
     case 18:  // Spawn right sidekick
       player[0].items.sidekick[RIGHT_SIDEKICK] = special[specialType].wpn;
 
-      draw_options();
+      draw_options_tick();
 
       soundQueue[4] = S_POWERUP;
 
@@ -219,14 +221,11 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 }
 
 // Port of JE_doSpecialShot.
-void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
+void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
   if (player[0].items.special > 0) {
-    if (shotRepeat[SHOT_SPECIAL] == 0 && specialWait == 0 && flareDuration < 2 && zinglonDuration < 2) {
-      draw::blit_sprite2(VGAScreen, 47, 4, spriteSheet9, 94);
-    }
-    else {
-      draw::blit_sprite2(VGAScreen, 47, 4, spriteSheet9, 93);
-    }
+    bool const ready =
+        shotRepeat[SHOT_SPECIAL] == 0 && specialWait == 0 && flareDuration < 2 && zinglonDuration < 2;
+    drawn.special_icon = PlayerDrawn::SpecialIcon{VGAScreen, ready};
   }
 
   if (shotRepeat[SHOT_SPECIAL] > 0) {
@@ -285,10 +284,10 @@ void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
 
     SFExecuted[playerNum - 1] = 0;
 
-    wipe_shield_armor_bars();
+    wipe_shield_armor_bars_tick();
     VGAScreen = VGAScreenSeg;  // side-effect of game_screen
-    draw_shield();
-    draw_armor();
+    draw_shield_tick();
+    draw_armor_tick();
     VGAScreen = game_screen;  // side-effect of game_screen
   }
 
@@ -388,8 +387,7 @@ void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
 
   temp = 25 - abs(zinglonDuration - 25);
 
-  draw::JE_barBright(VGAScreen, player[0].x + 7 - temp, 0, player[0].x + 7 + temp, 184);
-  draw::JE_barBright(VGAScreen, player[0].x + 7 - temp - 2, 0, player[0].x + 7 + temp + 2, 184);
+  drawn.zinglon = PlayerDrawn::Zinglon{VGAScreen, player[0].x, temp};
 
   zinglonDuration--;
   if (zinglonDuration % 5 == 0) {
@@ -397,11 +395,153 @@ void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
   }
 }
 
+// The ship as drawn: in the fade-out at the end of a level, its trail.
+void draw_ship_trail(SDL_Surface *screen, JE_word shipGr_, Sprite2_array *shipGrPtr_, int x, int trail_y) {
+  if (shipGr_ == 0) {
+    draw::blit_sprite2x2(screen, x - 17, trail_y - 7, *shipGrPtr_, 13);
+    draw::blit_sprite2x2(screen, x + 7, trail_y - 7, *shipGrPtr_, 51);
+  }
+  else if (shipGr_ == 1) {
+    draw::blit_sprite2x2(screen, x - 17, trail_y - 7, *shipGrPtr_, 220);
+    draw::blit_sprite2x2(screen, x + 7, trail_y - 7, *shipGrPtr_, 222);
+  }
+  else {
+    draw::blit_sprite2x2(screen, x - 5, trail_y - 7, *shipGrPtr_, shipGr_);
+  }
+}
+
+void draw_ship(JE_word shipGr_, Sprite2_array *shipGrPtr_, ShipDrawn const& d) {
+  SDL_Surface *const screen = d.screen;
+  int const x = d.x, y = d.y;
+  int const ship_sprite = d.ship_sprite;
+  JE_word const mapX2Ofs = d.mapX2Ofs;
+
+  if (shipGr_ == 0) {
+    if (d.background2) {
+      draw::blit_sprite2x2_darken(screen, x - 17 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_,
+                                  ship_sprite + 13);
+      draw::blit_sprite2x2_darken(screen, x + 7 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_,
+                                  ship_sprite + 51);
+      if (d.superWild) {
+        draw::blit_sprite2x2_darken(screen, x - 16 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_,
+                                    ship_sprite + 13);
+        draw::blit_sprite2x2_darken(screen, x + 6 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_,
+                                    ship_sprite + 51);
+      }
+    }
+  }
+  else if (shipGr_ == 1) {
+    if (d.background2) {
+      draw::blit_sprite2x2_darken(screen, x - 17 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_, 220);
+      draw::blit_sprite2x2_darken(screen, x + 7 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_, 222);
+    }
+  }
+  else {
+    if (d.background2) {
+      draw::blit_sprite2x2_darken(screen, x - 5 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_,
+                                  ship_sprite);
+      if (d.superWild) {
+        draw::blit_sprite2x2_darken(screen, x - 4 - mapX2Ofs + 30, y - 7 + shadowYDist, *shipGrPtr_,
+                                    ship_sprite);
+      }
+    }
+  }
+
+  if (d.invulnerable) {
+    if (shipGr_ == 0) {
+      draw::blit_sprite2x2_blend(screen, x - 17, y - 7, *shipGrPtr_, ship_sprite + 13);
+      draw::blit_sprite2x2_blend(screen, x + 7, y - 7, *shipGrPtr_, ship_sprite + 51);
+    }
+    else if (shipGr_ == 1) {
+      draw::blit_sprite2x2_blend(screen, x - 17, y - 7, *shipGrPtr_, 220);
+      draw::blit_sprite2x2_blend(screen, x + 7, y - 7, *shipGrPtr_, 222);
+    }
+    else {
+      draw::blit_sprite2x2_blend(screen, x - 5, y - 7, *shipGrPtr_, ship_sprite);
+    }
+  }
+  else {
+    if (shipGr_ == 0) {
+      draw::blit_sprite2x2(screen, x - 17, y - 7, *shipGrPtr_, ship_sprite + 13);
+      draw::blit_sprite2x2(screen, x + 7, y - 7, *shipGrPtr_, ship_sprite + 51);
+    }
+    else if (shipGr_ == 1) {
+      draw::blit_sprite2x2(screen, x - 17, y - 7, *shipGrPtr_, 220);
+      draw::blit_sprite2x2(screen, x + 7, y - 7, *shipGrPtr_, 222);
+
+      switch (ship_sprite) {
+        case 5:
+          draw::blit_sprite2(screen, x - 17, y + 7, *shipGrPtr_, 40);
+          break;
+        case 3:
+          draw::blit_sprite2(screen, x - 17, y + 7, *shipGrPtr_, 39);
+          break;
+        case -1:
+          draw::blit_sprite2(screen, x + 19, y + 7, *shipGrPtr_, 58);
+          break;
+        case -3:
+          draw::blit_sprite2(screen, x + 19, y + 7, *shipGrPtr_, 59);
+          break;
+      }
+    }
+    else {
+      draw::blit_sprite2x2(screen, x - 5, y - 7, *shipGrPtr_, ship_sprite);
+    }
+  }
+}
+
+}  // namespace
+
+// The player's parts, in the order JE_playerMovement draws them.
+void player_draw(PlayerDrawn const& d) {
+  if (d.trail) {
+    for (int trail_y : d.trail->trail_y) {
+      draw_ship_trail(d.trail->screen, d.shipGr_, d.shipGrPtr_, d.trail->x, trail_y);
+    }
+  }
+  if (d.insert_coin != nullptr) {
+    draw::JE_dString(d.insert_coin, 115, 10, miscText[7], SMALL_FONT_SHAPES);  // insert coin
+  }
+  if (d.ship) {
+    draw_ship(d.shipGr_, d.shipGrPtr_, *d.ship);
+  }
+  if (d.special_icon) {
+    draw::blit_sprite2(d.special_icon->screen, 47, 4, spriteSheet9, d.special_icon->ready ? 94 : 93);
+  }
+  if (d.zinglon) {
+    SDL_Surface *const screen = d.zinglon->screen;
+    int const x = d.zinglon->x, temp = d.zinglon->temp;
+    draw::JE_barBright(screen, x + 7 - temp, 0, x + 7 + temp, 184);
+    draw::JE_barBright(screen, x + 7 - temp - 2, 0, x + 7 + temp + 2, 184);
+  }
+  if (d.charge) {
+    draw::blit_sprite2(d.charge->screen, d.charge->x, d.charge->y, spriteSheet10, d.charge->sprite);
+  }
+  for (std::optional<PlayerDrawn::Sidekick> const& sidekick : d.sidekicks) {
+    if (!sidekick) {
+      continue;
+    }
+
+    if (sidekick->style == 1 || sidekick->style == 2) {
+      draw::blit_sprite2x2(sidekick->screen, sidekick->x - 6, sidekick->y, spriteSheet10, sidekick->sprite);
+    }
+    else {
+      draw::blit_sprite2(sidekick->screen, sidekick->x, sidekick->y, spriteSheet9, sidekick->sprite);
+    }
+  }
+}
+
+namespace {
+
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
   JE_integer mouseXC, mouseYC;
   JE_integer accelXC, accelYC;
+
+  PlayerDrawn& drawn = draw_record().players.emplace_back();
+  drawn.shipGr_ = shipGr_;
+  drawn.shipGrPtr_ = shipGrPtr_;
 
   if (playerNum_ == 2 || !twoPlayerMode) {
     tempW = weaponPort[this_player->items.weapon[REAR_WEAPON].id].opnum;
@@ -486,8 +626,8 @@ redo:
           }
 
           VGAScreen = VGAScreenSeg;  // side-effect of game_screen
-          draw_armor();
-          draw_shield();
+          draw_armor_tick();
+          draw_shield_tick();
           VGAScreen = game_screen;  // side-effect of game_screen
           goto redo;
         }
@@ -516,9 +656,9 @@ redo:
         levelEnd = 40;
       }
 
-      wipe_shield_armor_bars();
+      wipe_shield_armor_bars_tick();
       VGAScreen = VGAScreenSeg;  // side-effect of game_screen
-      draw_armor();
+      draw_armor_tick();
       VGAScreen = game_screen;  // side-effect of game_screen
 
       // as if instant death weren't enough, player also gets infinite lives in order to enjoy an infinite
@@ -791,23 +931,16 @@ redo:
           continue;
         }
 
-        if (shipGr_ == 0) {
-          draw::blit_sprite2x2(VGAScreen, this_player->x - 17, trail_y - 7, *shipGrPtr_, 13);
-          draw::blit_sprite2x2(VGAScreen, this_player->x + 7, trail_y - 7, *shipGrPtr_, 51);
+        if (!drawn.trail) {
+          drawn.trail = PlayerDrawn::Trail{VGAScreen, this_player->x, {}};
         }
-        else if (shipGr_ == 1) {
-          draw::blit_sprite2x2(VGAScreen, this_player->x - 17, trail_y - 7, *shipGrPtr_, 220);
-          draw::blit_sprite2x2(VGAScreen, this_player->x + 7, trail_y - 7, *shipGrPtr_, 222);
-        }
-        else {
-          draw::blit_sprite2x2(VGAScreen, this_player->x - 5, trail_y - 7, *shipGrPtr_, shipGr_);
-        }
+        drawn.trail->trail_y.push_back(trail_y);
       }
     }
   }
 
   if (playDemo) {
-    draw::JE_dString(VGAScreen, 115, 10, miscText[7], SMALL_FONT_SHAPES);  // insert coin
+    drawn.insert_coin = VGAScreen;
   }
 
   if (this_player->is_alive && !endLevel) {
@@ -954,108 +1087,46 @@ redo:
     this_player->last_x_explosion_follow = this_player->x;
     this_player->last_y_explosion_follow = this_player->y;
 
-    if (shipGr_ == 0) {
-      if (background2) {
-        draw::blit_sprite2x2_darken(VGAScreen, this_player->x - 17 - mapX2Ofs + 30,
-                                    this_player->y - 7 + shadowYDist, *shipGrPtr_, ship_sprite + 13);
-        draw::blit_sprite2x2_darken(VGAScreen, this_player->x + 7 - mapX2Ofs + 30,
-                                    this_player->y - 7 + shadowYDist, *shipGrPtr_, ship_sprite + 51);
-        if (superWild) {
-          draw::blit_sprite2x2_darken(VGAScreen, this_player->x - 16 - mapX2Ofs + 30,
-                                      this_player->y - 7 + shadowYDist, *shipGrPtr_, ship_sprite + 13);
-          draw::blit_sprite2x2_darken(VGAScreen, this_player->x + 6 - mapX2Ofs + 30,
-                                      this_player->y - 7 + shadowYDist, *shipGrPtr_, ship_sprite + 51);
-        }
-      }
-    }
-    else if (shipGr_ == 1) {
-      if (background2) {
-        draw::blit_sprite2x2_darken(VGAScreen, this_player->x - 17 - mapX2Ofs + 30,
-                                    this_player->y - 7 + shadowYDist, *shipGrPtr_, 220);
-        draw::blit_sprite2x2_darken(VGAScreen, this_player->x + 7 - mapX2Ofs + 30,
-                                    this_player->y - 7 + shadowYDist, *shipGrPtr_, 222);
-      }
-    }
-    else {
-      if (background2) {
-        draw::blit_sprite2x2_darken(VGAScreen, this_player->x - 5 - mapX2Ofs + 30,
-                                    this_player->y - 7 + shadowYDist, *shipGrPtr_, ship_sprite);
-        if (superWild) {
-          draw::blit_sprite2x2_darken(VGAScreen, this_player->x - 4 - mapX2Ofs + 30,
-                                      this_player->y - 7 + shadowYDist, *shipGrPtr_, ship_sprite);
-        }
-      }
-    }
+    drawn.ship =
+        ShipDrawn{VGAScreen, this_player->x,    this_player->y,  ship_sprite,
+                  mapX2Ofs,  (bool)background2, (bool)superWild, this_player->invulnerable_ticks > 0};
 
     if (this_player->invulnerable_ticks > 0) {
       --this_player->invulnerable_ticks;
-
-      if (shipGr_ == 0) {
-        draw::blit_sprite2x2_blend(VGAScreen, this_player->x - 17, this_player->y - 7, *shipGrPtr_,
-                                   ship_sprite + 13);
-        draw::blit_sprite2x2_blend(VGAScreen, this_player->x + 7, this_player->y - 7, *shipGrPtr_,
-                                   ship_sprite + 51);
-      }
-      else if (shipGr_ == 1) {
-        draw::blit_sprite2x2_blend(VGAScreen, this_player->x - 17, this_player->y - 7, *shipGrPtr_, 220);
-        draw::blit_sprite2x2_blend(VGAScreen, this_player->x + 7, this_player->y - 7, *shipGrPtr_, 222);
-      }
-      else {
-        draw::blit_sprite2x2_blend(VGAScreen, this_player->x - 5, this_player->y - 7, *shipGrPtr_,
-                                   ship_sprite);
-      }
     }
-    else {
-      if (shipGr_ == 0) {
-        draw::blit_sprite2x2(VGAScreen, this_player->x - 17, this_player->y - 7, *shipGrPtr_,
-                             ship_sprite + 13);
-        draw::blit_sprite2x2(VGAScreen, this_player->x + 7, this_player->y - 7, *shipGrPtr_,
-                             ship_sprite + 51);
+    else if (shipGr_ == 1) {
+      int ship_banking = 0;
+      switch (ship_sprite) {
+        case 5:
+          tempW = this_player->x - 7;
+          ship_banking = -2;
+          break;
+        case 3:
+          tempW = this_player->x - 7;
+          ship_banking = -1;
+          break;
+        case 1:
+          ship_banking = 0;
+          break;
+        case -1:
+          tempW = this_player->x + 9;
+          ship_banking = 1;
+          break;
+        case -3:
+          tempW = this_player->x + 9;
+          ship_banking = 2;
+          break;
       }
-      else if (shipGr_ == 1) {
-        draw::blit_sprite2x2(VGAScreen, this_player->x - 17, this_player->y - 7, *shipGrPtr_, 220);
-        draw::blit_sprite2x2(VGAScreen, this_player->x + 7, this_player->y - 7, *shipGrPtr_, 222);
-
-        int ship_banking = 0;
-        switch (ship_sprite) {
-          case 5:
-            draw::blit_sprite2(VGAScreen, this_player->x - 17, this_player->y + 7, *shipGrPtr_, 40);
-            tempW = this_player->x - 7;
-            ship_banking = -2;
-            break;
-          case 3:
-            draw::blit_sprite2(VGAScreen, this_player->x - 17, this_player->y + 7, *shipGrPtr_, 39);
-            tempW = this_player->x - 7;
-            ship_banking = -1;
-            break;
-          case 1:
-            ship_banking = 0;
-            break;
-          case -1:
-            draw::blit_sprite2(VGAScreen, this_player->x + 19, this_player->y + 7, *shipGrPtr_, 58);
-            tempW = this_player->x + 9;
-            ship_banking = 1;
-            break;
-          case -3:
-            draw::blit_sprite2(VGAScreen, this_player->x + 19, this_player->y + 7, *shipGrPtr_, 59);
-            tempW = this_player->x + 9;
-            ship_banking = 2;
-            break;
+      // NortSparks
+      if (ship_banking != 0) {
+        if (shotRepeat[SHOT_NORTSPARKS] > 0) {
+          --shotRepeat[SHOT_NORTSPARKS];
         }
-        // NortSparks
-        if (ship_banking != 0) {
-          if (shotRepeat[SHOT_NORTSPARKS] > 0) {
-            --shotRepeat[SHOT_NORTSPARKS];
-          }
-          else {
-            b = port::player_shot_create(0, SHOT_NORTSPARKS, tempW + (mt_rand() % 8) - 4,
-                                         this_player->y + (mt_rand() % 8) - 4, *mouseX_, *mouseY_, 671, 1);
-            shotRepeat[SHOT_NORTSPARKS] = abs(ship_banking) - 1;
-          }
+        else {
+          b = port::player_shot_create(0, SHOT_NORTSPARKS, tempW + (mt_rand() % 8) - 4,
+                                       this_player->y + (mt_rand() % 8) - 4, *mouseX_, *mouseY_, 671, 1);
+          shotRepeat[SHOT_NORTSPARKS] = abs(ship_banking) - 1;
         }
-      }
-      else {
-        draw::blit_sprite2x2(VGAScreen, this_player->x - 5, this_player->y - 7, *shipGrPtr_, ship_sprite);
       }
     }
 
@@ -1102,7 +1173,7 @@ redo:
               this_player->weapon_mode = 1;
             }
 
-            draw_port_config_buttons();
+            draw_port_config_buttons_tick();
             portConfigDone = false;
           }
         }
@@ -1111,7 +1182,7 @@ redo:
 
         // SpecialShot
         if (!galagaMode) {
-          do_special_shot(playerNum_, &this_player->armor, &this_player->shield);
+          do_special_shot(playerNum_, &this_player->armor, &this_player->shield, drawn);
         }
 
         // Normal Main Weapons
@@ -1148,8 +1219,8 @@ redo:
         // Super Charge Weapons
         if (playerNum_ == 2) {
           if (!twoPlayerLinked) {
-            draw::blit_sprite2(VGAScreen, this_player->x + (shipGr_ == 0) + 1, this_player->y - 13,
-                               spriteSheet10, 77 + chargeLevel + chargeGr * 19);
+            drawn.charge = PlayerDrawn::Charge{VGAScreen, this_player->x + (shipGr_ == 0) + 1,
+                                               this_player->y - 13, 77 + chargeLevel + chargeGr * 19};
           }
 
           if (chargeGrWait > 0) {
@@ -1164,8 +1235,7 @@ redo:
           }
 
           if (chargeLevel > 0) {
-            draw::fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275,
-                                    108 + (chargeLevel - 1) * 3, 193);
+            charge_level_tick(193);
           }
 
           if (chargeWait > 0) {
@@ -1183,8 +1253,7 @@ redo:
           }
 
           if (chargeLevel > 0) {
-            draw::fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275,
-                                    108 + (chargeLevel - 1) * 3, 204);
+            charge_level_tick(204);
           }
 
           if (shotRepeat[SHOT_P2_CHARGE] > 0) {
@@ -1197,8 +1266,7 @@ redo:
                 chargeGunWeapons[player[1].items.weapon[REAR_WEAPON].id - 1] + chargeLevel, playerNum_);
 
             if (chargeLevel > 0) {
-              draw::fill_rectangle_xy(VGAScreenSeg, 269, 107 + (chargeLevel - 1) * 3, 275,
-                                      108 + (chargeLevel - 1) * 3, 193);
+              charge_level_tick(193);
             }
 
             chargeLevel = 0;
@@ -1382,8 +1450,7 @@ redo:
 
                   // draw sidekick refill ammo gauge
                   int const y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
-                  draw::draw_segmented_gauge(VGAScreenSeg, 284, y, 112, 2, 2, MAX(1, ammo_max / 10),
-                                             this_player->sidekick[i].ammo);
+                  sidekick_ammo_tick(y, ammo_max, this_player->sidekick[i].ammo, false);
                 }
 
                 if (button[1 + i] && this_player->sidekick[i].ammo > 0) {
@@ -1401,9 +1468,7 @@ redo:
 
                   // draw sidekick discharge ammo gauge
                   int const y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
-                  draw::fill_rectangle_xy(VGAScreenSeg, 284, y, 312, y + 2, 0);
-                  draw::draw_segmented_gauge(VGAScreenSeg, 284, y, 112, 2, 2, MAX(1, ammo_max / 10),
-                                             this_player->sidekick[i].ammo);
+                  sidekick_ammo_tick(y, ammo_max, this_player->sidekick[i].ammo, true);
                 }
               }
               // has infinite ammo
@@ -1448,12 +1513,7 @@ redo:
       uint const sprite =
           this_option->gr[this_player->sidekick[i].animation_frame] + this_player->sidekick[i].charge;
 
-      if (this_player->sidekick[i].style == 1 || this_player->sidekick[i].style == 2) {
-        draw::blit_sprite2x2(VGAScreen, x - 6, y, spriteSheet10, sprite);
-      }
-      else {
-        draw::blit_sprite2(VGAScreen, x, y, spriteSheet9, sprite);
-      }
+      drawn.sidekicks[i] = PlayerDrawn::Sidekick{VGAScreen, x, y, sprite, this_player->sidekick[i].style};
     }
 
     if (--this_player->sidekick[i].charge_ticks != 0) {
@@ -1572,10 +1632,10 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
     setup_explosion(this_player->x + 7, this_player->y + 16, 0, 22, false, !twoPlayerMode);
   }
 
-  wipe_shield_armor_bars();
+  wipe_shield_armor_bars_tick();
   VGAScreen = VGAScreenSeg;  // side-effect of game_screen
-  draw_shield();
-  draw_armor();
+  draw_shield_tick();
+  draw_armor_tick();
   VGAScreen = game_screen;  // side-effect of game_screen
 
   return playerDamage;
@@ -1660,7 +1720,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
           else {
             sprintf(tempStr, "%s %s", miscText[64 - 1], special[evalue - 32100].name);
           }
-          draw_text_window(tempStr);
+          draw_text_window_tick(tempStr);
           soundQueue[7] = S_POWERUP;
           enemyAvail[z] = 1;
         }
@@ -1675,7 +1735,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
           else {
             sprintf(tempStr, "%s %s", miscText[44 - 1], options[evalue - 32000].name);
           }
-          draw_text_window(tempStr);
+          draw_text_window_tick(tempStr);
 
           // if picked up a different sidekick than player already has, then reset sidekicks to least
           // powerful, else power them up
@@ -1694,13 +1754,13 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
 
           shotMultiPos[SHOT_LEFT_SIDEKICK] = 0;
           shotMultiPos[SHOT_RIGHT_SIDEKICK] = 0;
-          draw_options();
+          draw_options_tick();
           soundQueue[7] = S_POWERUP;
         }
         else if (onePlayerAction) {
           enemyAvail[z] = 1;
           sprintf(tempStr, "%s %s", miscText[64 - 1], options[evalue - 32000].name);
-          draw_text_window(tempStr);
+          draw_text_window_tick(tempStr);
 
           for (uint i = 0; i < COUNTOF(player[0].items.sidekick); ++i) {
             player[0].items.sidekick[i] = evalue - 32000;
@@ -1708,7 +1768,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
           shotMultiPos[SHOT_LEFT_SIDEKICK] = 0;
           shotMultiPos[SHOT_RIGHT_SIDEKICK] = 0;
 
-          draw_options();
+          draw_options_tick();
           soundQueue[7] = S_POWERUP;
         }
         if (enemyAvail[z] == 1) {
@@ -1725,7 +1785,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
           else {
             sprintf(tempStr, "%s %s", miscText[44 - 1], weaponPort[evalue - 31000].name);
           }
-          draw_text_window(tempStr);
+          draw_text_window_tick(tempStr);
           player[1].items.weapon[REAR_WEAPON].id = evalue - 31000;
           shotMultiPos[SHOT_REAR] = 0;
           enemyAvail[z] = 1;
@@ -1733,7 +1793,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         }
         else if (onePlayerAction) {
           sprintf(tempStr, "%s %s", miscText[64 - 1], weaponPort[evalue - 31000].name);
-          draw_text_window(tempStr);
+          draw_text_window_tick(tempStr);
           player[0].items.weapon[REAR_WEAPON].id = evalue - 31000;
           shotMultiPos[SHOT_REAR] = 0;
           enemyAvail[z] = 1;
@@ -1754,7 +1814,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
           else {
             sprintf(tempStr, "%s %s", miscText[43 - 1], weaponPort[evalue - 30000].name);
           }
-          draw_text_window(tempStr);
+          draw_text_window_tick(tempStr);
           player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
           shotMultiPos[SHOT_FRONT] = 0;
           enemyAvail[z] = 1;
@@ -1762,7 +1822,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         }
         else if (onePlayerAction) {
           sprintf(tempStr, "%s %s", miscText[64 - 1], weaponPort[evalue - 30000].name);
-          draw_text_window(tempStr);
+          draw_text_window_tick(tempStr);
           player[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
           shotMultiPos[SHOT_FRONT] = 0;
           enemyAvail[z] = 1;
@@ -1799,7 +1859,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
       }
       enemyAvail[z] = 1;
       VGAScreen = VGAScreenSeg;  // side-effect of game_screen
-      draw_armor();
+      draw_armor_tick();
       VGAScreen = game_screen;  // side-effect of game_screen
       soundQueue[7] = S_POWERUP;
     }
@@ -1830,7 +1890,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         else {
           strcpy(tempStr, miscText[45 - 1]);
         }
-        draw_text_window(tempStr);
+        draw_text_window_tick(tempStr);
 
         port::power_up_weapon(&player[0], FRONT_WEAPON);
         soundQueue[7] = S_POWERUP;
@@ -1846,7 +1906,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
         else {
           strcpy(tempStr, miscText[46 - 1]);
         }
-        draw_text_window(tempStr);
+        draw_text_window_tick(tempStr);
 
         port::power_up_weapon(twoPlayerMode ? &player[1] : &player[0], REAR_WEAPON);
         soundQueue[7] = S_POWERUP;

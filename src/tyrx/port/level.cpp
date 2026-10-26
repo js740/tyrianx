@@ -18,7 +18,9 @@
 //------------------------------------------------------------------------------
 
 // One pass of the level loop (from the level_loop label in JE_main, tyrian2.c),
-// in C++, in the C code's order, drawing as it goes; see level.hpp.
+// in C++: the tick's simulation, in the C code's order, which keeps a record
+// for the drawing; then the drawing, from the record; then the frame.  See
+// level.hpp.
 
 #include "level.hpp"
 
@@ -26,29 +28,25 @@
 #include "draw.hpp"
 #include "port.hpp"
 
+#include <bitset>
 #include <cassert>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
+#include <vector>
 
 namespace tyrx::port {
 
 namespace {
 
-// The level loop's frame: copies the playing area to the screen, scales it,
-// waits for the frame deadline and presents it.  The level loop polls events
-// at the end of the tick.
-void show_frame() {
+// The end of the level loop's frame, after the tick's drawing: scales the
+// screen, waits for the frame deadline, presents it and polls events.  (The
+// copy of the playing area to the screen ends the tick's drawing.  The C code
+// polls events after the end-of-level checks, which the simulation has made
+// already.)
+void present_frame() {
   if (!playerEndLevel && !skipStarShowVGA) {
-    if (starShowVGASpecialCode == 1) {
-      draw::showFlipped(VGAScreenSeg, game_screen);
-    }
-    else if (starShowVGASpecialCode == 2 && processorType >= 2) {
-      draw::showHeadlight(VGAScreenSeg, game_screen, player[0].x, player[0].y);
-    }
-    else {
-      draw::showNormal(VGAScreenSeg, game_screen);
-    }
     // Scale the screen before the delay so that it can be presented
     // immediately after it.
     render_screen();
@@ -60,13 +58,32 @@ void show_frame() {
   }
   quitRequested = false;
   skipStarShowVGA = false;
+  poll_events();
 }
+
+// The tick's simulation, which is complete before anything is drawn.  `frame`
+// is set if the tick ends with a frame: it doesn't when the in-game menu or
+// help was opened, or the level ended early.
+LevelPass simulate(bool& frame);
 
 }  // namespace
 
 LevelLocals& level_locals() {
   static LevelLocals locals;
   return locals;
+}
+
+LevelPass level_pass() {
+  bool frame = false;
+  LevelPass const next = simulate(frame);
+  if (next != LevelPass::unsupported) {
+    drawing_begins();
+    draw_tick(draw_record());
+    if (frame) {
+      present_frame();
+    }
+  }
+  return next;
 }
 
 namespace {
@@ -134,7 +151,7 @@ void hud_tick() {
 
   // -----------------------Message Bar------------------------
   if (textErase > 0 && --textErase == 0) {
-    draw::blit_sprite(VGAScreenSeg, 16, 189, OPTION_SHAPES, 36);  // in-game message area
+    message_bar_erased_tick();  // in-game message area
   }
 
   // ------------------------Shield Gen-------------------------
@@ -179,7 +196,7 @@ void hud_tick() {
           }
         }
 
-        draw_shield();
+        draw_shield_tick();
       }
     }
     else if (player[0].is_alive && player[0].shield < player[0].shield_max && power > shieldT) {
@@ -193,7 +210,7 @@ void hud_tick() {
           ++player[1].shield;
         }
 
-        draw_shield();
+        draw_shield_tick();
       }
     }
   }
@@ -210,12 +227,7 @@ void hud_tick() {
 
     int x = twoPlayerMode ? 286 : 289, y = (i == 0) ? (twoPlayerMode ? 6 : 17) : (twoPlayerMode ? 100 : 38);
 
-    draw::fill_rectangle_xy(VGAScreenSeg, x, y, x + 1 + 10 * 2, y + 2, 0);
-
-    for (uint j = 1; j <= item_power; ++j) {
-      draw::JE_rectangle(VGAScreen, x, y, x + 1, y + 2, 115 + j);  // SEGa000
-      x += 2;
-    }
+    weapon_power_tick(x, y, item_power);
   }
 
   // ------------------------Power Bar-------------------------
@@ -231,13 +243,7 @@ void hud_tick() {
     temp = power / 10;
 
     if (temp != lastPower) {
-      if (temp > lastPower) {
-        draw::fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - temp, 276, 114 - 11 - lastPower,
-                                113 + temp / 7);
-      }
-      else {
-        draw::fill_rectangle_xy(VGAScreenSeg, 269, 113 - 11 - lastPower, 276, 114 - 11 - temp, 0);
-      }
+      power_bar_tick(temp, lastPower);
 
       lastPower = temp;
     }
@@ -250,6 +256,8 @@ void hud_tick() {
 
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under_tick() {
+  DrawRecord& r = draw_record();
+
   // SMOOTHIES!
   JE_checkSmoothies();
   if (anySmoothies) {
@@ -269,10 +277,10 @@ void backgrounds_under_tick() {
 
   // Draw background
   if (astralDuration == 0) {
-    draw::draw_background_1(VGAScreen, mapYPos, mapXbpPos, mapXPos, backPos);
+    background_1_tick(VGAScreen, false);
   }
   else {
-    draw::JE_clr256(VGAScreen);
+    background_1_tick(VGAScreen, true);  // JE_clr256
   }
 
   // Set Movement of background 1
@@ -291,38 +299,38 @@ void backgrounds_under_tick() {
   }
 
   if (starActive || astralDuration > 0) {
-    starfield(VGAScreen, starfield_speed);
+    starfield_tick(VGAScreen, starfield_speed);
   }
 
   if (processorType > 1 && smoothies[5 - 1]) {
-    draw::iced_blur_filter(game_screen, VGAScreen);
+    r.iced_blur_1 = Copy{game_screen, VGAScreen};
     VGAScreen = game_screen;
   }
 
   // -----------------------BACKGROUNDS------------------------
   // -----------------------BACKGROUND 2------------------------
   if (background2over == 3) {
-    background_2(VGAScreen, false);
+    background_2_tick(VGAScreen, false, r.background_2_under);
     background2 = true;
   }
 
   if (background2over == 0) {
     if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
       if (wild && !background2notTransparent) {
-        background_2(VGAScreen, true);
+        background_2_tick(VGAScreen, true, r.background_2_under);
       }
       else {
-        background_2(VGAScreen, false);
+        background_2_tick(VGAScreen, false, r.background_2_under);
       }
     }
   }
 
   if (smoothies[0] && processorType > 2 && smoothie_data[0] == 0) {
-    draw::lava_filter(game_screen, VGAScreen);
+    r.lava_1 = Copy{game_screen, VGAScreen};
     VGAScreen = game_screen;
   }
   if (smoothies[2 - 1] && processorType > 2) {
-    draw::water_filter(game_screen, VGAScreen, smoothie_data[1]);
+    r.water = Copy{game_screen, VGAScreen};
     VGAScreen = game_screen;
   }
 }
@@ -330,6 +338,7 @@ void backgrounds_under_tick() {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under_tick() {
+  DrawRecord& r = draw_record();
   int lastEnemyOnScreen;
 
   // -----------------------Ground Enemy------------------------
@@ -337,21 +346,21 @@ void enemies_under_tick() {
 
   tempMapXOfs = mapXOfs;
   tempBackMove = backMove;
-  draw_enemy(50);
-  draw_enemy(100);
+  draw_enemy_tick(50, r.ground_enemies);
+  draw_enemy_tick(100, r.ground_enemies_2);
 
   if ((enemyOnScreen == 0 || enemyOnScreen == lastEnemyOnScreen) && stopBackgroundNum == 1) {
     stopBackgroundNum = 9;
   }
 
   if (smoothies[0] && processorType > 2 && smoothie_data[0] > 0) {
-    draw::lava_filter(game_screen, VGAScreen);
+    r.lava_2 = Copy{game_screen, VGAScreen};
     VGAScreen = game_screen;
   }
 
   if (superWild) {
     neat += 3;
-    draw::JE_darkenBackground(VGAScreen, neat);
+    r.darken_1 = Darkened{VGAScreen, neat};
   }
 
   // -----------------------BACKGROUNDS------------------------
@@ -359,21 +368,21 @@ void enemies_under_tick() {
   if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
     if (background2over == 1) {
       if (wild && !background2notTransparent) {
-        background_2(VGAScreen, true);
+        background_2_tick(VGAScreen, true, r.background_2_over_1);
       }
       else {
-        background_2(VGAScreen, false);
+        background_2_tick(VGAScreen, false, r.background_2_over_1);
       }
     }
   }
 
   if (superWild) {
     neat++;
-    draw::JE_darkenBackground(VGAScreen, neat);
+    r.darken_2 = Darkened{VGAScreen, neat};
   }
 
   if (background3over == 2) {
-    background_3(VGAScreen);
+    background_3_tick(VGAScreen, r.background_3_over_2);
   }
 
   // New Enemy
@@ -386,11 +395,11 @@ void enemies_under_tick() {
   }
 
   if (processorType > 1 && smoothies[3 - 1]) {
-    draw::iced_blur_filter(game_screen, VGAScreen);
+    r.iced_blur_2 = Copy{game_screen, VGAScreen};
     VGAScreen = game_screen;
   }
   if (processorType > 1 && smoothies[4 - 1]) {
-    draw::blur_filter(game_screen, VGAScreen);
+    r.blur = Copy{game_screen, VGAScreen};
     VGAScreen = game_screen;
   }
 
@@ -400,7 +409,7 @@ void enemies_under_tick() {
 
     tempMapXOfs = mapX2Ofs;
     tempBackMove = 0;
-    draw_enemy(25);
+    draw_enemy_tick(25, r.sky_enemies_under);
 
     if (enemyOnScreen == lastEnemyOnScreen && stopBackgroundNum == 2) {
       stopBackgroundNum = 9;
@@ -408,20 +417,23 @@ void enemies_under_tick() {
   }
 
   if (background3over == 0) {
-    background_3(VGAScreen);
+    background_3_tick(VGAScreen, r.background_3_over_0);
   }
 
   // Draw Top Enemy
   if (!topEnemyOver) {
     tempMapXOfs = (background3x1 == 0) ? oldMapX3Ofs : mapXOfs;
     tempBackMove = backMove3;
-    draw_enemy(75);
+    draw_enemy_tick(75, r.top_enemies_under);
   }
 }
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  DrawRecord& r = draw_record();
+
   // Player Shot Images
+  r.player_shots = PlayerShotsDrawn{VGAScreen, {}};
   for (int z = 0; z < MAX_PWEAPON; z++) {
     if (shotAvail[z] == 0) {
       continue;
@@ -434,8 +446,8 @@ void player_shots_tick() {
     JE_word tempX2, tempY2;
     JE_integer damage;
 
-    if (!port::player_shot_move_and_draw(z, &is_special, &tempShotX, &tempShotY, &damage, &temp2, &chain,
-                                         &playerNum, &tempX2, &tempY2))
+    if (!player_shot_move(z, &is_special, &tempShotX, &tempShotY, &damage, &temp2, &chain, &playerNum,
+                          &tempX2, &tempY2, r.player_shots->drawn))
     {
       goto draw_player_shot_loop_end;
     }
@@ -734,11 +746,13 @@ void players_tick() {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
+  DrawRecord& r = draw_record();
   int lastEnemyOnScreen;
 
   // MAIN DRAWING IS STOPPED STARTING HERE
   if (!endLevel) {
     // Draw Enemy Shots
+    r.enemy_shots = EnemyShotsDrawn{VGAScreen, {}};
     for (int z = 0; z < ENEMY_SHOT_MAX; z++) {
       if (enemyShotAvail[z] != 0) {
         continue;
@@ -813,28 +827,21 @@ void enemy_shots_tick() {
             enemyShot[z].animate = 0;
           }
 
-          if (enemyShot[z].sgr >= 500) {
-            draw::blit_sprite2(VGAScreen, enemyShot[z].sx, enemyShot[z].sy, spriteSheet12,
-                               enemyShot[z].sgr + enemyShot[z].animate - 500);
-          }
-          else {
-            draw::blit_sprite2(VGAScreen, enemyShot[z].sx, enemyShot[z].sy, spriteSheet8,
-                               enemyShot[z].sgr + enemyShot[z].animate);
-          }
+          r.enemy_shots->drawn[z] = true;
         }
       }
     }
   }
 
   if (background3over == 1) {
-    background_3(VGAScreen);
+    background_3_tick(VGAScreen, r.background_3_over_1);
   }
 
   // Draw Top Enemy
   if (topEnemyOver) {
     tempMapXOfs = (background3x1 == 0) ? oldMapX3Ofs : oldMapXOfs;
     tempBackMove = backMove3;
-    draw_enemy(75);
+    draw_enemy_tick(75, r.top_enemies_over);
   }
 
   if (!skyEnemyOverAll) {
@@ -846,7 +853,7 @@ void enemy_shots_tick() {
 
   tempMapXOfs = mapX2Ofs;
   tempBackMove = 0;
-  draw_enemy(25);
+  draw_enemy_tick(25, r.sky_enemies_over);
 
   if (enemyOnScreen != lastEnemyOnScreen) {
     return;
@@ -859,6 +866,8 @@ void enemy_shots_tick() {
 
 // Sequenced explosions, and the explosions.
 void explosions_tick() {
+  DrawRecord& r = draw_record();
+
   // -------------------------- Sequenced Explosions -------------------------
   enemyStillExploding = false;
   for (int i = 0; i < MAX_REPEATING_EXPLOSIONS; i++) {
@@ -901,6 +910,7 @@ void explosions_tick() {
   }
 
   // ---------------------------- Draw Explosions ----------------------------
+  r.explosions = ExplosionsDrawn{VGAScreen, {}, {}};
   for (int j = 0; j < MAX_EXPLOSIONS; j++) {
     if (explosions[j].ttl == 0) {
       continue;
@@ -920,16 +930,12 @@ void explosions_tick() {
       explosions[j].ttl = 0;
     }
     else {
-      if (explosionTransparent) {
-        draw::blit_sprite2_blend(VGAScreen, explosions[j].x, explosions[j].y, explosionSpriteSheet,
-                                 explosions[j].sprite + 1);
-      }
-      else {
-        draw::blit_sprite2(VGAScreen, explosions[j].x, explosions[j].y, explosionSpriteSheet,
-                           explosions[j].sprite + 1);
-      }
+      r.explosions->drawn[j] = true;
 
       explosions[j].ttl--;
+      if (explosions[j].ttl == 0) {
+        r.explosions->ended.push_back({j, explosions[j].x, explosions[j].y, explosions[j].sprite});
+      }
     }
   }
 
@@ -940,15 +946,17 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  DrawRecord& r = draw_record();
+
   // -----------------------BACKGROUNDS------------------------
   // -----------------------BACKGROUND 2------------------------
   if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
     if (background2over == 2) {
       if (wild && !background2notTransparent) {
-        background_2(VGAScreen, true);
+        background_2_tick(VGAScreen, true, r.background_2_over_2);
       }
       else {
-        background_2(VGAScreen, false);
+        background_2_tick(VGAScreen, false, r.background_2_over_2);
       }
     }
   }
@@ -998,11 +1006,7 @@ void warning_tick() {
       else if (warningCol < 113) {
         warningColChange = -warningColChange;
       }
-      draw::fill_rectangle_xy(VGAScreen, 24, 181, 138, 183, warningCol);
-      draw::fill_rectangle_xy(VGAScreen, 175, 181, 287, 183, warningCol);
-      draw::fill_rectangle_xy(VGAScreen, 24, 0, 287, 3, warningCol);
-
-      draw::JE_outText(VGAScreen, 140, 178, "WARNING", 7, (warningCol % 16) / 2);
+      r.warning = VGAScreen;
     }
   }
 
@@ -1050,6 +1054,7 @@ void sound_tick() {
 
 // The debug display, the bonus message and the level timer.
 void texts_tick() {
+  DrawRecord& r = draw_record();
   char buffer[256];
 
   // -------      DEbug      ---------
@@ -1060,26 +1065,27 @@ void texts_tick() {
       tempStr[i] = '0' + smoothies[i];
     }
     tempStr[9] = '\0';
+    r.debug = DebugDrawn{VGAScreen, {}};
     sprintf(buffer, "SM = %s", tempStr);
-    draw::JE_outText(VGAScreen, 30, 70, buffer, 4, 0);
+    r.debug->text[0] = buffer;
 
     sprintf(buffer, "Memory left = %d", -1);
-    draw::JE_outText(VGAScreen, 30, 80, buffer, 4, 0);
+    r.debug->text[1] = buffer;
     sprintf(buffer, "Enemies onscreen = %d", enemyOnScreen);
-    draw::JE_outText(VGAScreen, 30, 90, buffer, 6, 0);
+    r.debug->text[2] = buffer;
 
     debugHist += debugTime - lastDebugTime;
     debugHistCount++;
     sprintf(tempStr, "%2.3f", debugHistCount / (debugHist * 1e-3f));
     sprintf(buffer, "X:%d Y:%-5d  %s FPS  %d %d %d %d", (mapX - 1) * 12 + player[0].x, curLoc, tempStr,
             player[0].x_velocity, player[0].y_velocity, player[0].x, player[0].y);
-    draw::JE_outText(VGAScreen, 45, 175, buffer, 15, 3);
+    r.debug->text[3] = buffer;
     lastDebugTime = debugTime;
   }
 
   if (displayTime > 0) {
     displayTime--;
-    draw::JE_outTextAndDarken(VGAScreen, 90, 10, miscText[59], 15, (JE_byte)flash - 8, FONT_SHAPES);
+    r.message = MessageDrawn{VGAScreen, flash};
     flash += flashChange;
     if (flash > 4 || flash == 0) {
       flashChange = -flashChange;
@@ -1109,15 +1115,15 @@ void texts_tick() {
     soundQueue[7] = S_WARNING;
   }
 
-  draw::JE_textShade(VGAScreen, 140, 6, miscText[66], 7, (levelTimerCountdown % 20) / 3, FULL_SHADE);
-  sprintf(buffer, "%.1f", levelTimerCountdown / 100.0f);
-  draw::JE_dString(VGAScreen, 100, 2, buffer, SMALL_FONT_SHAPES);
+  r.level_timer = VGAScreen;
 }
 
 // Game over, and the input for stopping demos, pausing, the menu and cheats.
 // Returns true if the in-game menu or help opened, which ends the tick
 // without a frame (the C code jumps back to level_loop).
 bool game_over_and_input_tick() {
+  DrawRecord& r = draw_record();
+
   // GAME OVER
   if (!constantPlay && !constantDie && allPlayersGone) {
     if (player[0].exploding_ticks > 0 || player[1].exploding_ticks > 0) {
@@ -1132,7 +1138,7 @@ bool game_over_and_input_tick() {
         reallyEndLevel = true;
       }
       else {
-        draw::JE_dString(VGAScreen, 120, 60, miscText[21], FONT_SHAPES);  // game over
+        r.game_over = VGAScreen;  // game over
       }
 
       if (firstGameOver) {
@@ -1219,9 +1225,10 @@ bool game_over_and_input_tick() {
   return false;
 }
 
-}  // namespace
+LevelPass simulate(bool& frame) {
+  DrawRecord& r = draw_record();
+  r = DrawRecord{};
 
-LevelPass level_pass() {
   if (isNetworkGame) {
     return LevelPass::unsupported;
   }
@@ -1267,21 +1274,19 @@ LevelPass level_pass() {
   // Network games aren't supported (level_pass returns early).
 
   // Test
-  draw_sp();
+  superpixels_tick();
 
   // Filtration
   if (filterActive) {
-    filter_screen(levelFilter, levelBrightness);
+    filter_screen_tick();
   }
 
-  draw_boss_bars();
+  boss_bar_tick();
 
-  in_game_displays(VGAScreen);
+  r.in_game_displays = VGAScreen;
 
-  VGAScreen = VGAScreenSeg;  // side-effect of game_screen
-
-  show_frame();
-
+  // The C code makes these changes after presenting the frame; they read no
+  // input and draw nothing, so they can come before the frame.
   // Start backgrounds if no enemies on screen
   // End level if number of enemies left to kill equals 0.
   if (stopBackgroundNum == 9 && backMove == 0 && !enemyStillExploding) {
@@ -1321,10 +1326,13 @@ LevelPass level_pass() {
     }
   }
 
+  VGAScreen = VGAScreenSeg;  // side-effect of game_screen
+
+  r.show = !playerEndLevel && !skipStarShowVGA;  // the frame copies the playing area to the screen
+  frame = true;
+
   // Other Network Functions
   JE_handleChat();
-
-  poll_events();
 
   if (reallyEndLevel) {
     return LevelPass::start_level;
@@ -1332,5 +1340,7 @@ LevelPass level_pass() {
 
   return LevelPass::level_loop;
 }
+
+}  // namespace
 
 }  // namespace tyrx::port

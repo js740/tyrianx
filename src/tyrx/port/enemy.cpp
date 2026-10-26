@@ -19,7 +19,10 @@
 
 // The enemies (JE_drawEnemy, which "actually does a whole lot more than just
 // drawing", JE_newEnemy and JE_makeEnemy in tyrian2.c).  Each enemy is drawn,
-// then moves, fires and launches enemies.
+// then moves, fires and launches enemies.  Nearly everything it was drawn with
+// can change later in the tick: its position, its frame and filter (when hit)
+// and, if it goes or is destroyed, its slot.  So the draw record gets each
+// drawn enemy's position, frame, filter, sprite sheet and size.
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -29,31 +32,59 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <vector>
 
 namespace tyrx::port {
 
 namespace {
 
 // Port of blit_enemy.
-void blit_enemy(SDL_Surface *surface, unsigned int i, signed int x_offset, signed int y_offset,
-                signed int sprite_offset) {
-  if (enemy[i].sprite2s == nullptr) {
+void blit_enemy(SDL_Surface *surface, EnemyDrawn const& e, JE_word mapXOfs, signed int x_offset,
+                signed int y_offset, signed int sprite_offset) {
+  if (e.sprite2s == nullptr) {
     return;
   }
 
-  int const x = enemy[i].ex + x_offset + tempMapXOfs, y = enemy[i].ey + y_offset;
-  unsigned int const index = enemy[i].egr[enemy[i].enemycycle - 1] + sprite_offset;
+  int const x = e.ex + x_offset + mapXOfs, y = e.ey + y_offset;
+  unsigned int const index = e.index + sprite_offset;
 
-  if (enemy[i].filter != 0) {
-    draw::blit_sprite2_filter(surface, x, y, *enemy[i].sprite2s, index, enemy[i].filter);
+  if (e.filter != 0) {
+    draw::blit_sprite2_filter(surface, x, y, *e.sprite2s, index, e.filter);
   }
   else {
-    draw::blit_sprite2(surface, x, y, *enemy[i].sprite2s, index);
+    draw::blit_sprite2(surface, x, y, *e.sprite2s, index);
   }
 }
 
+}  // namespace
+
+void enemies_draw(EnemiesDrawn const& d) {
+  SDL_Surface *const surface = d.screen;
+  JE_word const mapXOfs = d.mapXOfs;
+  for (EnemyDrawn const& e : d.drawn) {
+    // 2x2 enemy
+    if (e.size == 1) {
+      if (e.ey > -13) {
+        blit_enemy(surface, e, mapXOfs, -6, -7, 0);
+        blit_enemy(surface, e, mapXOfs, 6, -7, 1);
+      }
+      if (e.ey > -26 && e.ey < 182) {
+        blit_enemy(surface, e, mapXOfs, -6, 7, 19);
+        blit_enemy(surface, e, mapXOfs, 6, 7, 20);
+      }
+    }
+    else {
+      if (e.ey > -13) {
+        blit_enemy(surface, e, mapXOfs, 0, 0, 0);
+      }
+    }
+  }
+}
+
+namespace {
+
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
-void draw_enemy(int enemyOffset, int i) {
+void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
   enemy[i].mapoffset = tempMapXOfs;
 
   if (enemy[i].xaccel && enemy[i].xaccel - 89u > mt_rand() % 11) {
@@ -103,22 +134,8 @@ void draw_enemy(int enemyOffset, int i) {
       return enemy_gone();
     }
 
-    // 2x2 enemy
-    if (enemy[i].size == 1) {
-      if (enemy[i].ey > -13) {
-        blit_enemy(VGAScreen, i, -6, -7, 0);
-        blit_enemy(VGAScreen, i, 6, -7, 1);
-      }
-      if (enemy[i].ey > -26 && enemy[i].ey < 182) {
-        blit_enemy(VGAScreen, i, -6, 7, 19);
-        blit_enemy(VGAScreen, i, 6, 7, 20);
-      }
-    }
-    else {
-      if (enemy[i].ey > -13) {
-        blit_enemy(VGAScreen, i, 0, 0, 0);
-      }
-    }
+    drawn.push_back({enemy[i].ex, enemy[i].ey, enemy[i].egr[enemy[i].enemycycle - 1], enemy[i].filter,
+                     enemy[i].size, enemy[i].sprite2s});
 
     enemy[i].filter = 0;
   }
@@ -472,13 +489,14 @@ void draw_enemy(int enemyOffset, int i) {
 
 }  // namespace
 
-// Port of JE_drawEnemy.
-void draw_enemy(int enemyOffset) {
+void draw_enemy_tick(int enemyOffset, std::optional<EnemiesDrawn>& drawn) {
+  drawn = EnemiesDrawn{VGAScreen, tempMapXOfs, {}};
+
   player[0].x -= 25;
 
   for (int i = enemyOffset - 25; i < enemyOffset; i++) {
     if (enemyAvail[i] != 1) {
-      draw_enemy(enemyOffset, i);
+      draw_enemy(enemyOffset, i, drawn->drawn);
     }
   }
 

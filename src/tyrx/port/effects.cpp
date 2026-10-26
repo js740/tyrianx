@@ -23,25 +23,45 @@
 #include "draw.hpp"
 #include "port.hpp"
 
+#include <bitset>
+#include <cstring>
+
 namespace tyrx::port {
 
-// Port of JE_drawSP: the superpixels move and fade as they are drawn.
-void draw_sp() {
-  draw::JE_drawSP(VGAScreen, superpixels);
+// Superpixels move and fade as they are drawn.  The drawing gets the
+// superpixels as they were before (as the C code records them), rebuilt from
+// the ones that were active.
+void superpixels_tick() {
+  std::bitset<MAX_SUPERPIXELS> active;
   for (int i = MAX_SUPERPIXELS; i--;) {
     superpixel_type& sp = superpixels[i];
     if (sp.z) {
+      active[i] = true;
       sp.x += sp.delta_x;
       sp.y += sp.delta_y;
       sp.z--;
     }
   }
+  draw_record().superpixels = SuperpixelsDrawn{VGAScreen, active};
 }
 
-// Port of JE_filterScreen, which moves the fade on, then filters with the
-// filter and brightness it was called with.
-void filter_screen(JE_shortint col, JE_shortint brightness) {
-  draw::JE_filterScreen(VGAScreen, col, brightness, filtrationAvail, explosionTransparent);
+void superpixels_draw(SuperpixelsDrawn const& d) {
+  superpixel_type before[MAX_SUPERPIXELS];
+  std::memcpy(before, superpixels, sizeof before);
+  for (int i = 0; i < MAX_SUPERPIXELS; ++i) {
+    if (d.active[i]) {
+      before[i].x -= before[i].delta_x;
+      before[i].y -= before[i].delta_y;
+      before[i].z++;
+    }
+  }
+  draw::JE_drawSP(d.screen, before);
+}
+
+// The filter is drawn with the filter and brightness from before the fade
+// moves on.
+void filter_screen_tick() {
+  draw_record().filter = FilterDrawn{VGAScreen, levelFilter, levelBrightness};
 
   if (!filterFade) {
     return;
@@ -57,6 +77,10 @@ void filter_screen(JE_shortint col, JE_shortint brightness) {
     filterFade = false;
     levelBrightness = -99;
   }
+}
+
+void filter_screen_draw(FilterDrawn const& d) {
+  draw::JE_filterScreen(d.screen, d.col, d.brightness, filtrationAvail, explosionTransparent);
 }
 
 // Port of JE_setupExplosionLarge (varz.c).
