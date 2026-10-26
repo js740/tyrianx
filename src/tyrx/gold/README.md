@@ -53,3 +53,7 @@ writes them back. A snapshot is valid only within the level it was taken in,
 because pointers into per-level data (such as sprite sheets) are copied as-is.
 The round-trip test (`../check/README.md`) checks that snapshots hold
 everything a tick depends on.
+
+The C code allocates the joystick array (`joystick`), which holds each
+joystick's previous state and repeat timer, at startup. `register_heap_block`
+adds it to snapshots as input state once `init_joysticks` has run.

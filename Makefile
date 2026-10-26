@@ -86,7 +86,7 @@ ifeq ($(WITH_NETWORK), true)
 endif
 
 ifeq ($(WITH_TYRX), true)
-    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen
+    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen,--wrap=init_joysticks
     LINK = $(CXX) $(ALL_CXXFLAGS)
 else
     LINK = $(CC) $(ALL_CFLAGS)

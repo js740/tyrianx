@@ -20,12 +20,14 @@
 #include "input_driver.hpp"
 
 #include "../gold/api.hpp"
+#include "../gold/state.hpp"
 #include "../runtime.hpp"
 #include "vclock.hpp"
 
 #include <array>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <initializer_list>
 
 namespace tyrx::check {
@@ -34,12 +36,18 @@ namespace {
 
 bool in_item_screen = false;  // see __wrap_JE_itemScreen
 
+// The virtual joystick has the axes and buttons that the default assignments
+// (reset_joystick_assignments) use: a stick, and fire, change fire, left and
+// right sidekick, menu and pause.
+constexpr int kJoystickAxes = 2, kJoystickButtons = 6;
+
 class InputDriver {
  public:
   explicit InputDriver(long seed)
       : seed_(static_cast<std::uint64_t>(seed)),
         press_commands_(env("TYRX_INPUT_COMMANDS") != nullptr),
-        midtick_(env("TYRX_INPUT_MIDTICK") != nullptr) {}
+        midtick_(env("TYRX_INPUT_MIDTICK") != nullptr),
+        wants_joystick_(env("TYRX_INPUT_JOYSTICK") != nullptr) {}
 
   void advance(Uint32 from, Uint32 to) {
     if (!focused_) {
@@ -53,6 +61,7 @@ class InputDriver {
     bool const in_level = tick_ms_valid_ && to - last_tick_ms_ < 200;
     if (!in_level) {
       release_all();
+      between_levels_ = true;
       for (Uint32 t = from / 350 + 1; t * 350 <= to; ++t) {
         SDL_Scancode const k = menu_key();
         key(k, true);
@@ -66,13 +75,38 @@ class InputDriver {
     }
   }
 
+  bool wants_joystick() const { return wants_joystick_; }
+
+  // Called by __wrap_init_joysticks with the virtual joystick it opened.
+  void set_joystick(SDL_Joystick *handle) { joystick_ = handle; }
+
   // The game's key state was restored, so push the next tick's keys again.
-  void on_snapshot_restored() { pushed_tick_ = UINT64_MAX; }
+  // The virtual joystick isn't part of the game state, so it still holds the
+  // input of the tick before the restore; at the top of the tick, it is put
+  // back as the tick first saw it.
+  void on_snapshot_restored() {
+    pushed_tick_ = UINT64_MAX;
+    joystick_stale_ = joystick_ != nullptr;
+  }
 
   // Called at the top of each level tick, before it runs.
   void on_level_tick() {
     last_tick_ms_ = vclock_now();
     tick_ms_valid_ = true;
+    if (between_levels_) {
+      level_first_tick_ = current_tick();
+      between_levels_ = false;
+    }
+    if (joystick_stale_ && !midtick_) {
+      // The first tick of a level ran with everything released.
+      if (current_tick() == level_first_tick_) {
+        release_joystick();
+      }
+      else {
+        push_joystick(current_tick());
+      }
+    }
+    joystick_stale_ = false;
     if (midtick_) {
       push_input(current_tick() + 1);
     }
@@ -101,6 +135,27 @@ class InputDriver {
       set_key(kCommandModifier, down);
       set_key(SDL_SCANCODE_MINUS, down);
     }
+    if (joystick_) {
+      push_joystick(next_tick);
+    }
+  }
+
+  // The virtual joystick's stick and its fire and sidekick buttons follow runs
+  // like the keys' (with seeds of their own), and the change-fire button is
+  // down for one tick in every 200.  Menu and pause are never pressed.  The
+  // game sees the new state at its next poll_joystick().
+  void push_joystick(std::uint64_t tick) {
+    auto const down = [tick, this](std::size_t i) { return key_down(kKeys.size() + i, tick); };
+    SDL_JoystickSetVirtualAxis(joystick_, 0, axis_value(down(0), down(1)));  // left, right
+    SDL_JoystickSetVirtualAxis(joystick_, 1, axis_value(down(2), down(3)));  // up, down
+    SDL_JoystickSetVirtualButton(joystick_, 0, down(4));                     // fire
+    SDL_JoystickSetVirtualButton(joystick_, 1, tick % 200 == 100);           // change fire
+    SDL_JoystickSetVirtualButton(joystick_, 2, down(5));                     // left sidekick
+    SDL_JoystickSetVirtualButton(joystick_, 3, down(6));                     // right sidekick
+  }
+
+  static Sint16 axis_value(bool negative, bool positive) {
+    return static_cast<Sint16>((positive - negative) * SDL_JOYSTICK_AXIS_MAX);
   }
 
   static void set_key(SDL_Scancode scancode, bool down) {
@@ -157,7 +212,7 @@ class InputDriver {
     SDL_PushEvent(&ev);
   }
 
-  static void release_all() {
+  void release_all() {
     for (SDL_Scancode k : kKeys) {
       if (keysactive[k]) {
         key(k, false);
@@ -168,11 +223,28 @@ class InputDriver {
         key(k, false);
       }
     }
+    if (joystick_) {
+      release_joystick();
+    }
+  }
+
+  void release_joystick() {
+    for (int axis = 0; axis < kJoystickAxes; ++axis) {
+      SDL_JoystickSetVirtualAxis(joystick_, axis, 0);
+    }
+    for (int button = 0; button < kJoystickButtons; ++button) {
+      SDL_JoystickSetVirtualButton(joystick_, button, 0);
+    }
   }
 
   std::uint64_t seed_;
   bool press_commands_;
   bool midtick_;
+  bool wants_joystick_;
+  SDL_Joystick *joystick_ = nullptr;
+  bool joystick_stale_ = false;
+  bool between_levels_ = true;
+  std::uint64_t level_first_tick_ = 0;
   std::uint64_t pushed_tick_ = UINT64_MAX;
   bool focused_ = false;
   bool tick_ms_valid_ = false;
@@ -217,4 +289,43 @@ extern "C" void __wrap_JE_itemScreen(void) {
   tyrx::check::in_item_screen = true;
   __real_JE_itemScreen();
   tyrx::check::in_item_screen = false;
+}
+
+// Linked with -Wl,--wrap=init_joysticks, to register the joystick array, which
+// holds each joystick's previous state and repeat timer, as input state.  With
+// TYRX_INPUT_JOYSTICK, the game gets one virtual joystick with the default
+// assignments in place of any real ones, even with --no-joystick.
+// deinit_joysticks closes it as usual.
+extern "C" void __real_init_joysticks(void);
+
+extern "C" void __wrap_init_joysticks(void) {
+  tyrx::check::InputDriver *const d = tyrx::check::input_driver();
+  if (d == nullptr || !d->wants_joystick()) {
+    __real_init_joysticks();
+    if (joysticks > 0) {
+      tyrx::gold::register_heap_block("joystick[]", tyrx::gold::StateClass::input, joystick,
+                                      joysticks * sizeof *joystick);
+    }
+    return;
+  }
+
+  SDL_Joystick *handle = nullptr;
+  if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0) {
+    SDL_JoystickEventState(SDL_IGNORE);
+    int const index = SDL_JoystickAttachVirtual(SDL_JOYSTICK_TYPE_GAMECONTROLLER, tyrx::check::kJoystickAxes,
+                                                tyrx::check::kJoystickButtons, 0);
+    handle = index < 0 ? nullptr : SDL_JoystickOpen(index);
+  }
+  if (handle == nullptr) {
+    std::fprintf(stderr, "tyrx: could not open a virtual joystick: %s\n", SDL_GetError());
+    std::exit(EXIT_FAILURE);
+  }
+
+  ignore_joystick = false;
+  joysticks = 1;
+  joystick = static_cast<Joystick *>(std::calloc(1, sizeof *joystick));
+  joystick[0].handle = handle;
+  reset_joystick_assignments(0);
+  tyrx::gold::register_heap_block("joystick[]", tyrx::gold::StateClass::input, joystick, sizeof *joystick);
+  d->set_joystick(handle);
 }
