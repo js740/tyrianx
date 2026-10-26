@@ -28,7 +28,7 @@
 #       keyboard input from SEED, for TICKS level ticks.
 #
 # Further VAR=VALUE arguments are passed in the environment (e.g.
-# TYRX_DUMP_TICK=1234).  BINARY must be built with `make WITH_TYRX=true`.
+# TYRX_DUMP_TICK=1234, TYRX_DIFF=1).  BINARY must be built with `make WITH_TYRX=true`.
 # Runs with a throwaway config/save directory, no sound, no joystick, no
 # Christmas mode, and a virtual clock (see src/tyrx/vclock.cpp).
 set -euo pipefail
@@ -54,6 +54,7 @@ SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy \
 TYRX_VCLOCK=1 TYRX_HASHLOG="$log" \
 env "${vars[@]}" "$@" timeout 600 "$bin" --no-sound --no-joystick --no-xmas --data="$data" \
     > "$tmp/out.txt" 2>&1 || status=$?
+grep -E '^(tyrx|  C)' "$tmp/out.txt" >&2 || true
 if [ $status -ne 0 ]; then
     cat "$tmp/out.txt" >&2
     echo "run_headless.sh: exited with status $status" >&2

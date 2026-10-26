@@ -65,7 +65,7 @@ OBJS := $(SRCS:src/%.c=obj/%.o)
 DEPS := $(SRCS:src/%.c=obj/%.d)
 
 ifeq ($(WITH_TYRX), true)
-    TYRX_SRCS := $(wildcard src/tyrx/*.cpp)
+    TYRX_SRCS := $(wildcard src/tyrx/*.cpp src/tyrx/*/*.cpp)
     OBJS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.o)
     DEPS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.d)
 endif
@@ -86,7 +86,7 @@ ifeq ($(WITH_NETWORK), true)
 endif
 
 ifeq ($(WITH_TYRX), true)
-    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen
+    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen,--wrap=JE_setupExplosion
     LINK = $(CXX) $(ALL_CXXFLAGS)
 else
     LINK = $(CC) $(ALL_CFLAGS)

@@ -27,14 +27,16 @@
 //   TYRX_EXIT_AFTER_DEMOS=N exit when demo playback starts for the N+1th time
 //   TYRX_EXIT_AFTER_TICKS=N exit at the top of level tick N
 //
-// Exits that Tyrian X initiates return status 4 if the hashes may be
-// incomplete because some pointers could not be described.
+// Exits that Tyrian X initiates return status 3 if a C++ port mismatched
+// (TYRX_DIFF), and 4 if the hashes may be incomplete because some pointers
+// could not be described.
 //------------------------------------------------------------------------------
 
 #include "runtime.hpp"
 
 #include "c_api.hpp"
 #include "c_state.hpp"
+#include "diff.hpp"
 #include "input_driver.hpp"
 
 #include <cinttypes>
@@ -49,7 +51,10 @@ namespace {
 [[noreturn]] void exit_run() {
   std::fflush(nullptr);
   int status = EXIT_SUCCESS;
-  if (unresolved_pointers()) {
+  if (diff_mismatches()) {
+    status = 3;
+  }
+  else if (unresolved_pointers()) {
     status = 4;
   }
   std::exit(status);

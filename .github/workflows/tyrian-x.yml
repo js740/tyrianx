@@ -38,3 +38,7 @@ jobs:
           tools/run_headless.sh ./opentyrian data input1.log input 1 10000
           tools/run_headless.sh ./opentyrian data input2.log input 1 10000
           tools/compare_hashlogs.py input1.log input2.log
+      - name: C++ ports match the C code
+        run: |
+          tools/run_headless.sh ./opentyrian data diff-demos.log demos TYRX_DIFF=1
+          tools/run_headless.sh ./opentyrian data diff-input.log input 2 10000 TYRX_DIFF=1
