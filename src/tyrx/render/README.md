@@ -15,5 +15,5 @@ The ports are checked by replaying the C code's recorded draw lists with them
 (`TYRX_DRAWLIST_CHECK`, `../check/draw/README.md`), and `draw_background_1` is
 also checked call by call (`TYRX_RENDER_DIFF`, `../check/README.md`). Most of
 the C drawing is called from inside `tyrian2.c`, where it can't be wrapped, so
-it will need checking by whole frame instead, comparing a frame drawn in C++
-with what the C code presents.
+the shadow tick checks whole frames instead: the pixels drawn from the C++
+level tick's list against those the C code drew.

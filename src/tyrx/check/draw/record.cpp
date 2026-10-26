@@ -279,7 +279,7 @@ class Recorder {
         std::fprintf(stderr, "tyrx: cannot write %s\n", path);
       }
     }
-    enabled_ = out_ != nullptr || check_;
+    enabled_ = out_ != nullptr || check_ || env("TYRX_SHADOW") != nullptr;
   }
 
   ~Recorder() {
@@ -315,6 +315,19 @@ class Recorder {
     }
   }
 
+  DrawList const& current() const { return list_; }
+
+  void shadow_begin() {
+    shadow_ = true;
+    shadow_list_ = {};
+  }
+
+  DrawList shadow_end() {
+    shadow_ = false;
+    depth_ = 0;
+    return std::move(shadow_list_);
+  }
+
   bool enabled() const { return enabled_; }
 
   std::uint64_t check_failures() const {
@@ -341,6 +354,14 @@ class Recorder {
   }
 
   bool begin(DrawCall const& call, void const *blob, std::size_t blob_size) {
+    if (shadow_) {
+      if (depth_ > 0) {
+        return false;
+      }
+      shadow_list_.append(call, blob, blob_size);
+      depth_ = 1;
+      return true;
+    }
     if (!in_tick_) {
       return false;
     }
@@ -354,13 +375,7 @@ class Recorder {
                     render::op_name(call.op));
       audit_.check(where, list_.tick);
     }
-    DrawCall& c = list_.calls.emplace_back(call);
-    if (blob != nullptr) {
-      c.blob = list_.blob.size();
-      c.blob_size = blob_size;
-      auto const *b = static_cast<unsigned char const *>(blob);
-      list_.blob.insert(list_.blob.end(), b, b + blob_size);
-    }
+    list_.append(call, blob, blob_size);
     ++op_calls_[static_cast<std::size_t>(call.op)];
     ++calls_;
     depth_ = 1;
@@ -369,7 +384,7 @@ class Recorder {
 
   void end() {
     depth_ = 0;
-    if (check_) {
+    if (check_ && !shadow_) {
       SDL_Surface const *dst = list_.calls.back().dst;
       bool const watched = dst == game_screen || dst == VGAScreen2 || dst == VGAScreenSeg;
       audit_.sync(watched ? dst : nullptr);
@@ -406,6 +421,8 @@ class Recorder {
   bool in_level_ = false;
   bool in_tick_ = false;
   int depth_ = 0;
+  bool shadow_ = false;
+  DrawList shadow_list_;
   std::uint64_t tick_ = 0;
   DrawList list_;
   PixelAudit audit_;
@@ -422,6 +439,12 @@ Recorder& recorder() {
 }  // namespace
 
 bool drawlist_enabled() { return recorder().enabled(); }
+
+DrawList const& drawlist_current() { return recorder().current(); }
+
+void drawlist_shadow_begin() { recorder().shadow_begin(); }
+
+DrawList drawlist_shadow_end() { return recorder().shadow_end(); }
 
 std::uint64_t drawlist_check_failures() { return recorder().check_failures(); }
 

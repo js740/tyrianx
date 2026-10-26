@@ -9,6 +9,7 @@ shrinks as the C++ game takes over.
 | `hashlog.cpp` | The per-tick state hash log and state dumps |
 | `vclock.cpp` | The virtual clock |
 | `input_driver.cpp` | Seeded synthetic input |
+| `shadow.cpp` | The shadow tick: the C++ level tick checked against the C tick |
 | `diff.cpp` | Call-by-call checks of the ports in `../sim/` |
 | `render_diff.cpp` | Call-by-call checks of the ports in `../render/` |
 | `roundtrip.cpp` | The round-trip test of snapshots |
@@ -106,6 +107,32 @@ reads the joystick directly (`poll_joystick`) in the middle of the tick.
   demo-stop checks), with key repeat timed by the wall clock. The virtual clock
   only advances between ticks, so the repeat timer is deterministic here but
   not in real play.
+
+## The shadow tick
+
+`TYRX_SHADOW=1` (with `TYRX_VCLOCK`) checks the C++ level tick
+(`../port/README.md`) against the C code tick by tick. At the top of each level
+tick, after the C code has run the previous one, it:
+1. Saves all of the C code's writable data (`../gold/memory.hpp`: the C
+   objects' `.data` and `.bss`, which the linker places before the C++
+   objects', up to the markers in `../gold/data_end.cpp`).
+2. Restores the data from the start of the previous tick, and points the
+   screen surfaces at copies of them as they were then.
+3. Runs `level_pass` on it, with the side effects that the C code has already
+   had suppressed: sound, music, presenting and polling. File reads (demo
+   input) get the data the C tick read, and joystick polls the joystick state
+   the C tick's polls left (the next tick's input has already arrived).
+4. Compares the hashed state, the draw list and the pixels drawn with the C
+   tick's.
+5. Restores the data saved in step 1.
+
+Ticks in which the C code loaded sprites or opened the pause screen or the
+in-game menu aren't checked, and a pass that would open one, or present or
+poll in some other way, is abandoned. Network games aren't supported. A
+summary goes to stderr at exit, and exits that Tyrian X initiates return
+status 9 if a tick differed. The five demos pass (18,528 ticks checked, 5
+skipped for sprite loading), and so do 20,000 ticks each of synthetic play
+with seeds 1-3 with `TYRX_INPUT_CHEATS`.
 
 ## Call-by-call checks
 

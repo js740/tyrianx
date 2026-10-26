@@ -39,6 +39,7 @@
 #include "check/input_driver.hpp"
 #include "check/render_diff.hpp"
 #include "check/roundtrip.hpp"
+#include "check/shadow.hpp"
 #include "gold/api.hpp"
 #include "gold/state.hpp"
 
@@ -69,6 +70,9 @@ namespace {
   else if (check::draw::drawlist_check_failures()) {
     status = 8;
   }
+  else if (check::shadow_mismatches()) {
+    status = 9;
+  }
   std::exit(status);
 }
 
@@ -93,6 +97,7 @@ struct Runtime {
   }
 
   void level_start() {
+    check::shadow_level_start();
     ++level_count;
     check::round_trip_level_start();
     if (playDemo && exit_after_demos >= 0 && ++demo_count > exit_after_demos) {
@@ -101,9 +106,13 @@ struct Runtime {
     check::hashlog_level_start(level_count, tick);
   }
 
-  void level_ended() { check::draw::drawlist_level_ended(); }
+  void level_ended() {
+    check::shadow_level_ended();
+    check::draw::drawlist_level_ended();
+  }
 
   void level_tick() {
+    check::shadow_level_tick();
     check::draw::drawlist_level_tick();
     if (exit_after_ticks >= 0 && (long)tick >= exit_after_ticks) {
       exit_run();

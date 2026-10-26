@@ -65,7 +65,9 @@ OBJS := $(SRCS:src/%.c=obj/%.o)
 DEPS := $(SRCS:src/%.c=obj/%.d)
 
 ifeq ($(WITH_TYRX), true)
-    TYRX_SRCS := $(wildcard src/tyrx/*.cpp src/tyrx/*/*.cpp src/tyrx/*/*/*.cpp)
+    # gold/data_end.cpp first: its data marks the end of the C objects' (gold/memory.cpp).
+    TYRX_SRCS := src/tyrx/gold/data_end.cpp \
+                 $(filter-out src/tyrx/gold/data_end.cpp,$(wildcard src/tyrx/*.cpp src/tyrx/*/*.cpp src/tyrx/*/*/*.cpp))
     OBJS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.o)
     DEPS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.d)
 endif
@@ -99,7 +101,11 @@ ifeq ($(WITH_TYRX), true)
                      -Wl,--wrap=draw_background_2,--wrap=draw_background_2_blend \
                      -Wl,--wrap=draw_background_3,--wrap=JE_filterScreen,--wrap=lava_filter,--wrap=water_filter \
                      -Wl,--wrap=iced_blur_filter,--wrap=blur_filter,--wrap=showHeadlight,--wrap=showFlipped \
-                     -Wl,--wrap=showNormal,--wrap=update_and_draw_starfield,--wrap=JE_drawSP,--wrap=JE_clr256
+                     -Wl,--wrap=showNormal,--wrap=update_and_draw_starfield,--wrap=JE_drawSP,--wrap=JE_clr256 \
+                     -Wl,--wrap=multiSamplePlay,--wrap=play_song,--wrap=set_volume,--wrap=push_joysticks_as_keyboard,--wrap=poll_joystick \
+                     -Wl,--wrap=JE_loadCompShapes,--wrap=free_sprite2s,--wrap=JE_pauseGame,--wrap=JE_doInGameSetup \
+                     -Wl,--wrap=JE_showVGA,--wrap=handleSdlEvents \
+                     -Wl,--wrap=fileReadAtMost,--wrap=fileReadExactly
     LINK = $(CXX) $(ALL_CXXFLAGS)
 else
     LINK = $(CC) $(ALL_CFLAGS)
