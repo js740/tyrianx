@@ -23,5 +23,25 @@
 #pragma once
 
 extern "C" {
+#include "../../backgrnd.h"
+#include "../../config.h"
+#include "../../demo.h"
+#include "../../editship.h"
+#include "../../episodes.h"
+#include "../../fonthand.h"
+#include "../../game_menu.h"
 #include "../../hooks.h"
+#include "../../keyboard.h"
+#include "../../lvllib.h"
+#include "../../mainint.h"
+#include "../../mtrand.h"
+#include "../../musmast.h"
+#include "../../nortsong.h"
+#include "../../params.h"
+#include "../../player.h"
+#include "../../shots.h"
+#include "../../sprite.h"
+#include "../../tyrian2.h"
+#include "../../varz.h"
+#include "../../xmas.h"
 }

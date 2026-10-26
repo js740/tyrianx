@@ -14,7 +14,8 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | Directory | Namespace | What it holds |
 |---|---|---|
 | `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits |
-| [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations |
+| [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry and hashing |
+| [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input and the virtual clock |
 
 ## How it attaches to the C code
 
@@ -25,3 +26,24 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
   linking the C++ objects is all it takes. The C
   changes are all meant for upstream: these hooks, the RNG state refactor,
   external linkage for some state, and polling events only once per tick.
+- **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
+  `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently
+  covers `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock, and
+  `JE_itemScreen` so the input driver knows when the shop is up. It works for
+  any function called across object files and needs no source changes.
+- **State access**: the C++ code reads and writes the C globals directly,
+  through their declarations (`gold/api.hpp`). All hashed state has external
+  linkage.
+
+## Runtime controls (environment variables)
+
+| Variable | Effect |
+|---|---|
+| `TYRX_HASHLOG=FILE` | Per-tick hash of every hashed block, plus level-start markers ([check](check/README.md)) |
+| `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N ([check](check/README.md)) |
+| `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
+| `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
+| `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
+
+Exits that Tyrian X initiates return a status that names the first check that
+failed: 4 for pointers the hashes couldn't describe.
