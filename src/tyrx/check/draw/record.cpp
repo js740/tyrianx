@@ -19,6 +19,7 @@
 
 #include "record.hpp"
 
+#include "../../port/draw.hpp"
 #include "../../runtime.hpp"
 
 #include <cinttypes>
@@ -317,17 +318,6 @@ class Recorder {
 
   DrawList const& current() const { return list_; }
 
-  void shadow_begin() {
-    shadow_ = true;
-    shadow_list_ = {};
-  }
-
-  DrawList shadow_end() {
-    shadow_ = false;
-    depth_ = 0;
-    return std::move(shadow_list_);
-  }
-
   bool enabled() const { return enabled_; }
 
   std::uint64_t check_failures() const {
@@ -354,11 +344,11 @@ class Recorder {
   }
 
   bool begin(DrawCall const& call, void const *blob, std::size_t blob_size) {
-    if (shadow_) {
+    if (DrawList *shadow_list = port::draw::target()) {
       if (depth_ > 0) {
         return false;
       }
-      shadow_list_.append(call, blob, blob_size);
+      shadow_list->append(call, blob, blob_size);
       depth_ = 1;
       return true;
     }
@@ -384,7 +374,7 @@ class Recorder {
 
   void end() {
     depth_ = 0;
-    if (check_ && !shadow_) {
+    if (check_ && port::draw::target() == nullptr) {
       SDL_Surface const *dst = list_.calls.back().dst;
       bool const watched = dst == game_screen || dst == VGAScreen2 || dst == VGAScreenSeg;
       audit_.sync(watched ? dst : nullptr);
@@ -421,8 +411,6 @@ class Recorder {
   bool in_level_ = false;
   bool in_tick_ = false;
   int depth_ = 0;
-  bool shadow_ = false;
-  DrawList shadow_list_;
   std::uint64_t tick_ = 0;
   DrawList list_;
   PixelAudit audit_;
@@ -441,10 +429,6 @@ Recorder& recorder() {
 bool drawlist_enabled() { return recorder().enabled(); }
 
 DrawList const& drawlist_current() { return recorder().current(); }
-
-void drawlist_shadow_begin() { recorder().shadow_begin(); }
-
-DrawList drawlist_shadow_end() { return recorder().shadow_end(); }
 
 std::uint64_t drawlist_check_failures() { return recorder().check_failures(); }
 

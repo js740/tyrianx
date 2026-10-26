@@ -10,9 +10,24 @@ structures, the code that uses it moves to `../sim/`.
 
 `level.cpp` has the game's level loop in C++: `level_pass` runs one pass of it
 (one level tick), from the `level_loop` label in `JE_main` to the jump back to
-it, as a function for each phase of the C code's loop, in its order. It is a
-direct port of that code so far, which still calls the C functions for most of
-the work (`JE_drawEnemy`, `JE_eventSystem`, `JE_mainGamePlayerFunctions` and so
-on), so it still mixes simulation and drawing as the C code does. The one piece
-of state it keeps itself is `old_weapon_bar`, which the C code keeps in a local
-variable of `JE_main`.
+it, as a function for each phase of the C code's loop, in its order. The one
+piece of state it keeps itself is `old_weapon_bar`, which the C code keeps in a
+local variable of `JE_main`.
+
+## Drawing
+
+The parts of the tick ported to C++ draw where the C code draws, with the
+`draw::` functions (`draw.hpp`): each adds the call that the C primitive of the
+same name records (`../check/draw/README.md`) to the tick's draw list
+(`../render/draw_list.hpp`), instead of drawing. The code running the tick
+provides the list (`draw::target`): the shadow tick (`../check/shadow.cpp`)
+gives each pass a list of its own, which the C primitives that the pass still
+calls add their calls to as well. So the list has the whole tick's drawing, in
+the C code's order.
+
+Ported so far:
+- The drawing at the end of the tick: the superpixels (`effects.cpp`,
+  `JE_drawSP`), the screen filter (`JE_filterScreen`), the boss bar (`hud.cpp`,
+  `draw_boss_bar`), the in-game displays (`JE_inGameDisplays`) and the copy of
+  the playing area to the screen (in `JE_starShowVGA`), with the text drawing
+  of `fonthand.c` (`text.cpp`).

@@ -18,13 +18,13 @@
 //------------------------------------------------------------------------------
 
 // One pass of the level loop (from the level_loop label in JE_main, tyrian2.c),
-// in C++.  It is a direct port so far, which still calls the C functions for
-// most of the work, so it mixes the simulation and the drawing as the C code
-// does; see level.hpp.
+// in C++, in the C code's order, drawing as it goes; see level.hpp.
 
 #include "level.hpp"
 
 #include "../gold/api.hpp"
+#include "draw.hpp"
+#include "port.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -44,13 +44,13 @@ void star_show_vga() {
       setFrameCount(frameCountMax);
     }
     if (starShowVGASpecialCode == 1) {
-      showFlipped(VGAScreenSeg, game_screen);
+      draw::showFlipped(VGAScreenSeg, game_screen);
     }
     else if (starShowVGASpecialCode == 2 && processorType >= 2) {
-      showHeadlight(VGAScreenSeg, game_screen, player[0].x, player[0].y);
+      draw::showHeadlight(VGAScreenSeg, game_screen, player[0].x, player[0].y);
     }
     else {
-      showNormal(VGAScreenSeg, game_screen);
+      draw::showNormal(VGAScreenSeg, game_screen);
     }
     present();
   }
@@ -1268,16 +1268,16 @@ LevelPass level_pass() {
   // Network games aren't supported (level_pass returns early).
 
   // Test
-  JE_drawSP();
+  draw_sp();
 
   // Filtration
   if (filterActive) {
-    JE_filterScreen(levelFilter, levelBrightness);
+    filter_screen(levelFilter, levelBrightness);
   }
 
-  draw_boss_bar();
+  draw_boss_bars();
 
-  JE_inGameDisplays();
+  in_game_displays(VGAScreen);
 
   VGAScreen = VGAScreenSeg;  // side-effect of game_screen
 

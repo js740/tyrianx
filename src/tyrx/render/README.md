@@ -9,7 +9,8 @@ exactly the C function's pixels.
 `draw_list.hpp` describes a level tick's drawing as a *draw list*: calls to
 those primitives, each with its arguments and, for primitives that draw from
 game state (backgrounds, superpixels, the starfield), that state as it was at
-the call. `execute.cpp` draws a call with the ports.
+the call. The level tick in `../port/` builds the list of a tick
+(`../port/draw.hpp`), and `execute.cpp` draws a call with the ports.
 
 The ports are checked by replaying the C code's recorded draw lists with them
 (`TYRX_DRAWLIST_CHECK`, `../check/draw/README.md`), and `draw_background_1` is

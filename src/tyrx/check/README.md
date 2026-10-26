@@ -121,9 +121,12 @@ tick, after the C code has run the previous one, it:
 3. Runs `level_pass` on it, with the side effects that the C code has already
    had suppressed: sound, music, presenting and polling. File reads (demo
    input) get the data the C tick read, and joystick polls the joystick state
-   the C tick's polls left (the next tick's input has already arrived).
-4. Compares the hashed state, the draw list and the pixels drawn with the C
-   tick's.
+   the C tick's polls left (the next tick's input has already arrived). The
+   pass draws into a draw list of its own (`../port/draw.hpp`).
+4. Compares the hashed state, the draw list and the pixels with the C tick's
+   (`draw/`). The lists must have the same calls, in the same order. The
+   pixels are drawn from the C++ pass's list by the C++ ports (`../render/`),
+   on copies of the surfaces as they were at the start of the tick.
 5. Restores the data saved in step 1.
 
 Ticks in which the C code loaded sprites or opened the pause screen or the

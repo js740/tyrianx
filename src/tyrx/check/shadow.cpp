@@ -22,6 +22,7 @@
 #include "../gold/api.hpp"
 #include "../gold/memory.hpp"
 #include "../gold/state.hpp"
+#include "../port/draw.hpp"
 #include "../port/level.hpp"
 #include "../runtime.hpp"
 #include "draw/record.hpp"
@@ -258,7 +259,8 @@ class Shadow {
     next_read_ = 0;
     next_poll_ = 0;
     vclock_set_quiet(true);
-    draw::drawlist_shadow_begin();
+    pass_list_ = {};
+    port::draw::target() = &pass_list_;
     active_ = true;
     bool const completed = setjmp(abort_jump) == 0;
     port::LevelPass pass = port::LevelPass::unsupported;
@@ -266,7 +268,8 @@ class Shadow {
       pass = port::level_pass();
     }
     active_ = false;
-    DrawList shadow_list = draw::drawlist_shadow_end();
+    port::draw::target() = nullptr;
+    DrawList shadow_list = std::move(pass_list_);
     vclock_set_quiet(false);
 
     if (!completed) {
@@ -331,6 +334,23 @@ class Shadow {
                                           : "(none)");
     }
 
+    // The frame, drawn from the list by the C++ ports.
+    for (int s = 0; s < 3; ++s) {
+      std::memcpy(shadow_surfaces_[s]->pixels, pre_pixels_[s].data(), pre_pixels_[s].size());
+    }
+    auto const canvas = [&](SDL_Surface const *r) -> render::Canvas {
+      for (int s = 0; s < 3; ++s) {
+        if (r == real[s]) {
+          SDL_Surface *const c = shadow_surfaces_[s];
+          return {static_cast<Uint8 *>(c->pixels), c->pitch, c->w, c->h};
+        }
+      }
+      return {nullptr, 0, 0, 0};
+    };
+    for (DrawCall const& c : shadow_list.calls) {
+      render::execute(c, shadow_list.blob.data() + c.blob, canvas(c.dst), canvas(c.src));
+    }
+
     std::uint64_t differing = 0;
     for (int s = 0; s < 3; ++s) {
       SDL_Surface const *a = real[s], *b = shadow_surfaces_[s];
@@ -364,6 +384,8 @@ class Shadow {
 
   bool enabled_ = false;
   bool active_ = false;
+  // The pass's draw list, which the C++ code draws into (port/draw.hpp).
+  DrawList pass_list_;
   bool have_pre_ = false;
   char const *skip_reason_ = nullptr;
   char const *abort_reason_ = nullptr;
