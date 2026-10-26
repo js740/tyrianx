@@ -43,53 +43,85 @@
 #include "mtrand.h"
 
 /* Period parameters */
-#define N 624
 #define M 397
 #define MATRIX_A 0x9908b0dfUL   /* constant vector a */
 #define UPPER_MASK 0x80000000UL /* most significant w-r bits */
 #define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
-static unsigned long x[N];      /* the array for the state vector  */
-static unsigned long *p0, *p1, *pm;
+MtState mt_global;
 
-void mt_srand(unsigned long s)
+void mt_srand_r(MtState *mt, unsigned long s)
 {
 	int i;
-	
-	x[0] = s & 0xffffffffUL;
-	for (i = 1; i < N; ++i) {
-		x[i] = (1812433253UL * (x[i - 1] ^ (x[i - 1] >> 30)) + i)
-		     & 0xffffffffUL;           /* for >32 bit machines */
+
+	mt->state[0] = s & 0xffffffffUL;
+	for (i = 1; i < MT_STATE_N; ++i) {
+		mt->state[i] = (1812433253UL * (mt->state[i - 1] ^ (mt->state[i - 1] >> 30)) + i)
+		             & 0xffffffffUL;           /* for >32 bit machines */
 	}
-	p0 = x;
-	p1 = x + 1;
-	pm = x + M;
+	mt->p0 = 0;
+	mt->p1 = 1;
+	mt->pm = M;
+
+	mt->seed = s;
+	mt->last = 0;
+	mt->count = 0;
 }
 
 /* generates a random number on the interval [0,0xffffffff] */
-unsigned long mt_rand(void)
+unsigned long mt_rand_r(MtState *mt)
 {
 	unsigned long y;
 
-	if (!p0) {
-		/* Default seed */
-		mt_srand(5489UL);
+	/* Unseeded, i.e. zero-initialized.  (p1 is 1 after seeding, which tells
+	 * this apart from a generator just seeded with 0.) */
+	if ((mt->seed | mt->last | mt->count | mt->p1) == 0) {
+		mt_srand_r(mt, MT_DEFAULT_SEED);
 	}
+
 	/* Twisted feedback */
-	y = *p0 = *pm++ ^ (((*p0 & UPPER_MASK) | (*p1 & LOWER_MASK)) >> 1) ^ ((~(*p1 & 1)+1) & MATRIX_A);
-	p0 = p1++;
-	if (pm == x + N) {
-		pm = x;
+	y = mt->state[mt->pm] ^ (((mt->state[mt->p0] & UPPER_MASK) | (mt->state[mt->p1] & LOWER_MASK)) >> 1) ^ ((~(mt->state[mt->p1] & 1)+1) & MATRIX_A);
+	mt->state[mt->p0] = y;
+	mt->p0 = mt->p1++;
+	if (++mt->pm == MT_STATE_N) {
+		mt->pm = 0;
 	}
-	if (p1 == x + N) {
-		p1 = x;
+	if (mt->p1 == MT_STATE_N) {
+		mt->p1 = 0;
 	}
 	/* Temper */
 	y ^= y >> 11;
 	y ^= y << 7 & 0x9d2c5680UL;
 	y ^= y << 15 & 0xefc60000UL;
 	y ^= y >> 18;
+
+	mt->last = y;
+	++mt->count;
 	return y;
+}
+
+/* generates a random number on the interval [0,1]. */
+float mt_rand_1_r(MtState *mt)
+{
+	return ((float)mt_rand_r(mt) / (float)MT_RAND_MAX);
+}
+
+/* generates a random number on the interval [0,1). */
+float mt_rand_lt1_r(MtState *mt)
+{
+	/* MT_RAND_MAX must be a float before adding one to it! */
+	return ((float)mt_rand_r(mt) / ((float)MT_RAND_MAX + 1.0f));
+}
+
+void mt_srand(unsigned long s)
+{
+	mt_srand_r(&mt_global, s);
+}
+
+/* generates a random number on the interval [0,0xffffffff] */
+unsigned long mt_rand(void)
+{
+	return mt_rand_r(&mt_global);
 }
 
 /* generates a random number on the interval [0,1]. */

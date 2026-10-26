@@ -26,4 +26,31 @@ unsigned long mt_rand(void);
 float mt_rand_1(void);
 float mt_rand_lt1(void);
 
+/* New reentrant API using explicit state for deterministic gameplay checks. */
+
+#define MT_STATE_N 624
+#define MT_DEFAULT_SEED 5489UL  /* used by a generator drawn from before it is seeded */
+
+typedef struct {
+	unsigned long state[MT_STATE_N];
+	unsigned int p0, p1, pm;  /* indices into state[] */
+
+	/* Bookkeeping that makes generators which should agree, but have
+	 * drifted apart, easy to spot when comparing or dumping them. */
+	unsigned long seed;   /* last seed */
+	unsigned long last;   /* last value produced */
+	unsigned long count;  /* values produced since seeding */
+} MtState;
+
+/* An MtState must be zero-initialized or seeded with mt_srand_r() before use.
+ * A zero-initialized one is unseeded, and its first draw seeds it with
+ * MT_DEFAULT_SEED. */
+void mt_srand_r(MtState *mt, unsigned long s);
+unsigned long mt_rand_r(MtState *mt);
+float mt_rand_1_r(MtState *mt);
+float mt_rand_lt1_r(MtState *mt);
+
+/* The generator used by mt_rand() etc. */
+extern MtState mt_global;
+
 #endif /* MTRAND_H */

@@ -63,6 +63,20 @@ extern Sint32 mouseX;
 extern Sint32 mouseY;
 extern Uint8 mouseButtonsDown;
 
+// Input queues and mouse state behind the functions below.
+extern KeyboardInput keyboardInputs[32];
+extern size_t keyboardInputsFront;
+extern size_t keyboardInputsBack;
+extern size_t keyboardInputsCount;
+extern MouseInput mouseInputs[4];
+extern size_t mouseInputsFront;
+extern size_t mouseInputsBack;
+extern size_t mouseInputsCount;
+extern bool mouseHasMotionInput;
+extern bool mouseRelativeEnabled;
+extern Sint32 mouseWindowXRelative;  // relative mouse position in window coordinates
+extern Sint32 mouseWindowYRelative;
+
 void init_keyboard(void);
 
 bool keyboardHasInput(void);
