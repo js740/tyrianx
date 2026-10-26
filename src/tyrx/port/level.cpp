@@ -1180,9 +1180,9 @@ bool game_over_and_input_tick() {
 
       skipStarShowVGA = false;
       if (keysactive[SDL_SCANCODE_F1]) {
-        in_game_help_ahead();  // JE_mainKeyboardInput opens help
+        in_game_help_ahead();  // main_keyboard_input opens help
       }
-      JE_mainKeyboardInput();
+      main_keyboard_input();
       if (skipStarShowVGA) {
         return true;
       }
@@ -1237,7 +1237,7 @@ LevelPass level_pass() {
 
   // ---------------------------EVENTS-------------------------
   while (eventRec[eventLoc - 1].eventtime <= curLoc && eventLoc <= maxEvent) {
-    JE_eventSystem();
+    event_system();
   }
 
   if (isNetworkGame && reallyEndLevel) {
