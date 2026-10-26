@@ -51,6 +51,13 @@ jobs:
         run: |
           tools/run_headless.sh ./opentyrian data rt.log input 1 10000 TYRX_ROUNDTRIP=7,13
           tools/compare_hashlogs.py input1.log rt.log
+      - name: Joystick play is deterministic and survives round trips
+        run: |
+          tools/run_headless.sh ./opentyrian data joy1.log input 1 10000 TYRX_INPUT_JOYSTICK=1
+          tools/run_headless.sh ./opentyrian data joy2.log input 1 10000 TYRX_INPUT_JOYSTICK=1
+          tools/compare_hashlogs.py joy1.log joy2.log
+          tools/run_headless.sh ./opentyrian data joy-rt.log input 1 10000 TYRX_INPUT_JOYSTICK=1 TYRX_ROUNDTRIP=1,1
+          tools/compare_hashlogs.py joy1.log joy-rt.log
       - name: Rewind restores recorded states
         run: |
           tools/run_headless.sh ./opentyrian data rewind.log input 1 10000 TYRX_REWIND=350 TYRX_INPUT_REWIND=1 TYRX_REWIND_VERIFY=1

@@ -31,6 +31,7 @@ extern "C" {
 #include "../fonthand.h"
 #include "../game_menu.h"
 #include "../hooks.h"
+#include "../joystick.h"
 #include "../keyboard.h"
 #include "../lvllib.h"
 #include "../mainint.h"

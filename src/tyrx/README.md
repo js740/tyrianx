@@ -21,9 +21,9 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 - **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
   `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently
   covers `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock,
-  `JE_itemScreen` for the input driver, and `JE_setupExplosion` for the C++
-  port check. It works for any function called across object files and needs
-  no source changes.
+  `JE_itemScreen` and `init_joysticks` for the input driver, and
+  `JE_setupExplosion` for the C++ port check. It works for any function called
+  across object files and needs no source changes.
 - **State access**: the C++ code reads and writes the C globals directly,
   through their header declarations. All hashed state has external linkage.
 
@@ -74,6 +74,7 @@ if there were any, so CI fails until the target is registered.
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
 | `TYRX_INPUT_COMMANDS=1` | With `TYRX_INPUT_SEED`: also press a command every 300 ticks (see below) |
 | `TYRX_INPUT_MIDTICK=1` | With `TYRX_INPUT_SEED`: send input while ticks run, not between them (see below) |
+| `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick (see below) |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots (see below) |
 | `TYRX_REWIND=TICKS` | Rewind by holding a key (see below) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
@@ -122,6 +123,13 @@ game-over, demo-stop and pause/menu/cheat checks, so there the logs diverge at
 the first command. This branch removes those polls ("Poll events once per level
 loop iteration"), and CI checks that the logs match.
 
+`TYRX_INPUT_JOYSTICK=1` replaces any real joysticks with one virtual joystick
+(SDL's virtual joystick driver, with the default assignments) and drives its
+stick, fire and sidekick buttons along with the keys, plus a fire-mode change
+every 200 ticks. Joystick runs are deterministic and survive round trips, but
+with `TYRX_INPUT_MIDTICK=1` they diverge at the first tick: `JE_playerMovement`
+reads the joystick directly (`poll_joystick`) in the middle of the tick.
+
 ## Snapshots and the round-trip test
 
 `Snapshot` (`c_state.hpp`) copies the registered blocks of chosen classes and
@@ -150,6 +158,10 @@ tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
 
 Demos are skipped because their input comes from a file whose read position
 isn't part of the snapshot.
+
+The C code allocates the joystick array (`joystick`), which holds each
+joystick's previous state and repeat timer, at startup. `register_heap_block`
+adds it to snapshots as input state once `init_joysticks` has run.
 
 ## Rewind
 
@@ -216,10 +228,12 @@ To add a port:
 - Without `TYRX_INPUT_MIDTICK`, synthetic input arrives only during
   frame-pacing sleeps, so a comparison shows that the simulation is unchanged
   for input that arrives between ticks.
-- Joystick and mouse input are not synthesized yet. Joysticks are also read in
-  the middle of a tick (`poll_joystick` in `JE_playerMovement`, and
-  `push_joysticks_as_keyboard` in the game-over and demo-stop checks), with key
-  repeat timed by the wall clock.
+- Mouse input is not synthesized yet.
+- Joysticks are read in the middle of a tick (`poll_joystick` in
+  `JE_playerMovement`, and `push_joysticks_as_keyboard` in the game-over and
+  demo-stop checks), with key repeat timed by the wall clock. The virtual clock
+  only advances between ticks, so the repeat timer is deterministic here but
+  not in real play.
 - The registry classification was done by hand and leans towards hashing too
   much. A symbol hashed by mistake can only cause false divergences, never hide
   a real one.

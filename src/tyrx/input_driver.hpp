@@ -29,6 +29,9 @@
 //   TYRX_INPUT_MIDTICK=1    send each tick's input at the top of the tick
 //                           before, while it runs, instead of during the
 //                           frame-pacing wait between them
+//   TYRX_INPUT_JOYSTICK=1   also play with a virtual joystick (stick, fire,
+//                           sidekicks, and fire-mode change every 200 ticks),
+//                           which replaces any real ones
 //------------------------------------------------------------------------------
 
 #pragma once
