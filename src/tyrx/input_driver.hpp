@@ -17,11 +17,19 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
 // Deterministic synthetic keyboard input (TYRX_INPUT_SEED=S, with TYRX_VCLOCK):
 // outside levels, a key every 350 ms that heads for the next level through the
 // menus; in levels, gameplay keys whose state is a function of the seed and the
-// tick.  With TYRX_INPUT_REWIND=1, it also holds the rewind key for 40 of every
-// 400 ticks.
+// tick.
+//
+//   TYRX_INPUT_REWIND=1     also hold the rewind key for 40 of every 400 ticks
+//   TYRX_INPUT_COMMANDS=1   also press a command for one of every 300 ticks
+//                           (Backspace+Minus, which cycles the level filter)
+//   TYRX_INPUT_MIDTICK=1    send each tick's input at the top of the tick
+//                           before, while it runs, instead of during the
+//                           frame-pacing wait between them
+//------------------------------------------------------------------------------
 
 #pragma once
 
