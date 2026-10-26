@@ -39,6 +39,9 @@ void filter_screen(JE_shortint col, JE_shortint brightness);  // JE_filterScreen
 // enemy.cpp
 void draw_enemy(int enemyOffset);  // JE_drawEnemy
 
+// events.cpp
+void event_system();  // JE_eventSystem
+
 // hud.cpp
 void draw_shield();                          // JE_drawShield
 void draw_armor();                           // JE_drawArmor
@@ -49,6 +52,9 @@ void draw_options();                         // JE_drawOptions
 void draw_option_level();                    // JE_drawOptionLevel
 void draw_boss_bars();                       // draw_boss_bar
 void in_game_displays(SDL_Surface *screen);  // JE_inGameDisplays
+
+// keyboard.cpp
+void main_keyboard_input();  // JE_mainKeyboardInput
 
 // player.cpp
 void main_game_player_functions();                             // JE_mainGamePlayerFunctions

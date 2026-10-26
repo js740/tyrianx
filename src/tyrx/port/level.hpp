@@ -42,7 +42,7 @@ struct LevelLocals {
 LevelLocals& level_locals();
 
 // Provided by whatever runs the passes (check/shadow.cpp): scale the frame,
-// present it, poll events, and a notice just before JE_mainKeyboardInput opens
+// present it, poll events, and a notice just before main_keyboard_input opens
 // the in-game help.
 void render_screen();
 void present();

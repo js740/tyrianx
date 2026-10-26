@@ -18,9 +18,9 @@
 //------------------------------------------------------------------------------
 
 // The players (JE_mainGamePlayerFunctions, JE_playerMovement, JE_playerCollide
-// in mainint.c, and JE_doSpecialShot and JE_playerDamage in varz.c): input,
-// movement, firing, specials, sidekicks, pickups and damage.  Network games
-// aren't supported, so the network code is left out.
+// in mainint.c, and JE_doSpecialShot, JE_specialComplete and JE_playerDamage in
+// varz.c): input, movement, firing, specials, sidekicks, pickups and damage.
+// Network games aren't supported, so the network code is left out.
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -32,6 +32,189 @@
 namespace tyrx::port {
 
 namespace {
+
+// Port of JE_specialComplete.
+void special_complete(JE_byte playerNum, JE_byte specialType) {
+  nextSpecialWait = 0;
+  switch (special[specialType].stype) {
+    // Weapon
+    case 1:
+      if (playerNum == 1) {
+        b = player_shot_create(0, SHOT_SPECIAL2, player[0].x, player[0].y, player[0].mouseX, player[0].mouseY,
+                               special[specialType].wpn, playerNum);
+      }
+      else {
+        b = player_shot_create(0, SHOT_SPECIAL2, player[1].x, player[1].y, player[0].mouseX, player[0].mouseY,
+                               special[specialType].wpn, playerNum);
+      }
+
+      shotRepeat[SHOT_SPECIAL] = shotRepeat[SHOT_SPECIAL2];
+      break;
+    // Repulsor
+    case 2:
+      for (temp = 0; temp < ENEMY_SHOT_MAX; temp++) {
+        if (enemyShotAvail[temp]) {
+          continue;
+        }
+
+        if (player[0].x > enemyShot[temp].sx) {
+          enemyShot[temp].sxm--;
+        }
+        else if (player[0].x < enemyShot[temp].sx) {
+          enemyShot[temp].sxm++;
+        }
+
+        if (player[0].y > enemyShot[temp].sy) {
+          enemyShot[temp].sym--;
+        }
+        else if (player[0].y < enemyShot[temp].sy) {
+          enemyShot[temp].sym++;
+        }
+      }
+      break;
+    // Zinglon Blast
+    case 3:
+      zinglonDuration = 50;
+      shotRepeat[SHOT_SPECIAL] = 100;
+      soundQueue[7] = S_SOUL_OF_ZINGLON;
+      break;
+    // Attractor
+    case 4:
+      for (temp = 0; temp < 100; temp++) {
+        if (!(enemyAvail[temp] != 1 && enemy[temp].scoreitem && enemy[temp].evalue != 0)) {
+          continue;
+        }
+
+        if (player[0].x > enemy[temp].ex) {
+          enemy[temp].exc++;
+        }
+        else if (player[0].x < enemy[temp].ex) {
+          enemy[temp].exc--;
+        }
+
+        if (player[0].y > enemy[temp].ey) {
+          enemy[temp].eyc++;
+        }
+        else if (player[0].y < enemy[temp].ey) {
+          enemy[temp].eyc--;
+        }
+      }
+      break;
+    // Flare
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+    case 16:
+      if (flareDuration == 0) {
+        flareStart = true;
+      }
+
+      specialWeaponWpn = special[specialType].wpn;
+      linkToPlayer = false;
+      spraySpecial = false;
+      switch (special[specialType].stype) {
+        case 5:
+          specialWeaponFilter = 7;
+          specialWeaponFreq = 2;
+          flareDuration = 50;
+          break;
+        case 6:
+          specialWeaponFilter = 1;
+          specialWeaponFreq = 7;
+          flareDuration = 200 + 25 * player[0].items.weapon[FRONT_WEAPON].power;
+          break;
+        case 7:
+          specialWeaponFilter = 3;
+          specialWeaponFreq = 3;
+          flareDuration = 50 + 10 * player[0].items.weapon[FRONT_WEAPON].power;
+          zinglonDuration = 50;
+          shotRepeat[SHOT_SPECIAL] = 100;
+          soundQueue[7] = S_SOUL_OF_ZINGLON;
+          break;
+        case 8:
+          specialWeaponFilter = -99;
+          specialWeaponFreq = 7;
+          flareDuration = 10 + player[0].items.weapon[FRONT_WEAPON].power;
+          break;
+        case 9:
+          specialWeaponFilter = -99;
+          specialWeaponFreq = 8;
+          flareDuration = 8 + 2 * player[0].items.weapon[FRONT_WEAPON].power;
+          linkToPlayer = true;
+          nextSpecialWait = special[specialType].pwr;
+          break;
+        case 10:
+          specialWeaponFilter = -99;
+          specialWeaponFreq = 8;
+          flareDuration = 14 + 4 * player[0].items.weapon[FRONT_WEAPON].power;
+          linkToPlayer = true;
+          break;
+        case 11:
+          specialWeaponFilter = -99;
+          specialWeaponFreq = special[specialType].pwr;
+          flareDuration = 10 + 10 * player[0].items.weapon[FRONT_WEAPON].power;
+          astralDuration = 20 + 10 * player[0].items.weapon[FRONT_WEAPON].power;
+          break;
+        case 16:
+          specialWeaponFilter = -99;
+          specialWeaponFreq = 8;
+          flareDuration = temp2 * 16 + 8;
+          linkToPlayer = true;
+          spraySpecial = true;
+          break;
+      }
+      break;
+    case 12:  // Invulnerability
+      player[playerNum - 1].invulnerable_ticks = temp2 * 10;
+
+      if (superArcadeMode > 0 && superArcadeMode <= SA) {
+        shotRepeat[SHOT_SPECIAL] = 250;
+        b = player_shot_create(0, SHOT_SPECIAL2, player[0].x, player[0].y, player[0].mouseX, player[0].mouseY,
+                               707, 1);
+        player[0].invulnerable_ticks = 100;
+      }
+      break;
+    case 13:  // Repair Player 1
+      player[0].armor += temp2 / 4 + 1;
+
+      soundQueue[3] = S_POWERUP;
+      break;
+    case 14:  // Repair Player 2
+      player[1].armor += temp2 / 4 + 1;
+
+      soundQueue[3] = S_POWERUP;
+      break;
+
+    case 17:  // Spawn left or right sidekick
+      soundQueue[3] = S_POWERUP;
+
+      if (player[0].items.sidekick[LEFT_SIDEKICK] == special[specialType].wpn) {
+        player[0].items.sidekick[RIGHT_SIDEKICK] = special[specialType].wpn;
+        shotMultiPos[RIGHT_SIDEKICK] = 0;
+      }
+      else {
+        player[0].items.sidekick[LEFT_SIDEKICK] = special[specialType].wpn;
+        shotMultiPos[LEFT_SIDEKICK] = 0;
+      }
+
+      draw_options();
+      break;
+
+    case 18:  // Spawn right sidekick
+      player[0].items.sidekick[RIGHT_SIDEKICK] = special[specialType].wpn;
+
+      draw_options();
+
+      soundQueue[4] = S_POWERUP;
+
+      shotMultiPos[RIGHT_SIDEKICK] = 0;
+      break;
+  }
+}
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
@@ -95,7 +278,7 @@ void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
     shotMultiPos[SHOT_SPECIAL2] = 0;
 
     if (can_afford) {
-      JE_specialComplete(playerNum, temp);
+      special_complete(playerNum, temp);
     }
 
     SFExecuted[playerNum - 1] = 0;
@@ -117,7 +300,7 @@ void do_special_shot(JE_byte playerNum, uint *armor, uint *shield) {
     }
     else if (shotRepeat[SHOT_SPECIAL] == 0 && !fireButtonHeld && !(flareDuration > 0) && specialWait == 0) {
       fireButtonHeld = true;
-      JE_specialComplete(playerNum, player[0].items.special);
+      special_complete(playerNum, player[0].items.special);
     }
 
   }  // Main End

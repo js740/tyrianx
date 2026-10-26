@@ -48,3 +48,11 @@ Ported so far:
 - The player collisions and damage (`JE_playerCollide`, `JE_playerDamage`),
   with the message window and the sidekick HUD they draw (`JE_drawTextWindow`,
   `JE_drawOptions`, `JE_drawOptionLevel`).
+- The events (`events.cpp`, `JE_eventSystem`), the key commands
+  (`keyboard.cpp`, `JE_mainKeyboardInput`) and `JE_specialComplete`, which draw
+  messages and the HUD.
+
+With these, the C++ level tick makes all of its drawing calls itself. A call
+graph of the C sources shows that none of the C functions it still calls can
+draw, apart from the pause screen, the in-game menu and help, which the shadow
+tick doesn't run.
