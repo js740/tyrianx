@@ -334,8 +334,8 @@ void enemies_under_tick() {
 
   tempMapXOfs = mapXOfs;
   tempBackMove = backMove;
-  JE_drawEnemy(50);
-  JE_drawEnemy(100);
+  draw_enemy(50);
+  draw_enemy(100);
 
   if ((enemyOnScreen == 0 || enemyOnScreen == lastEnemyOnScreen) && stopBackgroundNum == 1) {
     stopBackgroundNum = 9;
@@ -397,7 +397,7 @@ void enemies_under_tick() {
 
     tempMapXOfs = mapX2Ofs;
     tempBackMove = 0;
-    JE_drawEnemy(25);
+    draw_enemy(25);
 
     if (enemyOnScreen == lastEnemyOnScreen && stopBackgroundNum == 2) {
       stopBackgroundNum = 9;
@@ -412,7 +412,7 @@ void enemies_under_tick() {
   if (!topEnemyOver) {
     tempMapXOfs = (background3x1 == 0) ? oldMapX3Ofs : mapXOfs;
     tempBackMove = backMove3;
-    JE_drawEnemy(75);
+    draw_enemy(75);
   }
 }
 
@@ -831,7 +831,7 @@ void enemy_shots_tick() {
   if (topEnemyOver) {
     tempMapXOfs = (background3x1 == 0) ? oldMapX3Ofs : oldMapXOfs;
     tempBackMove = backMove3;
-    JE_drawEnemy(75);
+    draw_enemy(75);
   }
 
   if (!skyEnemyOverAll) {
@@ -843,7 +843,7 @@ void enemy_shots_tick() {
 
   tempMapXOfs = mapX2Ofs;
   tempBackMove = 0;
-  JE_drawEnemy(25);
+  draw_enemy(25);
 
   if (enemyOnScreen != lastEnemyOnScreen) {
     return;
