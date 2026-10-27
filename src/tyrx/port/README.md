@@ -15,8 +15,8 @@ one of three ways:
   go through `state()`.
 - `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
 - Functions here bind references with the C globals' names to it, and are
-  otherwise unchanged: the player and enemy shots, whose code also works on the
-  players and the enemies.
+  otherwise unchanged: the enemies, and the player and enemy shots, whose code
+  also works on the players and the level's state.
 
 ## The level loop
 

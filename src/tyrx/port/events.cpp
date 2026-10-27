@@ -33,6 +33,8 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
   switch (eventRec[eventLoc - 1].eventtype) {
     case 1:
       state().starfield.speed = eventRec[eventLoc - 1].eventdat;
@@ -545,7 +547,7 @@ void event_system() {
 
     case 41:
       if (eventRec[eventLoc - 1].eventdat == 0) {
-        memset(enemyAvail, 1, sizeof(enemyAvail));
+        enemyAvail.fill(1);
       }
       else {
         for (x = 0; x <= 24; x++) {
@@ -908,6 +910,8 @@ void event_system() {
 
 // Port of JE_createNewEventEnemy (tyrian2.c).
 void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 uniqueShapeTableI) {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
   int i;
 
   b = 0;
@@ -989,6 +993,8 @@ void event_jump(JE_word jump) {
 
 // Port of JE_searchFor (tyrian2.c).
 bool search_for(JE_byte PLType, JE_byte *out_index) {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
   int found_id = -1;
 
   for (int i = 0; i < 100; i++) {

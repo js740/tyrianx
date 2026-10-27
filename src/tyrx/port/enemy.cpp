@@ -85,6 +85,9 @@ namespace {
 
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
 void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
+  auto& enemyOnScreen = state().enemies.on_screen;
   auto& enemyShot = state().enemy_shots.slots;
   auto& enemyShotAvail = state().enemy_shots.available;
 
@@ -493,6 +496,7 @@ void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
 }  // namespace
 
 void draw_enemy_tick(int enemyOffset, std::optional<EnemiesDrawn>& drawn) {
+  auto& enemyAvail = state().enemies.status;
   drawn = EnemiesDrawn{VGAScreen, tempMapXOfs, {}};
 
   player[0].x -= 25;
@@ -508,6 +512,8 @@ void draw_enemy_tick(int enemyOffset, std::optional<EnemiesDrawn>& drawn) {
 
 // Port of JE_newEnemy (tyrian2.c).
 Sint16 new_enemy(int enemyOffset, Uint16 eDatI, Sint16 uniqueShapeTableI) {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
   for (int i = enemyOffset; i < enemyOffset + 25; ++i) {
     if (enemyAvail[i] == 1) {
       enemyAvail[i] = make_enemy(&enemy[i], eDatI, uniqueShapeTableI);
@@ -520,6 +526,7 @@ Sint16 new_enemy(int enemyOffset, Uint16 eDatI, Sint16 uniqueShapeTableI) {
 
 // Port of JE_makeEnemy (tyrian2.c).
 uint make_enemy(struct JE_SingleEnemyType *enemy, Uint16 eDatI, Sint16 uniqueShapeTableI) {
+  auto& totalEnemy = state().enemies.total;
   uint avail;
 
   JE_byte shapeTableI;

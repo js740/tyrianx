@@ -34,7 +34,12 @@
 #include "../sim/state.hpp"
 #include "draw_record.hpp"
 
+#include <iterator>
 #include <vector>
+
+// COUNTOF counts the State's std::arrays too.
+#undef COUNTOF
+#define COUNTOF(x) std::size(x)
 
 namespace tyrx::port {
 
@@ -51,8 +56,8 @@ inline sim::State& state() { return *state_target(); }
 // that code in port/ can't use them by mistake.
 struct InSimState {};
 inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
-    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed, mt_global,
-    playerShotData, shotAvail, enemyShot, enemyShotAvail;
+    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed, mt_global, enemy,
+    enemyAvail, enemyOnScreen, totalEnemy, enemyKilled, playerShotData, shotAvail, enemyShot, enemyShotAvail;
 
 // The random number generator's state is in the State too.  These hide the C
 // functions, which draw from mt_global.
