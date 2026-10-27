@@ -136,6 +136,11 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& power = state().players.power;
+  auto& lastPower = state().players.last_power;
+  auto& powerAdd = state().players.power_add;
+  auto& shieldWait = state().players.shield_wait;
+  auto& shieldT = state().players.shield_cost;
   auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   unsigned *const old_weapon_bar = level_locals().old_weapon_bar;
@@ -430,6 +435,7 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
@@ -893,6 +899,7 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& armorShipDelay = state().players.armor_ship_delay;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   DrawRecord& r = draw_record();

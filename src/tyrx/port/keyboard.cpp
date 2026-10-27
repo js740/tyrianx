@@ -30,6 +30,8 @@ namespace tyrx::port {
 
 // Port of JE_mainKeyboardInput.
 void main_keyboard_input() {
+  auto& shotMultiPos = state().players.shot_multi_pos;
+  auto& shipGr = state().players.ship_gr;
   auto& player = state().players.slots;
   JE_gammaCheck();
 
@@ -54,7 +56,7 @@ void main_keyboard_input() {
         player[0].items.generator = extraShips[z + 6];
         // Armor
         player[0].items.shield = extraShips[z + 8];
-        memset(shotMultiPos, 0, sizeof(shotMultiPos));
+        shotMultiPos.fill(0);
 
         if (player[0].weapon_mode > port_configs()) {
           player[0].weapon_mode = 1;
@@ -99,7 +101,7 @@ void main_keyboard_input() {
         player[1].items.generator = extraShips[z + 6];
         // Armor
         player[1].items.shield = extraShips[z + 8];
-        memset(shotMultiPos, 0, sizeof(shotMultiPos));
+        shotMultiPos.fill(0);
 
         if (player[1].weapon_mode > port_configs()) {
           player[1].weapon_mode = 1;

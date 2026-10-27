@@ -39,6 +39,8 @@ namespace {
 
 // Port of JE_specialComplete.
 void special_complete(JE_byte playerNum, JE_byte specialType) {
+  auto& shotRepeat = state().players.shot_repeat;
+  auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
@@ -227,6 +229,8 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
+  auto& shotRepeat = state().players.shot_repeat;
+  auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
   auto& playerShotData = state().player_shots.slots;
   auto& shotAvail = state().player_shots.ttl;
@@ -557,6 +561,20 @@ bool play_demo_keys() {
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
+  auto& shotRepeat = state().players.shot_repeat;
+  auto& shotMultiPos = state().players.shot_multi_pos;
+  auto& chargeWait = state().players.charge_wait;
+  auto& chargeLevel = state().players.charge_level;
+  auto& chargeMax = state().players.charge_max;
+  auto& chargeGr = state().players.charge_gr;
+  auto& chargeGrWait = state().players.charge_gr_wait;
+  auto& twoPlayerLinked = state().players.two_player_linked;
+  auto& linkGunDirec = state().players.link_gun_direction;
+  auto& optionSatelliteRotate = state().players.option_satellite_rotate;
+  auto& optionAttachmentMove = state().players.option_attachment_move;
+  auto& optionAttachmentLinked = state().players.option_attachment_linked;
+  auto& optionAttachmentReturn = state().players.option_attachment_return;
+  auto& shipGr2 = state().players.ship_gr2;
   auto& player = state().players.slots;
   JE_integer mouseXC, mouseYC;
   JE_integer accelXC, accelYC;
@@ -1554,6 +1572,10 @@ redo:
 
 // Port of JE_mainGamePlayerFunctions.
 void main_game_player_functions() {
+  auto& shipGr = state().players.ship_gr;
+  auto& shipGr2 = state().players.ship_gr2;
+  auto& shipGrPtr = state().players.ship_gr_ptr;
+  auto& shipGr2ptr = state().players.ship_gr2_ptr;
   auto& player = state().players.slots;
   // PLAYER MOVEMENT/MOUSE ROUTINES
 
@@ -1667,6 +1689,10 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
 
 // Port of JE_playerCollide.
 void player_collide(Player *this_player, JE_byte playerNum_) {
+  auto& shotRepeat = state().players.shot_repeat;
+  auto& shotMultiPos = state().players.shot_multi_pos;
+  auto& damageRate = state().players.damage_rate;
+  auto& twoPlayerLinked = state().players.two_player_linked;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
@@ -1962,7 +1988,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
           player[i].weapon_mode = 1;
         }
 
-        memset(shotMultiPos, 0, sizeof(shotMultiPos));
+        shotMultiPos.fill(0);
       }
       else if (twoPlayerLinked) {
         // players get equal share of pick-up cash when linked
@@ -2144,6 +2170,11 @@ JE_word s_gr(JE_word ship, Sprite2_array **ptr) {
 
 // Port of JE_getShipInfo (varz.c).
 void get_ship_info(void) {
+  auto& powerAdd = state().players.power_add;
+  auto& shipGr = state().players.ship_gr;
+  auto& shipGr2 = state().players.ship_gr2;
+  auto& shipGrPtr = state().players.ship_gr_ptr;
+  auto& shipGr2ptr = state().players.ship_gr2_ptr;
   auto& player = state().players.slots;
   JE_boolean extraShip, extraShip2;
 
@@ -2206,6 +2237,7 @@ void calc_purple_balls_needed(Player *this_player) {
 
 // Port of power_up_weapon (player.c).
 bool power_up_weapon(Player *this_player, uint port) {
+  auto& shotMultiPos = state().players.shot_multi_pos;
   bool const can_power_up = this_player->items.weapon[port].id != 0 &&   // not None
                             this_player->items.weapon[port].power < 11;  // not at max power
   if (can_power_up) {
