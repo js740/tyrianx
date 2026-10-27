@@ -204,6 +204,7 @@ void player_shots_draw(PlayerShotsDrawn const& d) {
 // FKA Varz.initPlayerShot
 JE_integer player_shot_create(JE_word portNum, uint bay_i, JE_word PX, JE_word PY, JE_word mouseX,
                               JE_word mouseY, JE_word wpNum, JE_byte playerNum) {
+  auto& soundQueue = state().sound.queue;
   auto& shotRepeat = state().players.shot_repeat;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& power = state().players.power;

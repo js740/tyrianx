@@ -33,6 +33,9 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& soundQueue = state().sound.queue;
+  auto& musicFade = state().sound.music_fade;
+  auto& tempVolume = state().sound.temp_volume;
   auto& filterActive = state().display.filter_active;
   auto& starActive = state().display.star_active;
   auto& boss_bar = state().display.boss_bars;
