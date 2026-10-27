@@ -17,14 +17,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The backgrounds and the starfield (backgrnd.c).  Each background is drawn
-// at most once a tick, from the scroll position it had there, which the
-// simulation goes on to change; the drawing gets that position.
+// The backgrounds and the starfield's drawing (backgrnd.c).  Each background
+// is drawn at most once a tick, from the scroll position it had there, which
+// the simulation goes on to change; the drawing gets that position.
 
 #include "draw.hpp"
 #include "port.hpp"
 
-#include <cstring>
+#include <algorithm>
 
 namespace tyrx::port {
 
@@ -96,23 +96,14 @@ void background_3_draw(Background3Drawn const& d) {
   draw::draw_background_3(d.screen, d.mapY3Pos, d.mapX3bpPos, d.mapX3Pos, d.backPos3, d.backMove3);
 }
 
-// update_and_draw_starfield.  The stars move by their speed and move_speed
-// (starfield_speed, which only events change); the drawing gets them as they
-// were before (as the C code records them), moved back.
-void starfield_tick(SDL_Surface *screen, int move_speed) {
-  for (int i = MAX_STARS - 1; i >= 0; --i) {
-    StarfieldStar *star = &starfield_stars[i];
-
-    star->position += (star->speed + move_speed) * screen->pitch;
-  }
-
-  draw_record().starfield = screen;
-}
-
+// update_and_draw_starfield.  The stars move as they are drawn
+// (sim::update_starfield), so the drawing gets them as they were before (as the
+// C code records them), moved back.  Their speed is still the one they moved
+// by, as only events change it, and they come before.
 void starfield_draw(SDL_Surface *screen) {
-  int const move_speed = starfield_speed;
+  int const move_speed = state().starfield.speed;
   StarfieldStar before[MAX_STARS];
-  std::memcpy(before, starfield_stars, sizeof before);
+  std::ranges::copy(state().starfield.stars, before);
   for (StarfieldStar& star : before) {
     star.position -= (star.speed + move_speed) * screen->pitch;
   }
