@@ -55,6 +55,25 @@ struct Random {
 
 struct Players {
   std::array<Player, 2> slots;
+
+  std::array<JE_byte, 11> shot_repeat;     // ticks until each kind of shot can fire again
+  std::array<JE_byte, 11> shot_multi_pos;  // the pattern each kind of shot fires next
+  uint power, last_power, power_add;       // the generator's power, as last drawn, and gained per tick
+  JE_byte shield_wait, shield_cost;        // ticks until the shield recharges, and the power it takes
+  JE_byte charge_wait, charge_level, charge_max, charge_gr, charge_gr_wait;  // the charge weapon
+  JE_byte damage_rate;       // the most armor that a collision takes
+  JE_word armor_ship_delay;  // ticks until the low-armor ship shows again
+
+  // Two-player linked mode, and the sidekicks that attach to the ship.
+  JE_boolean two_player_linked;
+  JE_real link_gun_direction;
+  JE_real option_satellite_rotate;
+  JE_integer option_attachment_move;
+  JE_boolean option_attachment_linked, option_attachment_return;
+
+  // The ships' sprites.
+  JE_word ship_gr, ship_gr2;
+  Sprite2_array *ship_gr_ptr, *ship_gr2_ptr;
 };
 
 struct Enemies {

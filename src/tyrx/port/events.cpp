@@ -33,6 +33,9 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& shotRepeat = state().players.shot_repeat;
+  auto& shotMultiPos = state().players.shot_multi_pos;
+  auto& damageRate = state().players.damage_rate;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;

@@ -60,7 +60,10 @@ inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFo
     explosionFollowAmountY;
 inline constexpr InSimState superpixels, last_superpixel;
 inline constexpr InSimState starfield_stars, starfield_speed;
-inline constexpr InSimState player;
+inline constexpr InSimState player, shotRepeat, shotMultiPos, power, lastPower, powerAdd, shieldWait, shieldT,
+    chargeWait, chargeLevel, chargeMax, chargeGr, chargeGrWait, damageRate, armorShipDelay, twoPlayerLinked,
+    linkGunDirec, optionSatelliteRotate, optionAttachmentMove, optionAttachmentLinked, optionAttachmentReturn,
+    shipGr, shipGr2, shipGrPtr, shipGr2ptr;
 inline constexpr InSimState enemy, enemyAvail, enemyOnScreen, totalEnemy, enemyKilled;
 inline constexpr InSimState playerShotData, shotAvail;
 inline constexpr InSimState enemyShot, enemyShotAvail;

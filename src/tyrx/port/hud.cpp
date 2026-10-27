@@ -155,7 +155,10 @@ void weapon_power_tick(int x, int y, uint item_power) { log(hud::WeaponPower{x, 
 
 void power_bar_tick(JE_byte temp, uint lastPower) { log(hud::PowerBar{temp, lastPower}); }
 
-void charge_level_tick(JE_byte color) { log(hud::ChargeLevel{chargeLevel, color}); }
+void charge_level_tick(JE_byte color) {
+  auto& chargeLevel = state().players.charge_level;
+  log(hud::ChargeLevel{chargeLevel, color});
+}
 
 void sidekick_ammo_tick(int y, int ammo_max, int ammo, bool discharged) {
   log(hud::SidekickAmmo{y, ammo_max, ammo, discharged});
