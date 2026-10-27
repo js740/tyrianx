@@ -53,6 +53,27 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct Map {
+  // Where each of the three map layers is, and how far it moved in the tick.
+  JE_word back_pos, back_pos2, back_pos3;
+  JE_word back_move, back_move2, back_move3;
+  JE_word map_x, map_y, map_x2, map_x3, map_y2, map_y3;
+  JE_byte **map_y_pos, **map_y2_pos, **map_y3_pos;
+  JE_word map_x_pos, old_map_x_ofs, map_x_ofs, map_x2_ofs, map_x2_pos, map_x3_pos, old_map_x3_ofs, map_x3_ofs,
+      temp_map_x_ofs;
+  intptr_t map_x_bp_pos, map_x2_bp_pos, map_x3_bp_pos;
+  JE_byte map1_y_delay, map1_y_delay_max, map2_y_delay, map2_y_delay_max;
+  JE_word temp_back_move;
+  JE_byte **bk_wrap1, **bk_wrap2, **bk_wrap3, **bk_wrap1_to, **bk_wrap2_to, **bk_wrap3_to;
+
+  // Which layers there are, how they are drawn, and whether they scroll.
+  JE_boolean stop_backgrounds;
+  JE_byte stop_background_num;
+  JE_boolean background2, background2_not_transparent, background3x1, background3x1b;
+  JE_byte background2_over, background3_over;
+  JE_boolean sky_enemy_over_all, top_enemy_over;
+};
+
 struct Level {
   // The level's events, which some events change, and where the level is in them.
   std::array<JE_EventRecType, EVENT_MAXIMUM> events;
@@ -161,6 +182,7 @@ struct State {
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  Map map;
   Level level;
   Ending ending;
   Players players;

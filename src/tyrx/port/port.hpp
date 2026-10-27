@@ -60,6 +60,12 @@ inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFo
     explosionFollowAmountY;
 inline constexpr InSimState superpixels, last_superpixel;
 inline constexpr InSimState starfield_stars, starfield_speed;
+inline constexpr InSimState backPos, backPos2, backPos3, backMove, backMove2, backMove3, mapX, mapY, mapX2,
+    mapX3, mapY2, mapY3, mapYPos, mapY2Pos, mapY3Pos, mapXPos, oldMapXOfs, mapXOfs, mapX2Ofs, mapX2Pos,
+    mapX3Pos, oldMapX3Ofs, mapX3Ofs, tempMapXOfs, mapXbpPos, mapX2bpPos, mapX3bpPos, map1YDelay,
+    map1YDelayMax, map2YDelay, map2YDelayMax, tempBackMove, BKwrap1, BKwrap2, BKwrap3, BKwrap1to, BKwrap2to,
+    BKwrap3to, stopBackgrounds, stopBackgroundNum, background2, background2notTransparent, background3x1,
+    background3x1b, background2over, background3over, skyEnemyOverAll, topEnemyOver;
 inline constexpr InSimState eventRec, maxEvent, eventLoc, curLoc, returnLoc, returnActive, forceEvents,
     jumpSection, enemiesActive, levelEnemy, levelEnemyMax, levelEnemyFrequency, enemyContinualDamage,
     superEnemy254Jump, randomExplosions, smallEnemyAdjust, galagaShotFreq, galagaLife, levelTimer,

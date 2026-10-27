@@ -87,6 +87,15 @@ namespace {
 // The start of the tick: the smoothie screen code, background wrapping, and
 // music.
 void tick_start() {
+  auto& mapYPos = state().map.map_y_pos;
+  auto& mapY2Pos = state().map.map_y2_pos;
+  auto& mapY3Pos = state().map.map_y3_pos;
+  auto& BKwrap1 = state().map.bk_wrap1;
+  auto& BKwrap2 = state().map.bk_wrap2;
+  auto& BKwrap3 = state().map.bk_wrap3;
+  auto& BKwrap1to = state().map.bk_wrap1_to;
+  auto& BKwrap2to = state().map.bk_wrap2_to;
+  auto& BKwrap3to = state().map.bk_wrap3_to;
   auto& endLevel = state().ending.end_level;
   auto& levelEnd = state().ending.countdown;
   auto& firstGameOver = state().ending.first_game_over;
@@ -141,6 +150,8 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
+  auto& mapX3Ofs = state().map.map_x3_ofs;
   auto& endLevel = state().ending.end_level;
   auto& galagaLife = state().level.galaga_life;
   auto& power = state().players.power;
@@ -266,6 +277,15 @@ void hud_tick() {
 
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under_tick() {
+  auto& backPos = state().map.back_pos;
+  auto& backMove = state().map.back_move;
+  auto& mapY = state().map.map_y;
+  auto& mapYPos = state().map.map_y_pos;
+  auto& map1YDelay = state().map.map1_y_delay;
+  auto& map1YDelayMax = state().map.map1_y_delay_max;
+  auto& background2 = state().map.background2;
+  auto& background2notTransparent = state().map.background2_not_transparent;
+  auto& background2over = state().map.background2_over;
   auto& curLoc = state().level.cur_loc;
   auto& forceEvents = state().level.force_events;
   auto& astralDuration = state().specials.astral_duration;
@@ -352,6 +372,20 @@ void backgrounds_under_tick() {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under_tick() {
+  auto& backMove = state().map.back_move;
+  auto& backMove3 = state().map.back_move3;
+  auto& mapXOfs = state().map.map_x_ofs;
+  auto& mapX2Ofs = state().map.map_x2_ofs;
+  auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
+  auto& tempMapXOfs = state().map.temp_map_x_ofs;
+  auto& tempBackMove = state().map.temp_back_move;
+  auto& stopBackgroundNum = state().map.stop_background_num;
+  auto& background2notTransparent = state().map.background2_not_transparent;
+  auto& background3x1 = state().map.background3x1;
+  auto& background2over = state().map.background2_over;
+  auto& background3over = state().map.background3_over;
+  auto& skyEnemyOverAll = state().map.sky_enemy_over_all;
+  auto& topEnemyOver = state().map.top_enemy_over;
   auto& enemiesActive = state().level.enemies_active;
   auto& levelEnemy = state().level.enemy_types;
   auto& levelEnemyMax = state().level.enemy_types_max;
@@ -778,6 +812,17 @@ void players_tick() {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
+  auto& backMove3 = state().map.back_move3;
+  auto& oldMapXOfs = state().map.old_map_x_ofs;
+  auto& mapX2Ofs = state().map.map_x2_ofs;
+  auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
+  auto& tempMapXOfs = state().map.temp_map_x_ofs;
+  auto& tempBackMove = state().map.temp_back_move;
+  auto& stopBackgroundNum = state().map.stop_background_num;
+  auto& background3x1 = state().map.background3x1;
+  auto& background3over = state().map.background3_over;
+  auto& skyEnemyOverAll = state().map.sky_enemy_over_all;
+  auto& topEnemyOver = state().map.top_enemy_over;
   auto& endLevel = state().ending.end_level;
   auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
@@ -903,6 +948,7 @@ void enemy_shots_tick() {
 
 // Sequenced explosions, and the explosions.
 void explosions_tick() {
+  auto& backMove2 = state().map.back_move2;
   auto& enemyStillExploding = state().ending.enemy_still_exploding;
   DrawRecord& r = draw_record();
 
@@ -920,6 +966,9 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& backMove3 = state().map.back_move3;
+  auto& background2notTransparent = state().map.background2_not_transparent;
+  auto& background2over = state().map.background2_over;
   auto& randomExplosions = state().level.random_explosions;
   auto& armorShipDelay = state().players.armor_ship_delay;
   auto& player = state().players.slots;
@@ -1035,6 +1084,7 @@ void sound_tick() {
 
 // The debug display, the bonus message, the speed mode and the level timer.
 void texts_tick() {
+  auto& mapX = state().map.map_x;
   auto& curLoc = state().level.cur_loc;
   auto& levelTimer = state().level.timer;
   auto& levelTimerCountdown = state().level.timer_countdown;
@@ -1225,6 +1275,11 @@ bool game_over_and_input_tick() {
 }
 
 LevelPass simulate(bool& frame) {
+  auto& backMove = state().map.back_move;
+  auto& backMove2 = state().map.back_move2;
+  auto& backMove3 = state().map.back_move3;
+  auto& stopBackgrounds = state().map.stop_backgrounds;
+  auto& stopBackgroundNum = state().map.stop_background_num;
   auto& endLevel = state().ending.end_level;
   auto& reallyEndLevel = state().ending.really_end_level;
   auto& waitToEndLevel = state().ending.wait_to_end_level;
