@@ -34,6 +34,7 @@ namespace tyrx::sim {
 
 struct Explosions {
   std::array<Explosion, MAX_EXPLOSIONS> slots;
+  std::array<rep_explosion_type, MAX_REPEATING_EXPLOSIONS> repeating;  // which set off explosions over ticks
   JE_word move;                   // how far explosions that aren't fixed move down each tick
   JE_integer follow_x, follow_y;  // how far the player moved, for explosions that follow the player
 };

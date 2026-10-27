@@ -123,6 +123,11 @@ struct ExplosionsState {
   Explosion explosions[MAX_EXPLOSIONS];
 };
 
+struct ExplosionsLargeState {
+  Explosion explosions[MAX_EXPLOSIONS];
+  rep_explosion_type rep_explosions[MAX_REPEATING_EXPLOSIONS];
+};
+
 }  // namespace
 
 }  // namespace tyrx::check
@@ -149,4 +154,28 @@ extern "C" void __wrap_JE_setupExplosion(JE_integer x, JE_integer y, JE_integer 
   tyrx::check::ExplosionsState c;
   std::ranges::copy(explosions, c.explosions);
   tyrx::check::diff_check("JE_setupExplosion", c, cxx);
+}
+
+extern "C" void __real_JE_setupExplosionLarge(JE_boolean enemyGround, JE_byte exploNum, JE_integer x,
+                                              JE_integer y);
+
+extern "C" void __wrap_JE_setupExplosionLarge(JE_boolean enemyGround, JE_byte exploNum, JE_integer x,
+                                              JE_integer y) {
+  if (!tyrx::check::diff_enabled()) {
+    return __real_JE_setupExplosionLarge(enemyGround, exploNum, x, y);
+  }
+
+  tyrx::sim::Explosions e{};
+  std::ranges::copy(explosions, e.slots.begin());
+  std::ranges::copy(rep_explosions, e.repeating.begin());
+  tyrx::sim::setup_explosion_large(e, enemyGround, exploNum, x, y);
+
+  __real_JE_setupExplosionLarge(enemyGround, exploNum, x, y);
+
+  tyrx::check::ExplosionsLargeState c, cxx;
+  std::ranges::copy(explosions, c.explosions);
+  std::ranges::copy(rep_explosions, c.rep_explosions);
+  std::ranges::copy(e.slots, cxx.explosions);
+  std::ranges::copy(e.repeating, cxx.rep_explosions);
+  tyrx::check::diff_check("JE_setupExplosionLarge", c, cxx);
 }

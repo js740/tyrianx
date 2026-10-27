@@ -43,6 +43,16 @@ namespace tyrx::sim {
 void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, JE_integer x, JE_integer y,
                      JE_integer delta_y, JE_integer type, bool fixed_position, bool follow_player);
 
+// varz.c: JE_setupExplosionLarge
+void setup_explosion_large(Explosions& explosions, bool enemy_ground, JE_byte explo_num, JE_integer x,
+                           JE_integer y);
+
+// tyrian2.c: the repeating explosions' update in JE_main's level loop
+// ("Sequenced Explosions"), which sets off their explosions, with their
+// sounds in the sound queue.  Returns whether any is still exploding.
+bool update_repeating_explosions(Explosions& explosions, MtState& mt, JE_integer back_move,
+                                 std::span<JE_byte, 8> sound_queue);
+
 // The explosions visible in a tick, for its drawing: the slots of those still
 // on screen after the update moved them, and the last position and frame of
 // those whose time ran out, as a new explosion may take their slots later in

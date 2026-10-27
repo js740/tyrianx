@@ -864,45 +864,8 @@ void explosions_tick() {
   DrawRecord& r = draw_record();
 
   // -------------------------- Sequenced Explosions -------------------------
-  enemyStillExploding = false;
-  for (int i = 0; i < MAX_REPEATING_EXPLOSIONS; i++) {
-    if (rep_explosions[i].ttl == 0) {
-      continue;
-    }
-
-    enemyStillExploding = true;
-
-    if (rep_explosions[i].delay > 0) {
-      rep_explosions[i].delay--;
-      continue;
-    }
-
-    rep_explosions[i].y += backMove2 + 1;
-    JE_integer tempX = rep_explosions[i].x + (mt_rand() % 24) - 12;
-    JE_integer tempY = rep_explosions[i].y + (mt_rand() % 27) - 24;
-
-    if (rep_explosions[i].big) {
-      setup_explosion_large(false, 2, tempX, tempY);
-
-      if (rep_explosions[i].ttl == 1 || mt_rand() % 5 == 1) {
-        soundQueue[7] = S_EXPLOSION_11;
-      }
-      else {
-        soundQueue[6] = S_EXPLOSION_9;
-      }
-
-      rep_explosions[i].delay = 4 + (mt_rand() % 3);
-    }
-    else {
-      setup_explosion(tempX, tempY, 0, 1, false, false);
-
-      soundQueue[5] = S_EXPLOSION_4;
-
-      rep_explosions[i].delay = 3;
-    }
-
-    rep_explosions[i].ttl--;
-  }
+  enemyStillExploding =
+      sim::update_repeating_explosions(state().explosions, mt_global, backMove2, soundQueue);
 
   // ---------------------------- Draw Explosions ----------------------------
   r.explosions = ExplosionsDrawn{VGAScreen, sim::update_explosions(state().explosions)};

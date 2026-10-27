@@ -37,12 +37,12 @@ checks it against it.
   external linkage for some state, and polling events only once per tick.
 - **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
   `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently covers
-  `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock,
-  `JE_itemScreen`, `gameplaySelect` and `init_joysticks` for the input driver,
-  `JE_setupExplosion` and `draw_background_1` for the call-by-call checks, the
-  drawing primitives for the draw lists, and the functions whose effects the
-  shadow tick replays or suppresses. It works for any function called across
-  object files and needs no source changes.
+  `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock, `JE_itemScreen`,
+  `gameplaySelect` and `init_joysticks` for the input driver,
+  `JE_setupExplosion`, `JE_setupExplosionLarge` and `draw_background_1` for the
+  call-by-call checks, the drawing primitives for the draw lists, and the
+  functions whose effects the shadow tick replays or suppresses. It works for
+  any function called across object files and needs no source changes.
 - **State access**: the C++ code reads and writes the C globals directly,
   through their declarations (`gold/api.hpp`). All hashed state has external
   linkage.
