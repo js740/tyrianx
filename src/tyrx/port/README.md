@@ -41,6 +41,12 @@ it, with the parts of the C code that draw ported to C++ and split in two (see
    help opened), the wait for the frame deadline, the present and the event
    poll.
 
+What runs the passes provides, besides the `State` and the draw list, a
+`Runner` (`level.hpp`): it presents the frame, polls events, and runs the C
+loops that have their own drawing (the pause screen, the in-game menu and help,
+through `c_loop`). The shadow tick presents and polls nothing, and abandons the
+pass at a C loop.
+
 The one piece of state the loop keeps itself is `old_weapon_bar`, which the C
 code keeps in a local variable of `JE_main`.
 

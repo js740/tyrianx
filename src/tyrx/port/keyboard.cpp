@@ -22,6 +22,7 @@
 // draws (the HUD after a ship change, a cheat's message) goes in the HUD log
 // of the draw record.
 
+#include "level.hpp"
 #include "port.hpp"
 
 #include <cassert>
@@ -203,7 +204,7 @@ void main_keyboard_input() {
       helpRequest = true;
     }
     else {
-      JE_inGameHelp();
+      c_loop(JE_inGameHelp);
       skipStarShowVGA = true;
     }
   }
