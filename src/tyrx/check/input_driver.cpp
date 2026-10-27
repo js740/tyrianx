@@ -23,6 +23,7 @@
 #include "../gold/state.hpp"
 #include "../runtime.hpp"
 #include "rewind.hpp"
+#include "roundtrip.hpp"
 #include "vclock.hpp"
 
 #include <array>
@@ -52,10 +53,17 @@ class InputDriver {
         press_cheats_(env("TYRX_INPUT_CHEATS") != nullptr),
         move_mouse_(env("TYRX_INPUT_MOUSE") != nullptr),
         midtick_(env("TYRX_INPUT_MIDTICK") != nullptr),
+        press_screens_(env("TYRX_INPUT_SCREENS") != nullptr),
         wants_joystick_(env("TYRX_INPUT_JOYSTICK") != nullptr) {
     if (press_rewind_ && press_commands_ && rewind_key() == kCommandModifier) {
       std::fprintf(stderr, "tyrx: TYRX_INPUT_COMMANDS is ignored with TYRX_INPUT_REWIND\n");
       press_commands_ = false;
+    }
+    // The keys that close the screens go out as the virtual clock advances,
+    // which a round trip doesn't restore.
+    if (press_screens_ && round_trip_enabled()) {
+      std::fprintf(stderr, "tyrx: TYRX_INPUT_SCREENS is ignored with TYRX_ROUNDTRIP\n");
+      press_screens_ = false;
     }
   }
 
@@ -69,11 +77,22 @@ class InputDriver {
     }
 
     bool const in_level = tick_ms_valid_ && to - last_tick_ms_ < 200;
+    if (screen_open_) {
+      // Escape closes the pause screen (as any key) and the in-game menu.
+      for (Uint32 t = from / 350 + 1; t * 350 <= to; ++t) {
+        key(SDL_SCANCODE_ESCAPE, true);
+        key(SDL_SCANCODE_ESCAPE, false);
+      }
+      return;
+    }
     if (!in_level) {
       release_all();
-      if (press_cheats_ && !between_levels_) {
+      // Only after a level has ended: a screen that a level opens stops its
+      // ticks too.
+      if (press_cheats_ && level_ended_) {
         next_settings();
       }
+      level_ended_ = false;
       between_levels_ = true;
       for (Uint32 t = from / 350 + 1; t * 350 <= to; ++t) {
         SDL_Scancode const k = menu_key();
@@ -89,6 +108,10 @@ class InputDriver {
   }
 
   bool wants_joystick() const { return wants_joystick_; }
+
+  void on_level_ended() { level_ended_ = true; }
+
+  void set_screen_open(bool open) { screen_open_ = open && press_screens_; }
 
   // Called by __wrap_init_joysticks with the virtual joystick it opened.
   void set_joystick(SDL_Joystick *handle) { joystick_ = handle; }
@@ -153,6 +176,15 @@ class InputDriver {
     }
     if (press_cheats_) {
       push_cheats(next_tick);
+    }
+    if (press_screens_) {
+      // P opens the pause screen, F1 the in-game help and Escape the in-game
+      // menu, in turn every 1000 ticks.  The help closes at the next key, and
+      // advance closes the others.
+      std::uint64_t const t = next_tick % 1000;
+      set_key(SDL_SCANCODE_P, t == 400);
+      set_key(SDL_SCANCODE_F1, t == 600);
+      set_key(SDL_SCANCODE_ESCAPE, t == 800);
     }
     if (move_mouse_) {
       push_mouse(next_tick);
@@ -372,10 +404,13 @@ class InputDriver {
   bool press_cheats_;
   bool move_mouse_;
   bool midtick_;
+  bool press_screens_;
   bool wants_joystick_;
   SDL_Joystick *joystick_ = nullptr;
   bool joystick_stale_ = false;
   bool between_levels_ = true;
+  bool level_ended_ = false;
+  bool screen_open_ = false;  // the pause screen or the in-game menu
   std::uint64_t level_first_tick_ = 0;
   std::uint64_t pushed_tick_ = UINT64_MAX;
   bool focused_ = false;
@@ -392,6 +427,18 @@ InputDriver *input_driver() {
 }
 
 }  // namespace
+
+void input_driver_level_ended() {
+  if (InputDriver *d = input_driver()) {
+    d->on_level_ended();
+  }
+}
+
+void input_driver_screen(bool open) {
+  if (InputDriver *d = input_driver()) {
+    d->set_screen_open(open);
+  }
+}
 
 void input_driver_advance(Uint32 from, Uint32 to) {
   if (InputDriver *d = input_driver()) {

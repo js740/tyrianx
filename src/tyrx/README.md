@@ -70,6 +70,7 @@ checks it against it.
 | `TYRX_INPUT_ARCADE=1` | With `TYRX_INPUT_SEED`: play one-player arcade games ([check](check/README.md)) |
 | `TYRX_INPUT_MOUSE=1` | With `TYRX_INPUT_SEED`: also move the mouse and press its buttons ([check](check/README.md)) |
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick ([check](check/README.md)) |
+| `TYRX_INPUT_SCREENS=1` | With `TYRX_INPUT_SEED`: also open and close the pause screen, the in-game help and menu ([check](check/README.md)) |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots ([check](check/README.md)) |
 | `TYRX_REWIND=TICKS` | Rewind by holding a key ([check](check/README.md)) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |

@@ -113,6 +113,7 @@ struct Runtime {
   }
 
   void level_ended() {
+    check::input_driver_level_ended();
     check::shadow_level_ended();
     check::draw::drawlist_level_ended();
   }

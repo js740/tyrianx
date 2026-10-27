@@ -105,6 +105,15 @@ every 200 ticks. Joystick runs are deterministic and survive round trips, but
 with `TYRX_INPUT_MIDTICK=1` they diverge at the first tick: `JE_playerMovement`
 reads the joystick directly (`poll_joystick`) in the middle of the tick.
 
+`TYRX_INPUT_SCREENS=1` opens the screens that a level can open, each with its
+own loop, in turn every 1000 ticks: the pause screen (P), the in-game help (F1)
+and the in-game menu (Escape). The help closes at the next key; while the pause
+screen or the menu is open (the wrappers of `JE_pauseGame` and
+`JE_doInGameSetup` tell the driver), the driver presses only Escape, which
+closes them. The shadow tick skips the ticks that open them. Round trips
+(below) don't run with it: those keys go out as the virtual clock advances,
+which a round trip doesn't restore.
+
 ### Caveats
 
 - Without `TYRX_INPUT_MIDTICK`, synthetic input arrives only during
