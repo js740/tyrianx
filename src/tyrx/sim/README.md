@@ -13,6 +13,7 @@ the C game, moved into structures, a subsystem at a time. So far it has:
   each tick, and how far the player moved, for those that follow the player.
 - `Superpixels`: sparks that move and fade.
 - `Starfield`: the stars, and how much faster than their own speed they move.
+- `Sound`: the samples to play at the end of the tick, and the music's fade.
 - `Display`: the screen filter and its fades, the smoothies, flashes, warnings
   and texts, the boss bars, and the HUD's port config buttons.
 - `Map`: where each of the three map layers is and how it moves, and how the

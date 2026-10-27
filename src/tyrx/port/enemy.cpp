@@ -85,6 +85,7 @@ namespace {
 
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
 void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
+  auto& soundQueue = state().sound.queue;
   auto& backMove = state().map.back_move;
   auto& tempMapXOfs = state().map.temp_map_x_ofs;
   auto& tempBackMove = state().map.temp_back_move;

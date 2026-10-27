@@ -87,6 +87,9 @@ namespace {
 // The start of the tick: the smoothie screen code, background wrapping, and
 // music.
 void tick_start() {
+  auto& musicFade = state().sound.music_fade;
+  auto& tempVolume = state().sound.temp_volume;
+  auto& levelSong = state().sound.level_song;
   auto& smoothies = state().display.smoothies;
   auto& starShowVGASpecialCode = state().display.star_show_vga_special_code;
   auto& mapYPos = state().map.map_y_pos;
@@ -152,6 +155,7 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& soundQueue = state().sound.queue;
   auto& textErase = state().display.text_erase;
   auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
   auto& mapX3Ofs = state().map.map_x3_ofs;
@@ -379,6 +383,7 @@ void backgrounds_under_tick() {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under_tick() {
+  auto& soundQueue = state().sound.queue;
   auto& smoothies = state().display.smoothies;
   auto& smoothie_data = state().display.smoothie_data;
   auto& neat = state().display.neat;
@@ -493,6 +498,7 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& soundQueue = state().sound.queue;
   auto& boss_bar = state().display.boss_bars;
   auto& enemyContinualDamage = state().level.enemy_continual_damage;
   auto& superEnemy254Jump = state().level.super_enemy_254_jump;
@@ -959,6 +965,7 @@ void enemy_shots_tick() {
 
 // Sequenced explosions, and the explosions.
 void explosions_tick() {
+  auto& soundQueue = state().sound.queue;
   auto& portConfigChange = state().display.port_config_change;
   auto& portConfigDone = state().display.port_config_done;
   auto& backMove2 = state().map.back_move2;
@@ -979,6 +986,7 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& soundQueue = state().sound.queue;
   auto& smoothies = state().display.smoothies;
   auto& warningCol = state().display.warning_col;
   auto& warningColChange = state().display.warning_col_change;
@@ -1062,6 +1070,7 @@ void warning_tick() {
 
 // The sound routine, and the return event.
 void sound_tick() {
+  auto& soundQueue = state().sound.queue;
   auto& firstGameOver = state().ending.first_game_over;
   auto& returnActive = state().level.return_active;
   auto& enemyOnScreen = state().enemies.on_screen;
@@ -1101,6 +1110,7 @@ void sound_tick() {
 
 // The debug display, the bonus message, the speed mode and the level timer.
 void texts_tick() {
+  auto& soundQueue = state().sound.queue;
   auto& smoothies = state().display.smoothies;
   auto& flash = state().display.flash;
   auto& flashChange = state().display.flash_change;
@@ -1185,6 +1195,7 @@ void texts_tick() {
 // Returns true if the in-game menu or help opened, which ends the tick
 // without a frame (the C code jumps back to level_loop).
 bool game_over_and_input_tick() {
+  auto& musicFade = state().sound.music_fade;
   auto& reallyEndLevel = state().ending.really_end_level;
   auto& firstGameOver = state().ending.first_game_over;
   auto& allPlayersGone = state().ending.all_players_gone;

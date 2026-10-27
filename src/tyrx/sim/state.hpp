@@ -53,6 +53,13 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct Sound {
+  std::array<JE_byte, 8> queue;  // the samples to play at the end of the tick, one per channel
+  JE_boolean music_fade;
+  JE_word temp_volume;  // the music's volume while it fades
+  JE_byte level_song;
+};
+
 struct Display {
   // The screen filter, and its fades.
   JE_shortint filter, filter_new, brightness, brightness_chg;
@@ -213,6 +220,7 @@ struct State {
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  Sound sound;
   Display display;
   Map map;
   Level level;

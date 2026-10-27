@@ -47,6 +47,10 @@ void for_each_binding(State& s, F f) {
   f(s.superpixels.last, ::last_superpixel);
   f(s.starfield.stars, ::starfield_stars);
   f(s.starfield.speed, ::starfield_speed);
+  f(s.sound.queue, ::soundQueue);
+  f(s.sound.music_fade, ::musicFade);
+  f(s.sound.temp_volume, ::tempVolume);
+  f(s.sound.level_song, ::levelSong);
   f(s.display.filter, ::levelFilter);
   f(s.display.filter_new, ::levelFilterNew);
   f(s.display.brightness, ::levelBrightness);

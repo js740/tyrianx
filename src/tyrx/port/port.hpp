@@ -60,6 +60,7 @@ inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFo
     explosionFollowAmountY;
 inline constexpr InSimState superpixels, last_superpixel;
 inline constexpr InSimState starfield_stars, starfield_speed;
+inline constexpr InSimState soundQueue, musicFade, tempVolume, levelSong;
 inline constexpr InSimState levelFilter, levelFilterNew, levelBrightness, levelBrightnessChg, filtrationAvail,
     filterActive, filterFade, filterFadeStart, explosionTransparent, smoothies, smoothie_data, anySmoothies,
     flash, flashChange, warningCol, warningColChange, warningRed, warningSoundDelay, levelWarningDisplay,
