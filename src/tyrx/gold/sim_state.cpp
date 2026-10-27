@@ -171,6 +171,8 @@ void for_each_binding(State& s, F f) {
   f(s.ending.normal_bonus_level_current, ::normalBonusLevelCurrent);
   f(s.ending.main_level, ::mainLevel);
   f(s.ending.next_level, ::nextLevel);
+  f(s.input.button, ::button);
+  f(s.input.fire_button_held, ::fireButtonHeld);
   f(s.players.slots, ::player);
   f(s.players.shot_repeat, ::shotRepeat);
   f(s.players.shot_multi_pos, ::shotMultiPos);

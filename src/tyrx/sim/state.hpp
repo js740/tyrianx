@@ -157,6 +157,11 @@ struct Ending {
   JE_byte main_level, next_level;
 };
 
+struct Input {
+  std::array<bool, 4> button;  // fire, left sidekick, right sidekick, fire mode
+  JE_boolean fire_button_held;  // for the special weapon, which fires once per press
+};
+
 struct Players {
   std::array<Player, 2> slots;
 
@@ -225,6 +230,7 @@ struct State {
   Map map;
   Level level;
   Ending ending;
+  Input input;
   Players players;
   Specials specials;
   Enemies enemies;
