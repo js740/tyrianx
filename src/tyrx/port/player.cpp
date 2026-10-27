@@ -1655,6 +1655,7 @@ void main_game_player_functions() {
 
 // Port of JE_playerDamage.
 JE_byte player_damage(JE_byte temp, Player *this_player) {
+  auto& levelTimer = state().level.timer;
   int playerDamage = 0;
   soundQueue[7] = S_SHIELD_HIT;
 

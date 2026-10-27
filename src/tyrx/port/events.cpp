@@ -33,6 +33,23 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& eventRec = state().level.events;
+  auto& maxEvent = state().level.max_event;
+  auto& eventLoc = state().level.event_loc;
+  auto& curLoc = state().level.cur_loc;
+  auto& returnActive = state().level.return_active;
+  auto& forceEvents = state().level.force_events;
+  auto& enemiesActive = state().level.enemies_active;
+  auto& levelEnemyFrequency = state().level.enemy_frequency;
+  auto& enemyContinualDamage = state().level.enemy_continual_damage;
+  auto& superEnemy254Jump = state().level.super_enemy_254_jump;
+  auto& randomExplosions = state().level.random_explosions;
+  auto& smallEnemyAdjust = state().level.small_enemy_adjust;
+  auto& galagaShotFreq = state().level.galaga_shot_freq;
+  auto& levelTimer = state().level.timer;
+  auto& levelTimerCountdown = state().level.timer_countdown;
+  auto& levelTimerJumpTo = state().level.timer_jump_to;
+  auto& newPL = state().level.new_pl;
   auto& shotRepeat = state().players.shot_repeat;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& damageRate = state().players.damage_rate;
@@ -914,6 +931,9 @@ void event_system() {
 
 // Port of JE_createNewEventEnemy (tyrian2.c).
 void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 uniqueShapeTableI) {
+  auto& eventRec = state().level.events;
+  auto& eventLoc = state().level.event_loc;
+  auto& smallEnemyAdjust = state().level.small_enemy_adjust;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   int i;
@@ -979,6 +999,10 @@ void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 un
 
 // Port of JE_eventJump (tyrian2.c).
 void event_jump(JE_word jump) {
+  auto& eventRec = state().level.events;
+  auto& eventLoc = state().level.event_loc;
+  auto& curLoc = state().level.cur_loc;
+  auto& returnLoc = state().level.return_loc;
   JE_word tempW;
 
   if (jump == 65535) {

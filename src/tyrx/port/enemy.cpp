@@ -85,6 +85,7 @@ namespace {
 
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
 void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
+  auto& galagaShotFreq = state().level.galaga_shot_freq;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;

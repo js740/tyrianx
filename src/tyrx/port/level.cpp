@@ -136,6 +136,7 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& galagaLife = state().level.galaga_life;
   auto& power = state().players.power;
   auto& lastPower = state().players.last_power;
   auto& powerAdd = state().players.power_add;
@@ -259,6 +260,8 @@ void hud_tick() {
 
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under_tick() {
+  auto& curLoc = state().level.cur_loc;
+  auto& forceEvents = state().level.force_events;
   auto& astralDuration = state().specials.astral_duration;
   DrawRecord& r = draw_record();
 
@@ -343,6 +346,10 @@ void backgrounds_under_tick() {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under_tick() {
+  auto& enemiesActive = state().level.enemies_active;
+  auto& levelEnemy = state().level.enemy_types;
+  auto& levelEnemyMax = state().level.enemy_types_max;
+  auto& levelEnemyFrequency = state().level.enemy_frequency;
   auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   int lastEnemyOnScreen;
@@ -436,6 +443,8 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& enemyContinualDamage = state().level.enemy_continual_damage;
+  auto& superEnemy254Jump = state().level.super_enemy_254_jump;
   auto& zinglonDuration = state().specials.zinglon_duration;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
@@ -901,6 +910,7 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& randomExplosions = state().level.random_explosions;
   auto& armorShipDelay = state().players.armor_ship_delay;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
@@ -976,6 +986,7 @@ void warning_tick() {
 
 // The sound routine, and the return event.
 void sound_tick() {
+  auto& returnActive = state().level.return_active;
   auto& enemyOnScreen = state().enemies.on_screen;
   // =================================
   // =======The Sound Routine=========
@@ -1013,6 +1024,10 @@ void sound_tick() {
 
 // The debug display, the bonus message, the speed mode and the level timer.
 void texts_tick() {
+  auto& curLoc = state().level.cur_loc;
+  auto& levelTimer = state().level.timer;
+  auto& levelTimerCountdown = state().level.timer_countdown;
+  auto& levelTimerJumpTo = state().level.timer_jump_to;
   auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
@@ -1193,6 +1208,12 @@ bool game_over_and_input_tick() {
 }
 
 LevelPass simulate(bool& frame) {
+  auto& eventRec = state().level.events;
+  auto& maxEvent = state().level.max_event;
+  auto& eventLoc = state().level.event_loc;
+  auto& curLoc = state().level.cur_loc;
+  auto& levelTimer = state().level.timer;
+  auto& levelTimerCountdown = state().level.timer_countdown;
   auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   r = DrawRecord{};

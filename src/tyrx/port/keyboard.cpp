@@ -30,6 +30,8 @@ namespace tyrx::port {
 
 // Port of JE_mainKeyboardInput.
 void main_keyboard_input() {
+  auto& levelTimer = state().level.timer;
+  auto& levelTimerCountdown = state().level.timer_countdown;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& shipGr = state().players.ship_gr;
   auto& player = state().players.slots;
