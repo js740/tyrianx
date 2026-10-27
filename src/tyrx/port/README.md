@@ -15,8 +15,12 @@ one of three ways:
   go through `state()`.
 - `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
 - Functions here bind references with the C globals' names to it, and are
-  otherwise unchanged: the enemies, and the player and enemy shots, whose code
-  also works on the players and the level's state.
+  otherwise unchanged: the players, the enemies, and the player and enemy shots,
+  whose code also works on the level's state. `COUNTOF` counts their arrays, and
+  `port.hpp` has versions of `player.h`'s inline functions. The one C function
+  that the tick calls that uses them, `playDemoKeys` (the demo input, which
+  moves player 1), gets player 1's position in the C global. The in-game menu
+  (`JE_doInGameSetup`), which the shadow tick doesn't run, uses them too.
 
 ## The level loop
 

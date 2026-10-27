@@ -86,6 +86,7 @@ namespace {
 // The start of the tick: the smoothie screen code, background wrapping, and
 // music.
 void tick_start() {
+  auto& player = state().players.slots;
   // tempScreenSeg = game_screen; // side-effect of game_screen
 
   if (isNetworkGame) {
@@ -135,6 +136,7 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   unsigned *const old_weapon_bar = level_locals().old_weapon_bar;
 
@@ -428,6 +430,7 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   auto& enemyKilled = state().enemies.killed;
@@ -726,6 +729,7 @@ void player_shots_tick() {
 
 // The players: collisions, then movement and firing.
 void players_tick() {
+  auto& player = state().players.slots;
   // Player movement indicators for shots that track your ship
   for (uint i = 0; i < COUNTOF(player); ++i) {
     player[i].last_x_shot_move = player[i].x;
@@ -749,6 +753,7 @@ void players_tick() {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
+  auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   auto& enemyShot = state().enemy_shots.slots;
@@ -888,6 +893,7 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   DrawRecord& r = draw_record();
 
@@ -998,6 +1004,7 @@ void sound_tick() {
 
 // The debug display, the bonus message, the speed mode and the level timer.
 void texts_tick() {
+  auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   char buffer[256];
@@ -1072,6 +1079,7 @@ void texts_tick() {
 // Returns true if the in-game menu or help opened, which ends the tick
 // without a frame (the C code jumps back to level_loop).
 bool game_over_and_input_tick() {
+  auto& player = state().players.slots;
   DrawRecord& r = draw_record();
 
   // GAME OVER

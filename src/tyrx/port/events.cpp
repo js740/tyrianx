@@ -33,6 +33,7 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   switch (eventRec[eventLoc - 1].eventtype) {

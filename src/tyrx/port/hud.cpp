@@ -68,11 +68,13 @@ void log(hud::Draw draw) { draw_record().hud.push_back(std::move(draw)); }
 // JE_drawShield, with the shields as they are now: damage later in the tick
 // can change them.
 void draw_shield_tick() {
+  auto& player = state().players.slots;
   log(hud::Shield{twoPlayerMode && !galagaMode, {player[0].shield, player[1].shield}, player[0].shield_max});
 }
 
 // JE_drawArmor, which also limits the armor.
 void draw_armor_tick() {
+  auto& player = state().players.slots;
   for (uint i = 0; i < COUNTOF(player); ++i) {
     if (player[i].armor > 28) {
       player[i].armor = 28;
@@ -84,11 +86,13 @@ void draw_armor_tick() {
 
 // JE_wipeShieldArmorBars
 void wipe_shield_armor_bars_tick() {
+  auto& player = state().players.slots;
   log(hud::WipeShieldArmor{!twoPlayerMode || galagaMode, player[0].shield, player[0].armor});
 }
 
 // JE_drawPortConfigButtons (rear weapon pattern indicator)
 void draw_port_config_buttons_tick() {
+  auto& player = state().players.slots;
   if (twoPlayerMode) {
     return;
   }
@@ -107,6 +111,7 @@ void draw_text_window_tick(char const *text) {
 
 // JE_drawOptions: sets up the sidekicks, and draws their HUD.
 void draw_options_tick() {
+  auto& player = state().players.slots;
   Player *this_player = &player[twoPlayerMode ? 1 : 0];
 
   for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i) {
@@ -136,6 +141,7 @@ void draw_options_tick() {
 
 // JE_drawOptionLevel
 void draw_option_level_tick() {
+  auto& player = state().players.slots;
   if (twoPlayerMode) {
     temp = 4;  // the C code counts the levels with temp, from 1 to 3
     log(hud::OptionLevel{player[1].items.sidekick_level});
@@ -173,7 +179,7 @@ void hud_draw(hud::Draw const& draw) {
 
     void operator()(hud::Shield const& d) const {
       if (d.two) {
-        for (uint i = 0; i < COUNTOF(player); ++i) {
+        for (uint i = 0; i < COUNTOF(d.shield); ++i) {
           dbar3(screen, 270, 60 + 134 * i, roundf(d.shield[i] * 0.8f), 144);
         }
       }
@@ -188,7 +194,7 @@ void hud_draw(hud::Draw const& draw) {
 
     void operator()(hud::Armor const& d) const {
       if (d.two) {
-        for (uint i = 0; i < COUNTOF(player); ++i) {
+        for (uint i = 0; i < COUNTOF(d.armor); ++i) {
           dbar3(screen, 307, 60 + 134 * i, roundf(d.armor[i] * 0.8f), 224);
         }
       }
@@ -336,6 +342,7 @@ void boss_bar_draw(BossBarsDrawn const& d) {
 // JE_inGameDisplays: only draws, from state that nothing changes later in the
 // tick.
 void in_game_displays_draw(SDL_Surface *screen) {
+  auto& player = state().players.slots;
   char stemp[21];
   char tempstr[256];
 

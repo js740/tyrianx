@@ -103,6 +103,7 @@ void draw_if(std::optional<T> const& drawn, Draw draw) {
 }  // namespace
 
 void draw_tick(DrawRecord const& r) {
+  auto& player = state().players.slots;
   // The HUD, on its own surface, whose drawing commutes with the playing
   // area's until the playing area is copied onto it at the end.
   for (hud::Draw const& d : r.hud) {

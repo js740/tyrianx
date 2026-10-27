@@ -85,6 +85,7 @@ namespace {
 
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
 void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
+  auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   auto& enemyOnScreen = state().enemies.on_screen;
@@ -496,6 +497,7 @@ void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
 }  // namespace
 
 void draw_enemy_tick(int enemyOffset, std::optional<EnemiesDrawn>& drawn) {
+  auto& player = state().players.slots;
   auto& enemyAvail = state().enemies.status;
   drawn = EnemiesDrawn{VGAScreen, tempMapXOfs, {}};
 

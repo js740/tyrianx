@@ -22,9 +22,12 @@
 #include "state.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <set>
+#include <span>
+#include <vector>
 
 namespace tyrx::gold {
 
@@ -44,6 +47,7 @@ void for_each_binding(State& s, F f) {
   f(s.superpixels.last, ::last_superpixel);
   f(s.starfield.stars, ::starfield_stars);
   f(s.starfield.speed, ::starfield_speed);
+  f(s.players.slots, ::player);
   f(s.enemies.slots, ::enemy);
   f(s.enemies.status, ::enemyAvail);
   f(s.enemies.on_screen, ::enemyOnScreen);
@@ -72,6 +76,52 @@ void copy(T (&to)[N], std::array<T, N> const& from) {
   std::ranges::copy(from, to);
 }
 
+// Where a member or global is, and where its counterpart is.
+struct Relocation {
+  std::uintptr_t from;
+  std::size_t size;
+  std::uintptr_t to;
+};
+
+// Points the pointers in v that point into one of the relocations' from
+// objects into its to object instead.  Copied state can point into itself (a
+// player's lives point into its items), and must point into the copy.
+template <typename T>
+void relocate_pointers(T& v, std::span<Relocation const> relocations) {
+  using U = std::remove_cv_t<T>;
+  if constexpr (detail::is_bytewise<std::remove_all_extents_t<U>>) {
+    return;
+  }
+  else if constexpr (std::is_pointer_v<U>) {
+    std::uintptr_t const p = reinterpret_cast<std::uintptr_t>(v);
+    for (Relocation const& r : relocations) {
+      if (p - r.from < r.size) {
+        v = reinterpret_cast<U>(r.to + (p - r.from));
+        return;
+      }
+    }
+  }
+  else if constexpr (std::is_array_v<U>) {
+    for (auto& e : v) {
+      relocate_pointers(e, relocations);
+    }
+  }
+  else if constexpr (std::is_class_v<U>) {
+    template for (constexpr auto m : detail::data_members<U>()) { relocate_pointers(v.[:m:], relocations); }
+  }
+}
+
+// The relocations from the C globals to the State's members, or back.
+std::vector<Relocation> relocations(sim::State const& state, bool to_state) {
+  std::vector<Relocation> r;
+  for_each_binding(state, [&](auto const& cxx, auto const& c) {
+    static_assert(sizeof cxx == sizeof c);
+    auto const cxx_at = reinterpret_cast<std::uintptr_t>(&cxx), c_at = reinterpret_cast<std::uintptr_t>(&c);
+    r.push_back(to_state ? Relocation{c_at, sizeof c, cxx_at} : Relocation{cxx_at, sizeof cxx, c_at});
+  });
+  return r;
+}
+
 // Overwrites a global with a pattern.
 template <typename T>
 void scramble(T& c) {
@@ -91,10 +141,13 @@ void scramble(MtState& mt) {
 
 void read_sim_state(sim::State& state) {
   for_each_binding(state, [](auto& cxx, auto const& c) { copy(cxx, c); });
+  relocate_pointers(state, relocations(state, true));
 }
 
 void write_sim_state(sim::State const& state) {
   for_each_binding(state, [](auto const& cxx, auto& c) { copy(c, cxx); });
+  std::vector<Relocation> const r = relocations(state, false);
+  for_each_binding(state, [&](auto const&, auto& c) { relocate_pointers(c, r); });
 }
 
 void scramble_sim_state_globals() {
