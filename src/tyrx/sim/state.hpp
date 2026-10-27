@@ -53,6 +53,10 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct Players {
+  std::array<Player, 2> slots;
+};
+
 struct Enemies {
   std::array<JE_SingleEnemyType, 100> slots;
   std::array<JE_byte, 100> status;  // 1 for a free slot, 0 for an enemy, 2 for one without armor
@@ -75,6 +79,7 @@ struct State {
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  Players players;
   Enemies enemies;
   PlayerShots player_shots;
   EnemyShots enemy_shots;

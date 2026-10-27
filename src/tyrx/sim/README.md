@@ -13,6 +13,7 @@ the C game, moved into structures, a subsystem at a time. So far it has:
   each tick, and how far the player moved, for those that follow the player.
 - `Superpixels`: sparks that move and fade.
 - `Starfield`: the stars, and how much faster than their own speed they move.
+- `Players`: the players.
 - `Enemies`: the enemies' slots and what each holds, and how many there are on
   screen, in all and killed.
 - `PlayerShots`: the player shots' slots, and how many ticks each has left.
@@ -22,12 +23,13 @@ The C++ level tick works on a `State` that the code running it provides
 (`../port/README.md`).
 
 While the C game runs, it is the reference, so its globals hold the state at a
-tick boundary. `../gold/sim_state.hpp` lists the C global that holds each
-member of each of `State`'s subsystems, and copies between them. The shadow
-tick (`../check/README.md`) reads a `State` from the globals before each pass,
+tick boundary. `../gold/sim_state.hpp` lists the C global that holds each member
+of each of `State`'s subsystems, and copies between them. The shadow tick
+(`../check/README.md`) reads a `State` from the globals before each pass,
 scrambles the globals, and writes the `State` back for the comparison, so code
 that still used the globals would go wrong visibly. It also checks at startup
-that each member has exactly one global.
+that each member has exactly one global. Pointers into the state (a player's
+lives point into its items) are pointed into the copy when it is copied.
 
 ## Ports
 

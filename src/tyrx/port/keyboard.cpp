@@ -30,6 +30,7 @@ namespace tyrx::port {
 
 // Port of JE_mainKeyboardInput.
 void main_keyboard_input() {
+  auto& player = state().players.slots;
   JE_gammaCheck();
 
   // { Network Request Commands }

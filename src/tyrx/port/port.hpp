@@ -55,15 +55,31 @@ inline sim::State& state() { return *state_target(); }
 // The C globals whose state sim::State holds.  These names hide them here, so
 // that code in port/ can't use them by mistake.
 struct InSimState {};
+inline constexpr InSimState mt_global;
 inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
-    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed, mt_global, enemy,
-    enemyAvail, enemyOnScreen, totalEnemy, enemyKilled, playerShotData, shotAvail, enemyShot, enemyShotAvail;
+    explosionFollowAmountY;
+inline constexpr InSimState superpixels, last_superpixel;
+inline constexpr InSimState starfield_stars, starfield_speed;
+inline constexpr InSimState player;
+inline constexpr InSimState enemy, enemyAvail, enemyOnScreen, totalEnemy, enemyKilled;
+inline constexpr InSimState playerShotData, shotAvail;
+inline constexpr InSimState enemyShot, enemyShotAvail;
 
 // The random number generator's state is in the State too.  These hide the C
 // functions, which draw from mt_global.
 inline unsigned long mt_rand() { return mt_rand_r(&state().random.mt); }
 inline float mt_rand_1() { return mt_rand_1_r(&state().random.mt); }
 inline float mt_rand_lt1() { return mt_rand_lt1_r(&state().random.mt); }
+
+// player.h's, which read the C global player.
+inline bool all_players_dead() {
+  auto& player = state().players.slots;
+  return (!player[0].is_alive && (!twoPlayerMode || !player[1].is_alive));
+}
+inline bool all_players_alive() {
+  auto& player = state().players.slots;
+  return (player[0].is_alive && (!twoPlayerMode || player[1].is_alive));
+}
 
 // background.cpp
 void background_1_tick(SDL_Surface *screen, bool clr);  // draw_background_1, or JE_clr256

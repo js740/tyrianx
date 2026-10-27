@@ -39,6 +39,7 @@ namespace {
 
 // Port of JE_specialComplete.
 void special_complete(JE_byte playerNum, JE_byte specialType) {
+  auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   auto& enemyShot = state().enemy_shots.slots;
@@ -226,6 +227,7 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
+  auto& player = state().players.slots;
   auto& playerShotData = state().player_shots.slots;
   auto& shotAvail = state().player_shots.ttl;
   if (player[0].items.special > 0) {
@@ -539,9 +541,23 @@ void player_draw(PlayerDrawn const& d) {
 
 namespace {
 
+// playDemoKeys (demo.c), which reads the demo's input, whose state is static
+// there, and moves player 1 in the C global: it gets the State's player 1's
+// position there.
+bool play_demo_keys() {
+  auto& player = state().players.slots;
+  ::player[0].x = player[0].x;
+  ::player[0].y = player[0].y;
+  bool const more = playDemoKeys();
+  player[0].x = ::player[0].x;
+  player[0].y = ::player[0].y;
+  return more;
+}
+
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
+  auto& player = state().players.slots;
   JE_integer mouseXC, mouseYC;
   JE_integer accelXC, accelYC;
 
@@ -700,7 +716,7 @@ redo:
         }
 
         // demo playback input
-        if (playDemo && !playDemoKeys()) {
+        if (playDemo && !play_demo_keys()) {
           endLevel = true;
           levelEnd = 40;
         }
@@ -1003,12 +1019,12 @@ redo:
 
       // if player moved, add new ship x, y history entry
       if (this_player->x - *mouseX_ != 0 || this_player->y - *mouseY_ != 0) {
-        for (uint i = 1; i < COUNTOF(player->old_x); ++i) {
+        for (uint i = 1; i < COUNTOF(this_player->old_x); ++i) {
           this_player->old_x[i - 1] = this_player->old_x[i];
           this_player->old_y[i - 1] = this_player->old_y[i];
         }
-        this_player->old_x[COUNTOF(player->old_x) - 1] = this_player->x;
-        this_player->old_y[COUNTOF(player->old_x) - 1] = this_player->y;
+        this_player->old_x[COUNTOF(this_player->old_x) - 1] = this_player->x;
+        this_player->old_y[COUNTOF(this_player->old_x) - 1] = this_player->y;
       }
     }
     // twoPlayerLinked
@@ -1315,8 +1331,8 @@ redo:
         switch (this_player->sidekick[LEFT_SIDEKICK].style) {
           case 1:  // trailing
           case 3:
-            this_player->sidekick[LEFT_SIDEKICK].x = this_player->old_x[COUNTOF(player->old_x) / 2 - 1];
-            this_player->sidekick[LEFT_SIDEKICK].y = this_player->old_y[COUNTOF(player->old_x) / 2 - 1];
+            this_player->sidekick[LEFT_SIDEKICK].x = this_player->old_x[COUNTOF(this_player->old_x) / 2 - 1];
+            this_player->sidekick[LEFT_SIDEKICK].y = this_player->old_y[COUNTOF(this_player->old_x) / 2 - 1];
             break;
           case 2:  // front-mounted
             this_player->sidekick[LEFT_SIDEKICK].x = this_player->x;
@@ -1426,7 +1442,7 @@ redo:
 
         // if player has sidekicks
         if (playerNum_ == 2 || !twoPlayerMode) {
-          for (uint i = 0; i < COUNTOF(player->items.sidekick); ++i) {
+          for (uint i = 0; i < COUNTOF(this_player->items.sidekick); ++i) {
             uint shot_i = (i == 0) ? SHOT_LEFT_SIDEKICK : SHOT_RIGHT_SIDEKICK;
 
             JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
@@ -1538,6 +1554,7 @@ redo:
 
 // Port of JE_mainGamePlayerFunctions.
 void main_game_player_functions() {
+  auto& player = state().players.slots;
   // PLAYER MOVEMENT/MOUSE ROUTINES
 
   if (endLevel && levelEnd > 0) {
@@ -1650,6 +1667,7 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
 
 // Port of JE_playerCollide.
 void player_collide(Player *this_player, JE_byte playerNum_) {
+  auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   auto& shotAvail = state().player_shots.ttl;
@@ -2032,6 +2050,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
 
 // Port of JE_SFCodes (mainint.c).
 void sf_codes(JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_, JE_integer mouseY_) {
+  auto& player = state().players.slots;
   JE_byte temp, temp2, temp3, temp4, temp5;
 
   uint ship = player[playerNum_ - 1].items.ship;
@@ -2125,6 +2144,7 @@ JE_word s_gr(JE_word ship, Sprite2_array **ptr) {
 
 // Port of JE_getShipInfo (varz.c).
 void get_ship_info(void) {
+  auto& player = state().players.slots;
   JE_boolean extraShip, extraShip2;
 
   shipGrPtr = &spriteSheet9;
@@ -2172,6 +2192,7 @@ void get_ship_info(void) {
 
 // Port of JE_portConfigs (varz.c).
 JE_word port_configs(void) {
+  auto& player = state().players.slots;
   uint const player_index = twoPlayerMode ? 1 : 0;
   return tempW = weaponPort[player[player_index].items.weapon[REAR_WEAPON].id].opnum;
 }
