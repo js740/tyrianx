@@ -51,7 +51,13 @@ inline sim::State& state() { return *state_target(); }
 // that code in port/ can't use them by mistake.
 struct InSimState {};
 inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
-    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed;
+    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed, mt_global;
+
+// The random number generator's state is in the State too.  These hide the C
+// functions, which draw from mt_global.
+inline unsigned long mt_rand() { return mt_rand_r(&state().random.mt); }
+inline float mt_rand_1() { return mt_rand_1_r(&state().random.mt); }
+inline float mt_rand_lt1() { return mt_rand_lt1_r(&state().random.mt); }
 
 // background.cpp
 void background_1_tick(SDL_Surface *screen, bool clr);  // draw_background_1, or JE_clr256
@@ -82,7 +88,7 @@ inline void setup_explosion_large(JE_boolean enemyGround, JE_byte exploNum, JE_i
 // JE_doSP, in sim/superpixel.cpp.  It counts in the global temp, which it
 // leaves at num.
 inline void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color) {
-  sim::do_sp(state().superpixels, mt_global, x, y, num, explowidth, color);
+  sim::do_sp(state().superpixels, state().random.mt, x, y, num, explowidth, color);
   temp = num;
 }
 

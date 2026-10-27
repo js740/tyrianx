@@ -9,8 +9,9 @@ structures, the code that uses it moves to `../sim/`.
 The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the code
 running the tick provides (`state()`): the explosions, the repeating explosions,
 the superpixels and the starfield, whose setup and update have moved to
-`../sim/` as well. `port.hpp` hides the C globals that held it from code here,
-so using one by mistake doesn't compile.
+`../sim/` as well. It also has the random number generator's state, which
+`port.hpp`'s `mt_rand` etc. draw from. `port.hpp` hides the C globals that held
+it from code here, so using one by mistake doesn't compile.
 
 ## The level loop
 
@@ -82,11 +83,11 @@ level timer, the higher difficulties, network play, and the pause screen and
 menu (which the shadow tick doesn't run).
 
 Nothing is drawn during the simulation of a C++ level tick: `TYRX_SHADOW_CALLS`
-counts no calls before the drawing begins in the runs above. The game logic
-that the tick calls is ported as well (creating explosions, superpixels,
-enemies and player shots, event jumps, special-move codes, ship info and
-power-ups), checked by the shadow tick's state comparison. What the C++ tick
-still calls in C is the platform layer (input, sound, music, frame pacing,
-sprite loading, the random number generator), the pause screen, the in-game
-menu and help, which are separate loops with their own drawing, and a few
-settings functions.
+counts no calls before the drawing begins in the runs above. The game logic that
+the tick calls is ported as well (creating explosions, superpixels, enemies and
+player shots, event jumps, special-move codes, ship info and power-ups), checked
+by the shadow tick's state comparison. What the C++ tick still calls in C is the
+platform layer (input, sound, music, frame pacing, sprite loading, the random
+number generator's functions, on the `State`'s generator), the pause screen, the
+in-game menu and help, which are separate loops with their own drawing, and a
+few settings functions.

@@ -34,6 +34,7 @@ namespace {
 // state in the C game.
 template <typename State, typename F>
 void for_each_binding(State& s, F f) {
+  f(s.random.mt, ::mt_global);
   f(s.explosions.slots, ::explosions);
   f(s.explosions.repeating, ::rep_explosions);
   f(s.explosions.follow_x, ::explosionFollowAmountX);
@@ -62,6 +63,21 @@ void copy(T (&to)[N], std::array<T, N> const& from) {
   std::ranges::copy(from, to);
 }
 
+// Overwrites a global with a pattern.
+template <typename T>
+void scramble(T& c) {
+  std::memset(&c, 0xa5, sizeof c);
+}
+
+// A generator keeps its indices in range, so that drawing from it gives wrong
+// numbers instead of crashing.
+void scramble(MtState& mt) {
+  std::memset(&mt, 0xa5, sizeof mt);
+  mt.p0 %= MT_RAND_N;
+  mt.p1 %= MT_RAND_N;
+  mt.pm %= MT_RAND_N;
+}
+
 }  // namespace
 
 void read_sim_state(sim::State& state) {
@@ -74,7 +90,7 @@ void write_sim_state(sim::State const& state) {
 
 void scramble_sim_state_globals() {
   sim::State state;
-  for_each_binding(state, [](auto&, auto& c) { std::memset(&c, 0xa5, sizeof c); });
+  for_each_binding(state, [](auto&, auto& c) { scramble(c); });
 }
 
 bool sim_state_bound() {
