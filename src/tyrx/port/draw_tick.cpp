@@ -64,8 +64,9 @@ void explosions_draw(ExplosionsDrawn const& d) {
       continue;
     }
 
-    JE_integer x = explosions[j].x, y = explosions[j].y;
-    JE_word sprite = explosions[j].sprite;
+    Explosion const& explosion = state().explosions.slots[j];
+    JE_integer x = explosion.x, y = explosion.y;
+    JE_word sprite = explosion.sprite;
     if (e != d.ended.end() && e->j == j) {
       x = e->x, y = e->y, sprite = e->sprite;
       ++e;

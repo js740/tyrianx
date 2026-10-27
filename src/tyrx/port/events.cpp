@@ -48,10 +48,10 @@ void event_system() {
       backMove2 = eventRec[eventLoc - 1].eventdat2;
 
       if (backMove2 > 0) {
-        explodeMove = backMove2;
+        state().explosions.move = backMove2;
       }
       else {
-        explodeMove = backMove;
+        state().explosions.move = backMove;
       }
 
       backMove3 = eventRec[eventLoc - 1].eventdat3;
@@ -436,7 +436,7 @@ void event_system() {
 
       backMove = eventRec[eventLoc - 1].eventdat;
       backMove2 = eventRec[eventLoc - 1].eventdat2;
-      explodeMove = backMove2;
+      state().explosions.move = backMove2;
       backMove3 = eventRec[eventLoc - 1].eventdat3;
       break;
 
