@@ -87,6 +87,8 @@ namespace {
 // The start of the tick: the smoothie screen code, background wrapping, and
 // music.
 void tick_start() {
+  auto& smoothies = state().display.smoothies;
+  auto& starShowVGASpecialCode = state().display.star_show_vga_special_code;
   auto& mapYPos = state().map.map_y_pos;
   auto& mapY2Pos = state().map.map_y2_pos;
   auto& mapY3Pos = state().map.map_y3_pos;
@@ -150,6 +152,7 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& textErase = state().display.text_erase;
   auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
   auto& mapX3Ofs = state().map.map_x3_ofs;
   auto& endLevel = state().ending.end_level;
@@ -277,6 +280,10 @@ void hud_tick() {
 
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under_tick() {
+  auto& smoothies = state().display.smoothies;
+  auto& smoothie_data = state().display.smoothie_data;
+  auto& anySmoothies = state().display.any_smoothies;
+  auto& starActive = state().display.star_active;
   auto& backPos = state().map.back_pos;
   auto& backMove = state().map.back_move;
   auto& mapY = state().map.map_y;
@@ -292,7 +299,7 @@ void backgrounds_under_tick() {
   DrawRecord& r = draw_record();
 
   // SMOOTHIES!
-  JE_checkSmoothies();
+  check_smoothies();
   if (anySmoothies) {
     VGAScreen = VGAScreen2;  // this makes things complicated, but we do it anyway :(
   }
@@ -372,6 +379,9 @@ void backgrounds_under_tick() {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under_tick() {
+  auto& smoothies = state().display.smoothies;
+  auto& smoothie_data = state().display.smoothie_data;
+  auto& neat = state().display.neat;
   auto& backMove = state().map.back_move;
   auto& backMove3 = state().map.back_move3;
   auto& mapXOfs = state().map.map_x_ofs;
@@ -483,6 +493,7 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& boss_bar = state().display.boss_bars;
   auto& enemyContinualDamage = state().level.enemy_continual_damage;
   auto& superEnemy254Jump = state().level.super_enemy_254_jump;
   auto& zinglonDuration = state().specials.zinglon_duration;
@@ -948,6 +959,8 @@ void enemy_shots_tick() {
 
 // Sequenced explosions, and the explosions.
 void explosions_tick() {
+  auto& portConfigChange = state().display.port_config_change;
+  auto& portConfigDone = state().display.port_config_done;
   auto& backMove2 = state().map.back_move2;
   auto& enemyStillExploding = state().ending.enemy_still_exploding;
   DrawRecord& r = draw_record();
@@ -966,6 +979,10 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& smoothies = state().display.smoothies;
+  auto& warningCol = state().display.warning_col;
+  auto& warningColChange = state().display.warning_col_change;
+  auto& warningSoundDelay = state().display.warning_sound_delay;
   auto& backMove3 = state().map.back_move3;
   auto& background2notTransparent = state().map.background2_not_transparent;
   auto& background2over = state().map.background2_over;
@@ -1084,6 +1101,10 @@ void sound_tick() {
 
 // The debug display, the bonus message, the speed mode and the level timer.
 void texts_tick() {
+  auto& smoothies = state().display.smoothies;
+  auto& flash = state().display.flash;
+  auto& flashChange = state().display.flash_change;
+  auto& displayTime = state().display.display_time;
   auto& mapX = state().map.map_x;
   auto& curLoc = state().level.cur_loc;
   auto& levelTimer = state().level.timer;
@@ -1275,6 +1296,7 @@ bool game_over_and_input_tick() {
 }
 
 LevelPass simulate(bool& frame) {
+  auto& filterActive = state().display.filter_active;
   auto& backMove = state().map.back_move;
   auto& backMove2 = state().map.back_move2;
   auto& backMove3 = state().map.back_move3;

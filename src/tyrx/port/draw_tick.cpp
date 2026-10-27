@@ -59,6 +59,7 @@ void enemy_shots_draw(EnemyShotsDrawn const& d) {
 // Explosions that ended may have had their slots taken, so those are drawn
 // from the record.
 void explosions_draw(ExplosionsDrawn const& d) {
+  auto& explosionTransparent = state().display.explosion_transparent;
   auto e = d.visible.ended.begin();
   for (int j = 0; j < MAX_EXPLOSIONS; j++) {
     if (!d.visible.slots[j]) {
@@ -103,6 +104,9 @@ void draw_if(std::optional<T> const& drawn, Draw draw) {
 }  // namespace
 
 void draw_tick(DrawRecord const& r) {
+  auto& smoothie_data = state().display.smoothie_data;
+  auto& warningCol = state().display.warning_col;
+  auto& starShowVGASpecialCode = state().display.star_show_vga_special_code;
   auto& levelTimerCountdown = state().level.timer_countdown;
   auto& player = state().players.slots;
   // The HUD, on its own surface, whose drawing commutes with the playing

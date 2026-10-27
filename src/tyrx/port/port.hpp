@@ -60,6 +60,11 @@ inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFo
     explosionFollowAmountY;
 inline constexpr InSimState superpixels, last_superpixel;
 inline constexpr InSimState starfield_stars, starfield_speed;
+inline constexpr InSimState levelFilter, levelFilterNew, levelBrightness, levelBrightnessChg, filtrationAvail,
+    filterActive, filterFade, filterFadeStart, explosionTransparent, smoothies, smoothie_data, anySmoothies,
+    flash, flashChange, warningCol, warningColChange, warningRed, warningSoundDelay, levelWarningDisplay,
+    levelWarningLines, levelWarningText, textErase, displayTime, neat, starShowVGASpecialCode, starActive,
+    boss_bar, portConfigChange, portConfigDone;
 inline constexpr InSimState backPos, backPos2, backPos3, backMove, backMove2, backMove3, mapX, mapY, mapX2,
     mapX3, mapY2, mapY3, mapYPos, mapY2Pos, mapY3Pos, mapXPos, oldMapXOfs, mapXOfs, mapX2Ofs, mapX2Pos,
     mapX3Pos, oldMapX3Ofs, mapX3Ofs, tempMapXOfs, mapXbpPos, mapX2bpPos, mapX3bpPos, map1YDelay,
@@ -109,6 +114,7 @@ void background_2_draw(Background2Drawn const& d);
 void background_3_tick(SDL_Surface *screen, std::optional<Background3Drawn>& drawn);  // draw_background_3
 void background_3_draw(Background3Drawn const& d);
 void starfield_draw(SDL_Surface *screen);
+void check_smoothies();  // JE_checkSmoothies
 
 // effects.cpp
 void superpixels_draw(SuperpixelsDrawn const& d);

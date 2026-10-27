@@ -46,6 +46,12 @@ void superpixels_draw(SuperpixelsDrawn const& d) {
 // The filter is drawn with the filter and brightness from before the fade
 // moves on.
 void filter_screen_tick() {
+  auto& levelFilter = state().display.filter;
+  auto& levelFilterNew = state().display.filter_new;
+  auto& levelBrightness = state().display.brightness;
+  auto& levelBrightnessChg = state().display.brightness_chg;
+  auto& filterFade = state().display.filter_fade;
+  auto& filterFadeStart = state().display.filter_fade_start;
   draw_record().filter = FilterDrawn{VGAScreen, levelFilter, levelBrightness};
 
   if (!filterFade) {
@@ -65,6 +71,8 @@ void filter_screen_tick() {
 }
 
 void filter_screen_draw(FilterDrawn const& d) {
+  auto& filtrationAvail = state().display.filtration_avail;
+  auto& explosionTransparent = state().display.explosion_transparent;
   draw::JE_filterScreen(d.screen, d.col, d.brightness, filtrationAvail, explosionTransparent);
 }
 

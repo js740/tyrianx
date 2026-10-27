@@ -48,6 +48,7 @@ void background_1_draw(Background1Drawn const& d) {
 
 // draw_background_2, or draw_background_2_blend.
 void background_2_tick(SDL_Surface *screen, bool blend, std::optional<Background2Drawn>& drawn) {
+  auto& smoothies = state().display.smoothies;
   auto& backPos2 = state().map.back_pos2;
   auto& backMove2 = state().map.back_move2;
   auto& mapY2 = state().map.map_y2;
@@ -115,6 +116,14 @@ void background_3_tick(SDL_Surface *screen, std::optional<Background3Drawn>& dra
 
 void background_3_draw(Background3Drawn const& d) {
   draw::draw_background_3(d.screen, d.mapY3Pos, d.mapX3bpPos, d.mapX3Pos, d.backPos3, d.backMove3);
+}
+
+// Port of JE_checkSmoothies.
+void check_smoothies() {
+  auto& smoothies = state().display.smoothies;
+  auto& anySmoothies = state().display.any_smoothies;
+  anySmoothies = (processorType > 2 && (smoothies[1 - 1] || smoothies[2 - 1])) ||
+                 (processorType > 1 && (smoothies[3 - 1] || smoothies[4 - 1] || smoothies[5 - 1]));
 }
 
 // update_and_draw_starfield.  The stars move as they are drawn

@@ -33,6 +33,17 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& filterActive = state().display.filter_active;
+  auto& starActive = state().display.star_active;
+  auto& boss_bar = state().display.boss_bars;
+  auto& levelFilter = state().display.filter;
+  auto& levelFilterNew = state().display.filter_new;
+  auto& levelBrightness = state().display.brightness;
+  auto& levelBrightnessChg = state().display.brightness_chg;
+  auto& filterFade = state().display.filter_fade;
+  auto& filterFadeStart = state().display.filter_fade_start;
+  auto& smoothies = state().display.smoothies;
+  auto& smoothie_data = state().display.smoothie_data;
   auto& backMove = state().map.back_move;
   auto& backMove2 = state().map.back_move2;
   auto& backMove3 = state().map.back_move3;
