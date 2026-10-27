@@ -39,8 +39,14 @@ struct Explosions {
   JE_integer follow_x, follow_y;  // how far the player moved, for explosions that follow the player
 };
 
+struct Superpixels {
+  std::array<superpixel_type, MAX_SUPERPIXELS> slots;
+  unsigned int last;  // the slot of the last one created
+};
+
 struct State {
   Explosions explosions;
+  Superpixels superpixels;
 };
 
 }  // namespace tyrx::sim

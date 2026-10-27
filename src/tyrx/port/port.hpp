@@ -51,7 +51,7 @@ inline sim::State& state() { return *state_target(); }
 // that code in port/ can't use them by mistake.
 struct InSimState {};
 inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
-    explosionFollowAmountY;
+    explosionFollowAmountY, superpixels, last_superpixel;
 
 // background.cpp
 void background_1_tick(SDL_Surface *screen, bool clr);  // draw_background_1, or JE_clr256
@@ -65,11 +65,9 @@ void starfield_tick(SDL_Surface *screen, int move_speed);  // update_and_draw_st
 void starfield_draw(SDL_Surface *screen);
 
 // effects.cpp
-void superpixels_tick();  // JE_drawSP
 void superpixels_draw(SuperpixelsDrawn const& d);
 void filter_screen_tick();  // JE_filterScreen(levelFilter, levelBrightness)
 void filter_screen_draw(FilterDrawn const& d);
-void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color);  // JE_doSP (superpixels)
 
 // JE_setupExplosion, in sim/explosion.cpp
 inline void setup_explosion(JE_integer x, JE_integer y, JE_integer deltaY, JE_integer type,
@@ -80,6 +78,13 @@ inline void setup_explosion(JE_integer x, JE_integer y, JE_integer deltaY, JE_in
 // JE_setupExplosionLarge, in sim/explosion.cpp
 inline void setup_explosion_large(JE_boolean enemyGround, JE_byte exploNum, JE_integer x, JE_integer y) {
   sim::setup_explosion_large(state().explosions, enemyGround, exploNum, x, y);
+}
+
+// JE_doSP, in sim/superpixel.cpp.  It counts in the global temp, which it
+// leaves at num.
+inline void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color) {
+  sim::do_sp(state().superpixels, mt_global, x, y, num, explowidth, color);
+  temp = num;
 }
 
 // enemy.cpp

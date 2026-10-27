@@ -162,10 +162,12 @@ following:
 
 Mismatches are printed with the differing fields. A per-function summary is
 printed at exit, and exits that Tyrian X initiates return status 3. Checked so
-far: `JE_setupExplosion` and `JE_setupExplosionLarge`.
+far: `JE_setupExplosion`, `JE_setupExplosionLarge` and `JE_doSP`, whose
+check includes the random number generator's state.
 
 ```sh
 tools/run_headless.sh ./opentyrian DATA diff.log demos TYRX_DIFF=1
+# tyrx diff: JE_doSP                     191 calls, 0 mismatches
 # tyrx diff: JE_setupExplosion        36077 calls, 0 mismatches
 # tyrx diff: JE_setupExplosionLarge    1893 calls, 0 mismatches
 ```

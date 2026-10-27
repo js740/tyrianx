@@ -39,6 +39,8 @@ void for_each_binding(State& s, F f) {
   f(s.explosions.follow_x, ::explosionFollowAmountX);
   f(s.explosions.follow_y, ::explosionFollowAmountY);
   f(s.explosions.move, ::explodeMove);
+  f(s.superpixels.slots, ::superpixels);
+  f(s.superpixels.last, ::last_superpixel);
 }
 
 // Copies between a member and its global, which must have the same type, or

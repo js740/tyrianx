@@ -1210,7 +1210,7 @@ LevelPass simulate(bool& frame) {
   // Network games aren't supported (level_pass returns early).
 
   // Test
-  superpixels_tick();
+  r.superpixels = SuperpixelsDrawn{VGAScreen, sim::update_superpixels(state().superpixels)};
 
   // Filtration
   if (filterActive) {
