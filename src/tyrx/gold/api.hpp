@@ -32,6 +32,7 @@ extern "C" {
 #include "../../fonthand.h"
 #include "../../game_menu.h"
 #include "../../hooks.h"
+#include "../../hooks_tyrx.h"
 #include "../../joystick.h"
 #include "../../keyboard.h"
 #include "../../lds_play.h"

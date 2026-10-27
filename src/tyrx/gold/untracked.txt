@@ -38,7 +38,7 @@ picload           render   *
 sprite            render   *
 starlib           ui       *
 tyrian2           input    quit
-tyrian2           other    game_hooks
+tyrian2           other    game_hooks tyrx_hooks
 tyrian2           ui       tempStr
 varz              scratch  b temp temp2 temp3 tempDat tempDat2 tempDat3 tempW x y
 varz              timing   debug debugHist debugHistCount debugTime lastDebugTime

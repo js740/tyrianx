@@ -27,6 +27,7 @@
 #include "fonthand.h"
 #include "game_menu.h"
 #include "hooks.h"
+#include "hooks_tyrx.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "lds_play.h"
@@ -60,6 +61,7 @@
 inline static void blit_enemy(SDL_Surface *surface, unsigned int i, signed int x_offset, signed int y_offset, signed int sprite_offset);
 
 GameHooks game_hooks;
+TyrxHooks tyrx_hooks;
 
 boss_bar_t boss_bar[2];
 
@@ -981,6 +983,19 @@ level_loop:
 
 	if (game_hooks.level_tick)
 		game_hooks.level_tick();
+
+	if (tyrx_hooks.level_pass)
+	{
+		switch (tyrx_hooks.level_pass())
+		{
+		case TYRX_PASS_C:
+			break;
+		case TYRX_PASS_LEVEL_LOOP:
+			goto level_loop;
+		case TYRX_PASS_START_LEVEL:
+			goto start_level;
+		}
+	}
 
 	//tempScreenSeg = game_screen; /* side-effect of game_screen */
 

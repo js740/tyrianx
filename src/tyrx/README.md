@@ -13,7 +13,7 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 
 | Directory | Namespace | What it holds |
 |---|---|---|
-| `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits |
+| `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits; `cxx_tick.cpp`: the C++ level tick in place of the C code's |
 | [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry, hashing, snapshots, its memory, and the globals that hold the C++ game's state |
 | [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, the shadow tick, call-by-call checks, round trips and the rewind prototype |
 | [`check/draw/`](check/draw/README.md) | `tyrx::check::draw` | Recording the C code's draw lists, and checking them |
@@ -35,6 +35,11 @@ checks it against it.
   linking the C++ objects is all it takes. The C
   changes are all meant for upstream: these hooks, the RNG state refactor,
   external linkage for some state, and polling events only once per tick.
+- **The fork's hook**: `src/hooks_tyrx.h` declares `tyrx_hooks`, a callback
+  that only this fork's C code calls, at the top of each pass through
+  `level_loop`: it runs the C++ level tick in place of the C code's pass and
+  says where the C code goes next (`cxx_tick.cpp`). It is NULL unless
+  `TYRX_CXX_TICK` is set.
 - **Link-time wrapping**: `-Wl,--wrap=SYMBOL` sends the C code's calls to
   `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. This currently covers
   `SDL_GetTicks`, `SDL_Delay` and `time` for the virtual clock, `JE_itemScreen`,
@@ -52,6 +57,7 @@ checks it against it.
 
 | Variable | Effect |
 |---|---|
+| `TYRX_CXX_TICK=1` | Run the C++ level tick in place of the C code's ([cxx_tick.hpp](cxx_tick.hpp)) |
 | `TYRX_HASHLOG=FILE` | Per-tick hash of every hashed block, plus level-start markers ([check](check/README.md)) |
 | `TYRX_FRAMELOG=FILE` | A hash of each frame presented, with its tick ([check](check/README.md)) |
 | `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N ([check](check/README.md)) |

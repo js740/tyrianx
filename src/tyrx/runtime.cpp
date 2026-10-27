@@ -42,6 +42,7 @@
 #include "check/rewind.hpp"
 #include "check/roundtrip.hpp"
 #include "check/shadow.hpp"
+#include "cxx_tick.hpp"
 #include "gold/api.hpp"
 #include "gold/state.hpp"
 
@@ -102,6 +103,7 @@ struct Runtime {
   }
 
   void level_start() {
+    cxx_tick_level_start();
     check::shadow_level_start();
     ++level_count;
     check::round_trip_level_start();

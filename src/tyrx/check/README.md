@@ -47,6 +47,24 @@ differ outside the levels: the title screen shows the build's version, and the
 screens between the demos present more frames in a release build than in a
 debug build.
 
+## The C++ tick in place of the C code's
+
+With `TYRX_CXX_TICK=1`, the C++ level tick runs the game's levels
+(`../cxx_tick.hpp`). A run plays the same with it as without it if their hash
+logs and frame logs are the same:
+
+```sh
+tools/run_headless.sh ./opentyrian DATA c.log demos TYRX_FRAMELOG=c.frames
+tools/run_headless.sh ./opentyrian DATA x.log demos TYRX_FRAMELOG=x.frames TYRX_CXX_TICK=1
+cmp c.log x.log && cmp c.frames x.frames
+```
+
+The demos play the same, and so do the synthetic runs of the shadow suite above
+(seeds 1-7 with the cheats and with the commands, input during the tick, arcade
+and two-player games) and six runs that open the pause screen, the help and the
+menu (`TYRX_INPUT_SCREENS`), which the C++ tick runs with the `State` in the C
+globals: 838,538 ticks and 967,108 frames.
+
 ## Synthetic input
 
 With `TYRX_INPUT_SEED=S` (and `TYRX_VCLOCK`), `input_driver.cpp` plays the game

@@ -3,8 +3,9 @@
 The parts of the C game's level tick, ported to C++ as they are: they work on
 the C globals (`../gold/api.hpp`), with the C code's names, so that they can be
 compared with it line by line. The shadow tick (`../check/README.md`) checks
-them against the C code tick by tick. As state moves out of the globals into
-structures, the code that uses it moves to `../sim/`.
+them against the C code tick by tick, and with `TYRX_CXX_TICK=1` they run the
+game's levels in place of the C code (`../cxx_tick.hpp`). As state moves out of
+the globals into structures, the code that uses it moves to `../sim/`.
 
 The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the code
 running the tick provides (`state()`). `port.hpp` hides the C globals that held
@@ -41,26 +42,30 @@ it, with the parts of the C code that draw ported to C++ and split in two (see
    help opened), the wait for the frame deadline, the present and the event
    poll.
 
-What runs the passes provides, besides the `State` and the draw list, a
-`Runner` (`level.hpp`): it presents the frame, polls events, and runs the C
-loops that have their own drawing (the pause screen, the in-game menu and help,
-through `c_loop`). The shadow tick presents and polls nothing, and abandons the
-pass at a C loop.
+What runs the passes provides, besides the `State` and the draw list, a `Runner`
+(`level.hpp`): it presents the frame, polls events, and runs the C loops that
+have their own drawing (the pause screen, the in-game menu and help, through
+`c_loop`). The shadow tick presents and polls nothing, and abandons the pass at
+a C loop. The C++ tick in place of the C code's (`../cxx_tick.hpp`) draws the
+pass's list before it presents. Before a C loop, it draws what the tick has
+recorded so far (`draw_so_far`), as the C code has drawn the tick by then, and
+it gives the loop the `State` in the C globals and takes it back after.
 
 The one piece of state the loop keeps itself is `old_weapon_bar`, which the C
-code keeps in a local variable of `JE_main`.
+code keeps in a local variable of `JE_main` and sets when a level starts; the
+C++ tick does the same (`level_locals`).
 
 ## Separating the drawing
 
 Each part of the tick that is ported to C++ is split in two. Its simulation
 (`X_tick`) runs where the C code runs it, and keeps what its drawing will need
-in the tick's draw record (`draw_record.hpp`). Its drawing (`X_draw`) runs
-after the whole simulation: `draw_tick` (`draw_tick.cpp`) draws the tick from
-the game state at the end of the tick and from the record, in the C code's
-order. The `draw::` functions (`draw.hpp`) add the same calls as the C
-primitives record to a draw list (`../render/draw_list.hpp`), which the code
-running the tick provides: the shadow tick (`../check/shadow.cpp`) gives each
-pass a list of its own.
+in the tick's draw record (`draw_record.hpp`). Its drawing (`X_draw`) runs after
+the whole simulation: `draw_tick` (`draw_tick.cpp`) draws the tick from the game
+state at the end of the tick and from the record, in the C code's order. The
+`draw::` functions (`draw.hpp`) add the same calls as the C primitives record to
+a draw list (`../render/draw_list.hpp`), which the code running the tick
+provides: the shadow tick (`../check/shadow.cpp`) gives each pass a list of its
+own, and the C++ tick in place of the C code's draws its list as the pass goes.
 
 The record holds only what the state at the end of the tick no longer shows:
 which parts were drawn, on which surface, and values that the simulation went

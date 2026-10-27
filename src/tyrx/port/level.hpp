@@ -25,7 +25,8 @@
 // for the drawing (draw_record.hpp), from which draw_tick then draws the tick,
 // and then the frame is presented and events are polled.  It is checked
 // against the C code by running it in the shadow of each C tick
-// (check/shadow.hpp).
+// (check/shadow.hpp), and runs in place of the C code's with TYRX_CXX_TICK
+// (../cxx_tick.hpp).
 //------------------------------------------------------------------------------
 
 #pragma once
@@ -38,6 +39,11 @@ enum class LevelPass { level_loop, start_level, unsupported };
 
 LevelPass level_pass();
 
+// Draws what the tick has recorded so far, and starts a new record for the
+// rest of it.  The C code runs the C loops (c_loop) in the middle of the tick,
+// when it has drawn the playing area up to there, and they draw on top of it.
+void draw_so_far();
+
 // State the C code keeps in JE_main's local variables, which outlive a pass.
 struct LevelLocals {
   unsigned old_weapon_bar[2] = {0, 0};  // weapon power bars are only redrawn when they change
@@ -45,8 +51,9 @@ struct LevelLocals {
 
 LevelLocals& level_locals();
 
-// What runs the passes (the shadow tick, check/shadow.cpp) provides, with the
-// State and the draw list: a notice that the simulation is complete and the drawing begins,
+// What runs the passes (the shadow tick, check/shadow.cpp, or the C++ tick in
+// place of the C code's, ../cxx_tick.cpp) provides, with the State and the draw
+// list: a notice that the simulation is complete and the drawing begins,
 // presenting the frame, polling events, a notice just before
 // main_keyboard_input opens the in-game help, and running a C loop that has
 // its own drawing and works on the C globals (the pause screen, the in-game
