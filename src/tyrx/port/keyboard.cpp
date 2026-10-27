@@ -24,12 +24,74 @@
 
 #include "port.hpp"
 
+#include <cassert>
 #include <cstring>
 
 namespace tyrx::port {
 
+namespace {
+
+// Port of JE_setNewGameSpeed (config.c).
+void set_new_game_speed() {
+  auto& pentiumMode = state().game.pentium_mode;
+  auto& fastPlay = state().game.fast_play;
+  auto& frameCountMax = state().game.frame_count_max;
+
+  pentiumMode = false;
+
+  Uint16 speed;
+  switch (fastPlay) {
+    default:
+      assert(false);
+      [[fallthrough]];
+    case 0:  // Normal
+      speed = 0x4300;
+      smoothScroll = true;
+      frameCountMax = 2;
+      break;
+    case 1:  // Pentium Hyper
+      speed = 0x3000;
+      smoothScroll = true;
+      frameCountMax = 2;
+      break;
+    case 2:
+      speed = 0x2000;
+      smoothScroll = false;
+      frameCountMax = 2;
+      break;
+    case 3:  // Slug mode
+      speed = 0x5300;
+      smoothScroll = true;
+      frameCountMax = 4;
+      break;
+    case 4:  // Slower
+      speed = 0x4300;
+      smoothScroll = true;
+      frameCountMax = 3;
+      break;
+    case 5:  // Slow
+      speed = 0x4300;
+      smoothScroll = true;
+      frameCountMax = 2;
+      pentiumMode = true;
+      break;
+  }
+
+  setFrameSpeed(speed);
+  setFrameCount(frameCountMax);
+}
+
+}  // namespace
+
 // Port of JE_mainKeyboardInput.
 void main_keyboard_input() {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& superArcadeMode = state().game.super_arcade_mode;
+  auto& superTyrian = state().game.super_tyrian;
+  auto& fastPlay = state().game.fast_play;
+  auto& youAreCheating = state().cheats.you_are_cheating;
+  auto& constantPlay = state().cheats.constant_play;
+  auto& superPause = state().cheats.super_pause;
   auto& levelFilter = state().display.filter;
   auto& smoothies = state().display.smoothies;
   auto& endLevel = state().ending.end_level;
@@ -270,7 +332,7 @@ void main_keyboard_input() {
           fastPlay = 0;
         }
         keysactive[SDL_SCANCODE_1] = false;
-        JE_setNewGameSpeed();
+        set_new_game_speed();
       }
 
   // {IN-GAME RANDOM MUSIC SELECTION}

@@ -85,6 +85,9 @@ namespace {
 
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
 void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& galagaMode = state().game.galaga_mode;
+  auto& difficultyLevel = state().game.difficulty_level;
   auto& soundQueue = state().sound.queue;
   auto& backMove = state().map.back_move;
   auto& tempMapXOfs = state().map.temp_map_x_ofs;
@@ -534,6 +537,8 @@ Sint16 new_enemy(int enemyOffset, Uint16 eDatI, Sint16 uniqueShapeTableI) {
 
 // Port of JE_makeEnemy (tyrian2.c).
 uint make_enemy(struct JE_SingleEnemyType *enemy, Uint16 eDatI, Sint16 uniqueShapeTableI) {
+  auto& superArcadeMode = state().game.super_arcade_mode;
+  auto& difficultyLevel = state().game.difficulty_level;
   auto& totalEnemy = state().enemies.total;
   uint avail;
 

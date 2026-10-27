@@ -49,6 +49,70 @@ struct Starfield {
   int speed;                                   // how much faster than their own speed all stars move
 };
 
+// The game's modes and settings.
+struct Game {
+  JE_boolean two_player_mode;
+  JE_boolean one_player_action;
+  JE_boolean galaga_mode;
+  JE_byte super_arcade_mode;
+  JE_byte super_arcade_power_up;
+  JE_shortint difficulty_level;
+  JE_shortint initial_difficulty;
+  JE_shortint old_difficulty_level;
+  JE_boolean super_tyrian;
+  JE_byte processor_type;
+  JE_boolean pentium_mode;
+  JE_word frame_count_max;
+  JE_byte fast_play;
+  JE_byte game_speed;
+  bool play_demo;
+  bool record_demo;
+  bool xmas;
+  JE_boolean display_score;
+  JE_boolean rich_mode;
+};
+
+// The cheats and debug modes.
+struct Cheats {
+  JE_boolean you_are_cheating;
+  JE_boolean super_wild;
+  JE_boolean wild;
+  JE_byte do_iced;
+  JE_boolean infinite_shot;
+  JE_boolean constant_play;
+  JE_boolean constant_die;
+  JE_shortint constant_last_x;
+  JE_boolean super_pause;
+  std::array<JE_boolean, 10> global_flags;
+};
+
+// Where the game is: the episode, the level, and the items and data cubes found.
+struct Progress {
+  JE_byte episode_num;
+  JE_byte initial_episode_num;
+  std::array<JE_boolean, EPISODE_MAX> episode_avail;
+  JE_byte lvl_file_num;
+  std::array<char, 11> level_name;
+  std::array<char, 11> last_level_name;
+  JE_boolean load_level_ok;
+  std::array<JE_word, 4> cube_list;
+  JE_word cube_max;
+  JE_word last_cube_max;
+  std::array<std::array<JE_byte, 10>, 9> item_avail;
+  std::array<JE_byte, 9> item_avail_max;
+  JE_word editor_level;
+  std::array<JE_byte, 100> editor_item_avail;
+  JE_byte secret_hint;
+  JE_boolean use_last_bank;
+  JE_boolean trent_win;
+  JE_boolean jump_back_to_episode1;
+  JE_boolean extra_game;
+  JE_boolean game_loaded;
+  JE_boolean game_just_loaded;
+  JE_boolean game_has_repeated;
+  JE_boolean do_not_save_backup;
+};
+
 struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
@@ -158,7 +222,7 @@ struct Ending {
 };
 
 struct Input {
-  std::array<bool, 4> button;  // fire, left sidekick, right sidekick, fire mode
+  std::array<bool, 4> button;   // fire, left sidekick, right sidekick, fire mode
   JE_boolean fire_button_held;  // for the special weapon, which fires once per press
 };
 
@@ -208,6 +272,7 @@ struct Enemies {
   std::array<JE_byte, 100> status;  // 1 for a free slot, 0 for an enemy, 2 for one without armor
   JE_word on_screen;                // how many were updated in the tick
   JE_word total, killed;            // for the destruction ratio
+  JE_word offset;                   // enemyOffset
 };
 
 struct PlayerShots {
@@ -221,6 +286,9 @@ struct EnemyShots {
 };
 
 struct State {
+  Game game;
+  Cheats cheats;
+  Progress progress;
   Random random;
   Explosions explosions;
   Superpixels superpixels;

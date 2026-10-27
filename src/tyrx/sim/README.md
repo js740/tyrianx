@@ -7,6 +7,11 @@ structures, and the game logic that works on it.
 
 `state.hpp` has the C++ game's state, `State`: the state that C globals hold in
 the C game, moved into structures, a subsystem at a time. So far it has:
+- `Game`: the game's modes and settings (two players, arcade, Galaga, the
+  difficulty, the speed, demos).
+- `Cheats`: the cheats and debug modes.
+- `Progress`: where the game is: the episode, the level, and the items and data
+  cubes found.
 - `Random`: the random number generator's state.
 - `Explosions`: the explosions' slots, the repeating explosions (big explosions
   that set off explosions over several ticks), how far explosions move down
@@ -44,6 +49,16 @@ scrambles the globals, and writes the `State` back for the comparison, so code
 that still used the globals would go wrong visibly. It also checks at startup
 that each member has exactly one global. Pointers into the state (a player's
 lives point into its items) are pointed into the copy when it is copied.
+
+The `State` holds all the state that the registry (`../gold/registry.inc`)
+classes as gameplay or presentation state. The C++ level tick still uses these
+from the C globals:
+- The level and episode data loaded from files (`enemyDat`, `weapons`, the map
+  data and the like). Events 49 to 52 change `enemyDat[0]`, the data of the
+  enemies they create, which the `State` doesn't hold yet.
+- The raw input that the tick reads, the scratch globals that its code writes
+  before reading (`temp`, `tempW` and the like), the screens and sprites, the
+  settings and the sound.
 
 ## Ports
 

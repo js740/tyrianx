@@ -55,6 +55,15 @@ inline sim::State& state() { return *state_target(); }
 // The C globals whose state sim::State holds.  These names hide them here, so
 // that code in port/ can't use them by mistake.
 struct InSimState {};
+inline constexpr InSimState twoPlayerMode, onePlayerAction, galagaMode, superArcadeMode, superArcadePowerUp,
+    difficultyLevel, initialDifficulty, oldDifficultyLevel, superTyrian, processorType, pentiumMode,
+    frameCountMax, fastPlay, gameSpeed, playDemo, recordDemo, xmas, displayScore, richMode;
+inline constexpr InSimState youAreCheating, superWild, wild, doIced, infiniteShot, constantPlay, constantDie,
+    constantLastX, superPause, globalFlags;
+inline constexpr InSimState episodeNum, initial_episode_num, episodeAvail, lvlFileNum, levelName,
+    lastLevelName, loadLevelOk, cubeList, cubeMax, lastCubeMax, itemAvail, itemAvailMax, editorLevel,
+    editorItemAvail, secretHint, useLastBank, trentWin, jumpBackToEpisode1, extraGame, gameLoaded,
+    gameJustLoaded, gameHasRepeated, doNotSaveBackup;
 inline constexpr InSimState mt_global;
 inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
     explosionFollowAmountY;
@@ -87,7 +96,7 @@ inline constexpr InSimState player, shotRepeat, shotMultiPos, power, lastPower, 
 inline constexpr InSimState specialWait, nextSpecialWait, SFCurrentCode, SFExecuted, spraySpecial,
     specialWeaponWpn, specialWeaponFilter, specialWeaponFreq, linkToPlayer, flareDuration, flareStart,
     flareColChg, zinglonDuration, astralDuration;
-inline constexpr InSimState enemy, enemyAvail, enemyOnScreen, totalEnemy, enemyKilled;
+inline constexpr InSimState enemy, enemyAvail, enemyOnScreen, totalEnemy, enemyKilled, enemyOffset;
 inline constexpr InSimState playerShotData, shotAvail;
 inline constexpr InSimState enemyShot, enemyShotAvail;
 
@@ -100,10 +109,12 @@ inline float mt_rand_lt1() { return mt_rand_lt1_r(&state().random.mt); }
 // player.h's, which read the C global player.
 inline bool all_players_dead() {
   auto& player = state().players.slots;
+  auto& twoPlayerMode = state().game.two_player_mode;
   return (!player[0].is_alive && (!twoPlayerMode || !player[1].is_alive));
 }
 inline bool all_players_alive() {
   auto& player = state().players.slots;
+  auto& twoPlayerMode = state().game.two_player_mode;
   return (player[0].is_alive && (!twoPlayerMode || player[1].is_alive));
 }
 

@@ -120,6 +120,7 @@ void background_3_draw(Background3Drawn const& d) {
 
 // Port of JE_checkSmoothies.
 void check_smoothies() {
+  auto& processorType = state().game.processor_type;
   auto& smoothies = state().display.smoothies;
   auto& anySmoothies = state().display.any_smoothies;
   anySmoothies = (processorType > 2 && (smoothies[1 - 1] || smoothies[2 - 1])) ||

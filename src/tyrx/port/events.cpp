@@ -33,6 +33,14 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& onePlayerAction = state().game.one_player_action;
+  auto& galagaMode = state().game.galaga_mode;
+  auto& superArcadeMode = state().game.super_arcade_mode;
+  auto& difficultyLevel = state().game.difficulty_level;
+  auto& initialDifficulty = state().game.initial_difficulty;
+  auto& superTyrian = state().game.super_tyrian;
+  auto& globalFlags = state().cheats.global_flags;
   auto& soundQueue = state().sound.queue;
   auto& musicFade = state().sound.music_fade;
   auto& tempVolume = state().sound.temp_volume;
@@ -1068,6 +1076,7 @@ void event_jump(JE_word jump) {
 
 // Port of JE_searchFor (tyrian2.c).
 bool search_for(JE_byte PLType, JE_byte *out_index) {
+  auto& galagaMode = state().game.galaga_mode;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   int found_id = -1;
