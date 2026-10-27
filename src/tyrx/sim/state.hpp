@@ -53,6 +53,38 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct Level {
+  // The level's events, which some events change, and where the level is in them.
+  std::array<JE_EventRecType, EVENT_MAXIMUM> events;
+  JE_word max_event, event_loc;  // the number of events, and the next one
+  JE_word cur_loc;               // how far the level has scrolled, which events wait for
+  JE_word return_loc;            // where a jump back goes, if return_active
+  JE_boolean return_active;
+  JE_boolean force_events;
+  JE_boolean jump_section;
+
+  // Random enemies.
+  JE_boolean enemies_active;
+  std::array<JE_word, 40> enemy_types;
+  JE_word enemy_types_max, enemy_frequency;
+
+  JE_boolean enemy_continual_damage;
+  JE_word super_enemy_254_jump;
+  JE_boolean random_explosions;
+  JE_boolean small_enemy_adjust;
+  JE_word galaga_shot_freq;
+  JE_longint galaga_life;
+
+  // The level timer.
+  JE_boolean timer;
+  JE_word timer_countdown, timer_jump_to;
+
+  // Where the map screen goes after the level.
+  JE_word map_origin, map_pnum;
+  std::array<JE_byte, 5> map_planet, map_section;
+  std::array<JE_byte, 10> new_pl;
+};
+
 struct Players {
   std::array<Player, 2> slots;
 
@@ -116,6 +148,7 @@ struct State {
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  Level level;
   Players players;
   Specials specials;
   Enemies enemies;

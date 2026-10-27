@@ -60,6 +60,10 @@ inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFo
     explosionFollowAmountY;
 inline constexpr InSimState superpixels, last_superpixel;
 inline constexpr InSimState starfield_stars, starfield_speed;
+inline constexpr InSimState eventRec, maxEvent, eventLoc, curLoc, returnLoc, returnActive, forceEvents,
+    jumpSection, enemiesActive, levelEnemy, levelEnemyMax, levelEnemyFrequency, enemyContinualDamage,
+    superEnemy254Jump, randomExplosions, smallEnemyAdjust, galagaShotFreq, galagaLife, levelTimer,
+    levelTimerCountdown, levelTimerJumpTo, mapOrigin, mapPNum, mapPlanet, mapSection, newPL;
 inline constexpr InSimState player, shotRepeat, shotMultiPos, power, lastPower, powerAdd, shieldWait, shieldT,
     chargeWait, chargeLevel, chargeMax, chargeGr, chargeGrWait, damageRate, armorShipDelay, twoPlayerLinked,
     linkGunDirec, optionSatelliteRotate, optionAttachmentMove, optionAttachmentLinked, optionAttachmentReturn,
