@@ -85,6 +85,9 @@ namespace {
 
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
 void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
+  auto& enemyShot = state().enemy_shots.slots;
+  auto& enemyShotAvail = state().enemy_shots.available;
+
   enemy[i].mapoffset = tempMapXOfs;
 
   if (enemy[i].xaccel && enemy[i].xaccel - 89u > mt_rand() % 11) {

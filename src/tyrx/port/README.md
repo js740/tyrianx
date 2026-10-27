@@ -7,11 +7,15 @@ them against the C code tick by tick. As state moves out of the globals into
 structures, the code that uses it moves to `../sim/`.
 
 The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the code
-running the tick provides (`state()`): the explosions, the repeating explosions,
-the superpixels and the starfield, whose setup and update have moved to
-`../sim/` as well. It also has the random number generator's state, which
-`port.hpp`'s `mt_rand` etc. draw from. `port.hpp` hides the C globals that held
-it from code here, so using one by mistake doesn't compile.
+running the tick provides (`state()`). `port.hpp` hides the C globals that held
+it from code here, so using one by mistake doesn't compile. Code here uses it in
+one of three ways:
+- The explosions, the repeating explosions, the superpixels and the starfield:
+  their setup and update have moved to `../sim/`, and the few other uses here
+  go through `state()`.
+- `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
+- Functions here bind references with the C globals' names to it, and are
+  otherwise unchanged: the enemy shots, whose code also works on the players.
 
 ## The level loop
 

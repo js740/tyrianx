@@ -39,6 +39,7 @@ namespace {
 // The shots drawn stay as they are, and in their slots, for the rest of the
 // tick.
 void enemy_shots_draw(EnemyShotsDrawn const& d) {
+  auto const& enemyShot = state().enemy_shots.slots;
   for (int z = 0; z < ENEMY_SHOT_MAX; z++) {
     if (!d.drawn[z]) {
       continue;
