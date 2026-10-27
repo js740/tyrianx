@@ -39,6 +39,16 @@ namespace {
 
 // Port of JE_specialComplete.
 void special_complete(JE_byte playerNum, JE_byte specialType) {
+  auto& nextSpecialWait = state().specials.next_wait;
+  auto& spraySpecial = state().specials.spray;
+  auto& specialWeaponWpn = state().specials.weapon_wpn;
+  auto& specialWeaponFilter = state().specials.weapon_filter;
+  auto& specialWeaponFreq = state().specials.weapon_freq;
+  auto& linkToPlayer = state().specials.link_to_player;
+  auto& flareDuration = state().specials.flare_duration;
+  auto& flareStart = state().specials.flare_start;
+  auto& zinglonDuration = state().specials.zinglon_duration;
+  auto& astralDuration = state().specials.astral_duration;
   auto& shotRepeat = state().players.shot_repeat;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
@@ -229,6 +239,19 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
+  auto& specialWait = state().specials.wait;
+  auto& nextSpecialWait = state().specials.next_wait;
+  auto& SFExecuted = state().specials.sf_executed;
+  auto& spraySpecial = state().specials.spray;
+  auto& specialWeaponWpn = state().specials.weapon_wpn;
+  auto& specialWeaponFilter = state().specials.weapon_filter;
+  auto& specialWeaponFreq = state().specials.weapon_freq;
+  auto& linkToPlayer = state().specials.link_to_player;
+  auto& flareDuration = state().specials.flare_duration;
+  auto& flareStart = state().specials.flare_start;
+  auto& flareColChg = state().specials.flare_col_chg;
+  auto& zinglonDuration = state().specials.zinglon_duration;
+  auto& astralDuration = state().specials.astral_duration;
   auto& shotRepeat = state().players.shot_repeat;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
@@ -1572,6 +1595,7 @@ redo:
 
 // Port of JE_mainGamePlayerFunctions.
 void main_game_player_functions() {
+  auto& SFExecuted = state().specials.sf_executed;
   auto& shipGr = state().players.ship_gr;
   auto& shipGr2 = state().players.ship_gr2;
   auto& shipGrPtr = state().players.ship_gr_ptr;
@@ -1585,7 +1609,7 @@ void main_game_player_functions() {
   }
 
   // Reset Street-Fighter commands
-  std::memset(SFExecuted, 0, sizeof(SFExecuted));
+  SFExecuted.fill(0);
 
   portConfigChange = false;
 
@@ -2076,6 +2100,8 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
 
 // Port of JE_SFCodes (mainint.c).
 void sf_codes(JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_, JE_integer mouseY_) {
+  auto& SFCurrentCode = state().specials.sf_current_code;
+  auto& SFExecuted = state().specials.sf_executed;
   auto& player = state().players.slots;
   JE_byte temp, temp2, temp3, temp4, temp5;
 

@@ -64,6 +64,9 @@ inline constexpr InSimState player, shotRepeat, shotMultiPos, power, lastPower, 
     chargeWait, chargeLevel, chargeMax, chargeGr, chargeGrWait, damageRate, armorShipDelay, twoPlayerLinked,
     linkGunDirec, optionSatelliteRotate, optionAttachmentMove, optionAttachmentLinked, optionAttachmentReturn,
     shipGr, shipGr2, shipGrPtr, shipGr2ptr;
+inline constexpr InSimState specialWait, nextSpecialWait, SFCurrentCode, SFExecuted, spraySpecial,
+    specialWeaponWpn, specialWeaponFilter, specialWeaponFreq, linkToPlayer, flareDuration, flareStart,
+    flareColChg, zinglonDuration, astralDuration;
 inline constexpr InSimState enemy, enemyAvail, enemyOnScreen, totalEnemy, enemyKilled;
 inline constexpr InSimState playerShotData, shotAvail;
 inline constexpr InSimState enemyShot, enemyShotAvail;

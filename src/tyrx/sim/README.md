@@ -16,6 +16,8 @@ the C game, moved into structures, a subsystem at a time. So far it has:
 - `Players`: the players, their shots' timing, the generator's power and the
   shield's recharging, the charge weapon, two-player linking, the sidekicks'
   attachment and the ships' sprites.
+- `Specials`: the special moves' timing and codes, the special weapon, and the
+  specials that last a while (flares, the Zinglon and the astral).
 - `Enemies`: the enemies' slots and what each holds, and how many there are on
   screen, in all and killed.
 - `PlayerShots`: the player shots' slots, and how many ticks each has left.
