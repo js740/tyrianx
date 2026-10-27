@@ -64,6 +64,9 @@ inline constexpr InSimState eventRec, maxEvent, eventLoc, curLoc, returnLoc, ret
     jumpSection, enemiesActive, levelEnemy, levelEnemyMax, levelEnemyFrequency, enemyContinualDamage,
     superEnemy254Jump, randomExplosions, smallEnemyAdjust, galagaShotFreq, galagaLife, levelTimer,
     levelTimerCountdown, levelTimerJumpTo, mapOrigin, mapPNum, mapPlanet, mapSection, newPL;
+inline constexpr InSimState endLevel, reallyEndLevel, waitToEndLevel, playerEndLevel, readyToEndLevel,
+    levelEnd, levelEndFxWait, levelEndWarp, firstGameOver, allPlayersGone, enemyStillExploding, stoppedDemo,
+    bonusLevel, bonusLevelCurrent, normalBonusLevelCurrent, mainLevel, nextLevel;
 inline constexpr InSimState player, shotRepeat, shotMultiPos, power, lastPower, powerAdd, shieldWait, shieldT,
     chargeWait, chargeLevel, chargeMax, chargeGr, chargeGrWait, damageRate, armorShipDelay, twoPlayerLinked,
     linkGunDirec, optionSatelliteRotate, optionAttachmentMove, optionAttachmentLinked, optionAttachmentReturn,

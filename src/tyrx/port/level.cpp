@@ -44,6 +44,7 @@ namespace {
 // deadline, presents the frame and polls events.  (Its drawing, the copy of
 // the playing area to the screen, ends the tick's drawing.)
 void star_show_vga_present() {
+  auto& playerEndLevel = state().ending.player_end_level;
   if (!playerEndLevel && !skipStarShowVGA) {
     if (smoothScroll != 0) {
       delayUntilElapsed();
@@ -86,6 +87,10 @@ namespace {
 // The start of the tick: the smoothie screen code, background wrapping, and
 // music.
 void tick_start() {
+  auto& endLevel = state().ending.end_level;
+  auto& levelEnd = state().ending.countdown;
+  auto& firstGameOver = state().ending.first_game_over;
+  auto& allPlayersGone = state().ending.all_players_gone;
   auto& player = state().players.slots;
   // tempScreenSeg = game_screen; // side-effect of game_screen
 
@@ -136,6 +141,7 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& endLevel = state().ending.end_level;
   auto& galagaLife = state().level.galaga_life;
   auto& power = state().players.power;
   auto& lastPower = state().players.last_power;
@@ -746,6 +752,8 @@ void player_shots_tick() {
 
 // The players: collisions, then movement and firing.
 void players_tick() {
+  auto& endLevel = state().ending.end_level;
+  auto& firstGameOver = state().ending.first_game_over;
   auto& player = state().players.slots;
   // Player movement indicators for shots that track your ship
   for (uint i = 0; i < COUNTOF(player); ++i) {
@@ -770,6 +778,7 @@ void players_tick() {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
+  auto& endLevel = state().ending.end_level;
   auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
@@ -894,6 +903,7 @@ void enemy_shots_tick() {
 
 // Sequenced explosions, and the explosions.
 void explosions_tick() {
+  auto& enemyStillExploding = state().ending.enemy_still_exploding;
   DrawRecord& r = draw_record();
 
   // -------------------------- Sequenced Explosions -------------------------
@@ -986,6 +996,7 @@ void warning_tick() {
 
 // The sound routine, and the return event.
 void sound_tick() {
+  auto& firstGameOver = state().ending.first_game_over;
   auto& returnActive = state().level.return_active;
   auto& enemyOnScreen = state().enemies.on_screen;
   // =================================
@@ -1103,6 +1114,12 @@ void texts_tick() {
 // Returns true if the in-game menu or help opened, which ends the tick
 // without a frame (the C code jumps back to level_loop).
 bool game_over_and_input_tick() {
+  auto& reallyEndLevel = state().ending.really_end_level;
+  auto& firstGameOver = state().ending.first_game_over;
+  auto& allPlayersGone = state().ending.all_players_gone;
+  auto& stoppedDemo = state().ending.stopped_demo;
+  auto& bonusLevelCurrent = state().ending.bonus_level_current;
+  auto& normalBonusLevelCurrent = state().ending.normal_bonus_level_current;
   auto& player = state().players.slots;
   DrawRecord& r = draw_record();
 
@@ -1208,6 +1225,14 @@ bool game_over_and_input_tick() {
 }
 
 LevelPass simulate(bool& frame) {
+  auto& endLevel = state().ending.end_level;
+  auto& reallyEndLevel = state().ending.really_end_level;
+  auto& waitToEndLevel = state().ending.wait_to_end_level;
+  auto& playerEndLevel = state().ending.player_end_level;
+  auto& readyToEndLevel = state().ending.ready_to_end_level;
+  auto& levelEnd = state().ending.countdown;
+  auto& allPlayersGone = state().ending.all_players_gone;
+  auto& enemyStillExploding = state().ending.enemy_still_exploding;
   auto& eventRec = state().level.events;
   auto& maxEvent = state().level.max_event;
   auto& eventLoc = state().level.event_loc;

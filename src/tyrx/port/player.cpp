@@ -584,6 +584,12 @@ bool play_demo_keys() {
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
+  auto& endLevel = state().ending.end_level;
+  auto& reallyEndLevel = state().ending.really_end_level;
+  auto& levelEnd = state().ending.countdown;
+  auto& levelEndFxWait = state().ending.fx_wait;
+  auto& levelEndWarp = state().ending.warp;
+  auto& allPlayersGone = state().ending.all_players_gone;
   auto& shotRepeat = state().players.shot_repeat;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& chargeWait = state().players.charge_wait;
@@ -1595,6 +1601,9 @@ redo:
 
 // Port of JE_mainGamePlayerFunctions.
 void main_game_player_functions() {
+  auto& endLevel = state().ending.end_level;
+  auto& levelEnd = state().ending.countdown;
+  auto& levelEndWarp = state().ending.warp;
   auto& SFExecuted = state().specials.sf_executed;
   auto& shipGr = state().players.ship_gr;
   auto& shipGr2 = state().players.ship_gr2;
@@ -1655,6 +1664,7 @@ void main_game_player_functions() {
 
 // Port of JE_playerDamage.
 JE_byte player_damage(JE_byte temp, Player *this_player) {
+  auto& levelEnd = state().ending.countdown;
   auto& levelTimer = state().level.timer;
   int playerDamage = 0;
   soundQueue[7] = S_SHIELD_HIT;
@@ -1714,6 +1724,8 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
 
 // Port of JE_playerCollide.
 void player_collide(Player *this_player, JE_byte playerNum_) {
+  auto& bonusLevel = state().ending.bonus_level;
+  auto& nextLevel = state().ending.next_level;
   auto& shotRepeat = state().players.shot_repeat;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& damageRate = state().players.damage_rate;

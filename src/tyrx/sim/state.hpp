@@ -85,6 +85,19 @@ struct Level {
   std::array<JE_byte, 10> new_pl;
 };
 
+struct Ending {
+  JE_boolean end_level, really_end_level, wait_to_end_level, player_end_level, ready_to_end_level;
+  JE_byte countdown;  // levelEnd: ticks until the level ends
+  JE_word fx_wait;    // ticks until the next of the dead players' explosions
+  JE_shortint warp;   // levelEndWarp
+  JE_boolean first_game_over, all_players_gone, enemy_still_exploding;
+  bool stopped_demo;
+
+  // What comes next.
+  JE_boolean bonus_level, bonus_level_current, normal_bonus_level_current;
+  JE_byte main_level, next_level;
+};
+
 struct Players {
   std::array<Player, 2> slots;
 
@@ -149,6 +162,7 @@ struct State {
   Superpixels superpixels;
   Starfield starfield;
   Level level;
+  Ending ending;
   Players players;
   Specials specials;
   Enemies enemies;
