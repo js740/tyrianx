@@ -7,9 +7,9 @@ them against the C code tick by tick. As state moves out of the globals into
 structures, the code that uses it moves to `../sim/`.
 
 The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the
-code running the tick provides (`state()`): the explosions. `port.hpp` hides
-the C globals that held it from code here, so using one by mistake doesn't
-compile.
+code running the tick provides (`state()`): the explosions, whose update has
+moved to `../sim/` as well. `port.hpp` hides the C globals that held it from
+code here, so using one by mistake doesn't compile.
 
 ## The level loop
 
@@ -58,7 +58,7 @@ copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
 | Enemies (`enemy.cpp`, `JE_drawEnemy`) | Each drawn enemy's position before it moved, frame, filter, sprite sheet and size: damage changes the frame and filter, and the slot can be reused |
 | Player shots (`shots.cpp`, `player_shot_move_and_draw`) | Each drawn shot's position and frame, and whether it has a shadow: a hit can free the slot for a chain-reaction shot |
 | Players (`player.cpp`, `JE_mainGamePlayerFunctions`, `JE_playerMovement`, `JE_doSpecialShot`) | The positions and ship and sidekick frames they were drawn with, and the charge |
-| Explosions | Which slots were drawn, and the position and frame of those that ended (a new explosion can take the slot) |
+| Explosions (`../sim/explosion.cpp`) | The visible explosions that their update returns: which slots were drawn, and the position and frame of those that ended (a new explosion can take the slot) |
 | Enemy shots | Which slots were drawn (drawn shots stay in their slots for the rest of the tick) |
 | Boss bars | The bars' positions, armor and colours |
 | Screen filter | The filter and brightness before the fade moves on |

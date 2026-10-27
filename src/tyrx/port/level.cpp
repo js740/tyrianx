@@ -905,36 +905,7 @@ void explosions_tick() {
   }
 
   // ---------------------------- Draw Explosions ----------------------------
-  sim::Explosions& e = state().explosions;
-  r.explosions = ExplosionsDrawn{VGAScreen, {}, {}};
-  for (int j = 0; j < MAX_EXPLOSIONS; j++) {
-    Explosion& explosion = e.slots[j];
-    if (explosion.ttl == 0) {
-      continue;
-    }
-
-    if (!explosion.fixedPosition) {
-      explosion.sprite++;
-      explosion.y += e.move;
-    }
-    else if (explosion.followPlayer) {
-      explosion.x += e.follow_x;
-      explosion.y += e.follow_y;
-    }
-    explosion.y += explosion.deltaY;
-
-    if (explosion.y > 200 - 14) {
-      explosion.ttl = 0;
-    }
-    else {
-      r.explosions->drawn[j] = true;
-
-      explosion.ttl--;
-      if (explosion.ttl == 0) {
-        r.explosions->ended.push_back({j, explosion.x, explosion.y, explosion.sprite});
-      }
-    }
-  }
+  r.explosions = ExplosionsDrawn{VGAScreen, sim::update_explosions(state().explosions)};
 
   if (!portConfigChange) {
     portConfigDone = true;
