@@ -584,6 +584,8 @@ bool play_demo_keys() {
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
+  auto& mapX2Ofs = state().map.map_x2_ofs;
+  auto& background2 = state().map.background2;
   auto& endLevel = state().ending.end_level;
   auto& reallyEndLevel = state().ending.really_end_level;
   auto& levelEnd = state().ending.countdown;
@@ -1601,6 +1603,17 @@ redo:
 
 // Port of JE_mainGamePlayerFunctions.
 void main_game_player_functions() {
+  auto& mapXPos = state().map.map_x_pos;
+  auto& oldMapXOfs = state().map.old_map_x_ofs;
+  auto& mapXOfs = state().map.map_x_ofs;
+  auto& mapX2Ofs = state().map.map_x2_ofs;
+  auto& mapX2Pos = state().map.map_x2_pos;
+  auto& mapX3Pos = state().map.map_x3_pos;
+  auto& mapX3Ofs = state().map.map_x3_ofs;
+  auto& mapXbpPos = state().map.map_x_bp_pos;
+  auto& mapX2bpPos = state().map.map_x2_bp_pos;
+  auto& mapX3bpPos = state().map.map_x3_bp_pos;
+  auto& background3x1 = state().map.background3x1;
   auto& endLevel = state().ending.end_level;
   auto& levelEnd = state().ending.countdown;
   auto& levelEndWarp = state().ending.warp;

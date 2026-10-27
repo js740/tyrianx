@@ -85,6 +85,9 @@ namespace {
 
 // One enemy's part of JE_drawEnemy; returning is `goto draw_enemy_end`.
 void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
+  auto& backMove = state().map.back_move;
+  auto& tempMapXOfs = state().map.temp_map_x_ofs;
+  auto& tempBackMove = state().map.temp_back_move;
   auto& galagaShotFreq = state().level.galaga_shot_freq;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
@@ -498,6 +501,7 @@ void draw_enemy(int enemyOffset, int i, std::vector<EnemyDrawn>& drawn) {
 }  // namespace
 
 void draw_enemy_tick(int enemyOffset, std::optional<EnemiesDrawn>& drawn) {
+  auto& tempMapXOfs = state().map.temp_map_x_ofs;
   auto& player = state().players.slots;
   auto& enemyAvail = state().enemies.status;
   drawn = EnemiesDrawn{VGAScreen, tempMapXOfs, {}};

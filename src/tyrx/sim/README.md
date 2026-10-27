@@ -13,6 +13,8 @@ the C game, moved into structures, a subsystem at a time. So far it has:
   each tick, and how far the player moved, for those that follow the player.
 - `Superpixels`: sparks that move and fade.
 - `Starfield`: the stars, and how much faster than their own speed they move.
+- `Map`: where each of the three map layers is and how it moves, and how the
+  layers are drawn. The map data stays in the C globals.
 - `Level`: the level's events and where the level is in them, and what events
   set: random enemies, the level timer, Galaga mode's settings, and where the
   map screen goes next.

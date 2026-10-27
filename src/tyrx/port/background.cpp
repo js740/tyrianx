@@ -30,6 +30,10 @@ namespace tyrx::port {
 
 // draw_background_1 (the scrolling is in the level loop), or JE_clr256.
 void background_1_tick(SDL_Surface *screen, bool clr) {
+  auto& backPos = state().map.back_pos;
+  auto& mapYPos = state().map.map_y_pos;
+  auto& mapXPos = state().map.map_x_pos;
+  auto& mapXbpPos = state().map.map_x_bp_pos;
   draw_record().background_1 = Background1Drawn{screen, clr, mapYPos, mapXbpPos, mapXPos, backPos};
 }
 
@@ -44,6 +48,17 @@ void background_1_draw(Background1Drawn const& d) {
 
 // draw_background_2, or draw_background_2_blend.
 void background_2_tick(SDL_Surface *screen, bool blend, std::optional<Background2Drawn>& drawn) {
+  auto& backPos2 = state().map.back_pos2;
+  auto& backMove2 = state().map.back_move2;
+  auto& mapY2 = state().map.map_y2;
+  auto& mapY2Pos = state().map.map_y2_pos;
+  auto& mapXPos = state().map.map_x_pos;
+  auto& mapX2Pos = state().map.map_x2_pos;
+  auto& mapXbpPos = state().map.map_x_bp_pos;
+  auto& mapX2bpPos = state().map.map_x2_bp_pos;
+  auto& map2YDelay = state().map.map2_y_delay;
+  auto& map2YDelayMax = state().map.map2_y_delay_max;
+  auto& background2 = state().map.background2;
   if (map2YDelayMax > 1 && backMove2 < 2) {
     backMove2 = (map2YDelay == 1) ? 1 : 0;
   }
@@ -80,6 +95,12 @@ void background_2_draw(Background2Drawn const& d) {
 
 // draw_background_3, which scrolls before drawing.
 void background_3_tick(SDL_Surface *screen, std::optional<Background3Drawn>& drawn) {
+  auto& backPos3 = state().map.back_pos3;
+  auto& backMove3 = state().map.back_move3;
+  auto& mapY3 = state().map.map_y3;
+  auto& mapY3Pos = state().map.map_y3_pos;
+  auto& mapX3Pos = state().map.map_x3_pos;
+  auto& mapX3bpPos = state().map.map_x3_bp_pos;
   drawn = Background3Drawn{screen, mapY3Pos, mapX3bpPos, mapX3Pos, backPos3, backMove3};
 
   // Movement of background

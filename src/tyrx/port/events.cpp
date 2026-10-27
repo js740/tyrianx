@@ -33,6 +33,26 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& backMove = state().map.back_move;
+  auto& backMove2 = state().map.back_move2;
+  auto& backMove3 = state().map.back_move3;
+  auto& mapYPos = state().map.map_y_pos;
+  auto& mapY2Pos = state().map.map_y2_pos;
+  auto& map1YDelay = state().map.map1_y_delay;
+  auto& map1YDelayMax = state().map.map1_y_delay_max;
+  auto& map2YDelay = state().map.map2_y_delay;
+  auto& map2YDelayMax = state().map.map2_y_delay_max;
+  auto& BKwrap2 = state().map.bk_wrap2;
+  auto& BKwrap2to = state().map.bk_wrap2_to;
+  auto& stopBackgrounds = state().map.stop_backgrounds;
+  auto& stopBackgroundNum = state().map.stop_background_num;
+  auto& background2notTransparent = state().map.background2_not_transparent;
+  auto& background3x1 = state().map.background3x1;
+  auto& background3x1b = state().map.background3x1b;
+  auto& background2over = state().map.background2_over;
+  auto& background3over = state().map.background3_over;
+  auto& skyEnemyOverAll = state().map.sky_enemy_over_all;
+  auto& topEnemyOver = state().map.top_enemy_over;
   auto& endLevel = state().ending.end_level;
   auto& reallyEndLevel = state().ending.really_end_level;
   auto& readyToEndLevel = state().ending.ready_to_end_level;
@@ -937,6 +957,13 @@ void event_system() {
 
 // Port of JE_createNewEventEnemy (tyrian2.c).
 void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 uniqueShapeTableI) {
+  auto& backMove = state().map.back_move;
+  auto& backMove2 = state().map.back_move2;
+  auto& backMove3 = state().map.back_move3;
+  auto& mapX = state().map.map_x;
+  auto& mapX3 = state().map.map_x3;
+  auto& background3x1 = state().map.background3x1;
+  auto& background3x1b = state().map.background3x1b;
   auto& eventRec = state().level.events;
   auto& eventLoc = state().level.event_loc;
   auto& smallEnemyAdjust = state().level.small_enemy_adjust;

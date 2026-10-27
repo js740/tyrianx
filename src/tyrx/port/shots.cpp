@@ -48,6 +48,7 @@ bool player_shot_move(int shot_id, bool *out_is_special, int *out_shotx, int *ou
                       JE_integer *out_shot_damage, JE_byte *out_blast_filter, JE_byte *out_chain,
                       JE_byte *out_playerNum, JE_word *out_special_radiusw, JE_word *out_special_radiush,
                       std::vector<PlayerShotDrawn>& drawn) {
+  auto& background2 = state().map.background2;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
