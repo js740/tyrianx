@@ -48,6 +48,8 @@ bool player_shot_move(int shot_id, bool *out_is_special, int *out_shotx, int *ou
                       JE_integer *out_shot_damage, JE_byte *out_blast_filter, JE_byte *out_chain,
                       JE_byte *out_playerNum, JE_word *out_special_radiusw, JE_word *out_special_radiush,
                       std::vector<PlayerShotDrawn>& drawn) {
+  auto& playerShotData = state().player_shots.slots;
+  auto& shotAvail = state().player_shots.ttl;
   PlayerShotDataType *shot = &playerShotData[shot_id];
 
   shotAvail[shot_id]--;
@@ -198,6 +200,8 @@ void player_shots_draw(PlayerShotsDrawn const& d) {
 // FKA Varz.initPlayerShot
 JE_integer player_shot_create(JE_word portNum, uint bay_i, JE_word PX, JE_word PY, JE_word mouseX,
                               JE_word mouseY, JE_word wpNum, JE_byte playerNum) {
+  auto& playerShotData = state().player_shots.slots;
+  auto& shotAvail = state().player_shots.ttl;
   static JE_byte const soundChannel[11] = {0, 2, 4, 4, 2, 2, 5, 5, 1, 4, 1};  // [1..11]
 
   // Bounds check
@@ -394,6 +398,7 @@ JE_integer player_shot_create(JE_word portNum, uint bay_i, JE_word PX, JE_word P
 
 // Port of player_shot_set_direction (shots.c).
 void player_shot_set_direction(JE_integer shot_id, uint weapon_id, JE_real direction) {
+  auto& playerShotData = state().player_shots.slots;
   PlayerShotDataType *shot = &playerShotData[shot_id];
 
   shot->shotXM = -roundf(sinf(direction) * shot->shotYM);

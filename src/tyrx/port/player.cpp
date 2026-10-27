@@ -224,6 +224,8 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
+  auto& playerShotData = state().player_shots.slots;
+  auto& shotAvail = state().player_shots.ttl;
   if (player[0].items.special > 0) {
     bool const ready =
         shotRepeat[SHOT_SPECIAL] == 0 && specialWait == 0 && flareDuration < 2 && zinglonDuration < 2;
@@ -1646,6 +1648,7 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
 
 // Port of JE_playerCollide.
 void player_collide(Player *this_player, JE_byte playerNum_) {
+  auto& shotAvail = state().player_shots.ttl;
   char tempStr[256];
 
   for (int z = 0; z < 100; z++) {

@@ -53,6 +53,11 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct PlayerShots {
+  std::array<PlayerShotDataType, MAX_PWEAPON + 1> slots;
+  std::array<JE_byte, MAX_PWEAPON> ttl;  // ticks each shot has left, 0 for a free slot
+};
+
 struct EnemyShots {
   std::array<EnemyShotType, ENEMY_SHOT_MAX> slots;
   std::array<JE_boolean, ENEMY_SHOT_MAX> available;  // whether each slot is free
@@ -63,6 +68,7 @@ struct State {
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  PlayerShots player_shots;
   EnemyShots enemy_shots;
 };
 
