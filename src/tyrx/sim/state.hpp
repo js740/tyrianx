@@ -49,7 +49,12 @@ struct Starfield {
   int speed;                                   // how much faster than their own speed all stars move
 };
 
+struct Random {
+  MtState mt;  // the random number generator that the game logic draws from
+};
+
 struct State {
+  Random random;
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;

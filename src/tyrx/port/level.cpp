@@ -871,7 +871,7 @@ void explosions_tick() {
 
   // -------------------------- Sequenced Explosions -------------------------
   enemyStillExploding =
-      sim::update_repeating_explosions(state().explosions, mt_global, backMove2, soundQueue);
+      sim::update_repeating_explosions(state().explosions, state().random.mt, backMove2, soundQueue);
 
   // ---------------------------- Draw Explosions ----------------------------
   r.explosions = ExplosionsDrawn{VGAScreen, sim::update_explosions(state().explosions)};

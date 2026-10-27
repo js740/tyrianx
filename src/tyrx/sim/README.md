@@ -6,12 +6,16 @@ structures, and the game logic that works on it.
 ## The game state
 
 `state.hpp` has the C++ game's state, `State`: the state that C globals hold in
-the C game, moved into structures, a subsystem at a time. So far it has the
-explosions: their slots, the repeating explosions (big explosions that set off
-explosions over several ticks), how far explosions move down each tick, and how
-far the player moved, for those that follow the player; the superpixels, sparks
-that move and fade; and the starfield. The C++ level tick works on a `State`
-that the code running it provides (`../port/README.md`).
+the C game, moved into structures, a subsystem at a time. So far it has:
+- `Random`: the random number generator's state.
+- `Explosions`: the explosions' slots, the repeating explosions (big explosions
+  that set off explosions over several ticks), how far explosions move down
+  each tick, and how far the player moved, for those that follow the player.
+- `Superpixels`: sparks that move and fade.
+- `Starfield`: the stars, and how much faster than their own speed they move.
+
+The C++ level tick works on a `State` that the code running it provides
+(`../port/README.md`).
 
 While the C game runs, it is the reference, so its globals hold the state at a
 tick boundary. `../gold/sim_state.hpp` lists the C global that holds each
@@ -42,8 +46,7 @@ A port in `sim/` can also be checked on its own, call by call, with `TYRX_DIFF`
 (`../check/README.md`).
 
 Ports that need random numbers call the reentrant C generator (`mt_rand_r` etc.)
-on an `MtState` they are given; there is no C++ copy of it. Until the
-generator's state moves into `State`, the level tick passes them the C game's
-(`mt_global`), which the C code that the C++ tick still calls draws from too. A
-port must draw the same values in the same order as the C function. Including
-the `MtState` in the compared state checks that.
+on an `MtState` they are given; there is no C++ copy of it. The level tick gives
+them the `State`'s, and `../port/`'s code draws from it too. A port must draw
+the same values in the same order as the C function. Including the `MtState` in
+the compared state checks that.
