@@ -1313,7 +1313,7 @@ bool game_over_and_input_tick() {
         pauseRequest = true;
       }
       else {
-        JE_pauseGame();
+        c_loop(JE_pauseGame);
       }
     }
 
@@ -1325,7 +1325,7 @@ bool game_over_and_input_tick() {
       }
       else {
         yourInGameMenuRequest = true;
-        JE_doInGameSetup();
+        c_loop(JE_doInGameSetup);
         skipStarShowVGA = true;
       }
     }

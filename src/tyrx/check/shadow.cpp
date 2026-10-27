@@ -90,7 +90,7 @@ std::string summary(std::array<std::uint64_t, render::kDrawOps> const& counts) {
   return s;
 }
 
-class Shadow {
+class Shadow final : public port::Runner {
  public:
   Shadow() {
     if (env("TYRX_SHADOW") == nullptr) {
@@ -145,8 +145,14 @@ class Shadow {
     }
   }
 
-  // The pass's simulation is complete, and its drawing begins.
-  void drawing_begins() { simulated_calls_ = pass_list_.calls.size(); }
+  // What the pass needs from what runs it.  It presents and polls nothing, as
+  // the C tick did that, and the C loops abort it (see the wrappers below).
+  void drawing_begins() override { simulated_calls_ = pass_list_.calls.size(); }
+  void render_screen() override {}
+  void present() override {}
+  void poll_events() override {}
+  void in_game_help_ahead() override { abort("in-game help"); }
+  void c_loop(void (*loop)()) override { loop(); }
 
   bool enabled() const { return enabled_; }
   bool active() const { return active_; }
@@ -317,6 +323,7 @@ class Shadow {
     pass_list_ = {};
     simulated_calls_ = SIZE_MAX;
     port::draw::target() = &pass_list_;
+    port::runner_target() = this;
     active_ = true;
     bool const completed = setjmp(abort_jump) == 0;
     port::LevelPass pass = port::LevelPass::unsupported;
@@ -324,6 +331,7 @@ class Shadow {
       pass = port::level_pass();
     }
     active_ = false;
+    port::runner_target() = nullptr;
     port::draw::target() = nullptr;
     port::state_target() = nullptr;
     gold::write_sim_state(sim_state_);
@@ -565,36 +573,6 @@ void shadow_level_ended() {
 std::uint64_t shadow_mismatches() { return shadow().mismatches(); }
 
 }  // namespace tyrx::check
-
-namespace tyrx::port {
-
-void drawing_begins() { check::shadow().drawing_begins(); }
-
-void render_screen() {
-  if (!check::shadow_active()) {
-    scale_and_render_screen(VGAScreen);
-  }
-}
-
-void present() {
-  if (!check::shadow_active()) {
-    present_screen();
-  }
-}
-
-void poll_events() {
-  if (!check::shadow_active()) {
-    handleSdlEvents();
-  }
-}
-
-void in_game_help_ahead() {
-  if (check::shadow_active()) {
-    check::shadow_abort("in-game help");
-  }
-}
-
-}  // namespace tyrx::port
 
 //------------------------------------------------------------------------------
 // Side effects to suppress in the shadow pass, and C code that makes a tick
