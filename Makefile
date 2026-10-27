@@ -88,7 +88,7 @@ ifeq ($(WITH_NETWORK), true)
 endif
 
 ifeq ($(WITH_TYRX), true)
-    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen,--wrap=gameplaySelect,--wrap=JE_setupExplosion,--wrap=JE_setupExplosionLarge,--wrap=init_joysticks \
+    EXTRA_LDFLAGS += -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time,--wrap=JE_itemScreen,--wrap=gameplaySelect,--wrap=JE_setupExplosion,--wrap=JE_setupExplosionLarge,--wrap=JE_doSP,--wrap=init_joysticks \
                      -Wl,--wrap=draw_background_1 \
                      -Wl,--wrap=blit_sprite,--wrap=blit_sprite_blend,--wrap=blit_sprite_hv_unsafe \
                      -Wl,--wrap=blit_sprite_hv,--wrap=blit_sprite_hv_blend,--wrap=blit_sprite_dark,--wrap=blit_sprite2 \

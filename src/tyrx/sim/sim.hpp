@@ -72,4 +72,12 @@ struct VisibleExplosions {
 // left the screen.
 VisibleExplosions update_explosions(Explosions& explosions);
 
+// varz.c: JE_doSP, which creates num superpixels around (x, y)
+void do_sp(Superpixels& superpixels, MtState& mt, JE_word x, JE_word y, JE_word num, JE_byte explowidth,
+           JE_byte color);
+
+// varz.c: the superpixels' update in JE_drawSP, which moves and fades them.
+// Returns the slots of those it updated, which the drawing draws.
+std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels);
+
 }  // namespace tyrx::sim

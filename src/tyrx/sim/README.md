@@ -9,8 +9,9 @@ structures, and the game logic that works on it.
 the C game, moved into structures, a subsystem at a time. So far it has the
 explosions: their slots, the repeating explosions (big explosions that set off
 explosions over several ticks), how far explosions move down each tick, and how
-far the player moved, for those that follow the player. The C++ level tick works
-on a `State` that the code running it provides (`../port/README.md`).
+far the player moved, for those that follow the player; and the superpixels,
+sparks that move and fade. The C++ level tick works on a `State` that the code
+running it provides (`../port/README.md`).
 
 While the C game runs, it is the reference, so its globals hold the state at a
 tick boundary. `../gold/sim_state.hpp` lists the C global that holds each
@@ -28,11 +29,13 @@ explosions (`explosion.cpp`): `setup_explosion`, the port of
 `setup_explosion_large` (`JE_setupExplosionLarge`) the `Explosions`.
 `update_repeating_explosions`, the repeating explosions' update in the level
 loop, sets off their explosions, and `update_explosions` moves the explosions
-and returns the ones visible in the tick for its drawing. The
-level tick's ports in `../port/` work on the C globals and on the `State`,
-with the C code's names, so that they can be compared with it line by line.
-As state moves into `State`, the code that uses it moves from `../port/` to
-`sim/`, and the shadow tick checks it there as before.
+and returns the ones visible in the tick for its drawing. The superpixels
+(`superpixel.cpp`) have `do_sp` (`JE_doSP`), which creates them, and
+`update_superpixels`, which moves and fades them and returns those it updated.
+The level tick's ports in `../port/` work on the C globals and on the `State`,
+with the C code's names, so that they can be compared with it line by line. As
+state moves into `State`, the code that uses it moves from `../port/` to `sim/`,
+and the shadow tick checks it there as before.
 
 A port in `sim/` can also be checked on its own, call by call, with `TYRX_DIFF`
 (`../check/README.md`).

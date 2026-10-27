@@ -128,6 +128,12 @@ struct ExplosionsLargeState {
   rep_explosion_type rep_explosions[MAX_REPEATING_EXPLOSIONS];
 };
 
+struct SuperpixelsState {
+  superpixel_type superpixels[MAX_SUPERPIXELS];
+  unsigned int last_superpixel;
+  MtState mt;
+};
+
 }  // namespace
 
 }  // namespace tyrx::check
@@ -178,4 +184,29 @@ extern "C" void __wrap_JE_setupExplosionLarge(JE_boolean enemyGround, JE_byte ex
   std::ranges::copy(e.slots, cxx.explosions);
   std::ranges::copy(e.repeating, cxx.rep_explosions);
   tyrx::check::diff_check("JE_setupExplosionLarge", c, cxx);
+}
+
+extern "C" void __real_JE_doSP(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color);
+
+extern "C" void __wrap_JE_doSP(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color) {
+  if (!tyrx::check::diff_enabled()) {
+    return __real_JE_doSP(x, y, num, explowidth, color);
+  }
+
+  tyrx::sim::Superpixels sp;
+  std::ranges::copy(superpixels, sp.slots.begin());
+  sp.last = last_superpixel;
+  MtState mt = mt_global;
+  tyrx::sim::do_sp(sp, mt, x, y, num, explowidth, color);
+
+  __real_JE_doSP(x, y, num, explowidth, color);
+
+  tyrx::check::SuperpixelsState c, cxx;
+  std::ranges::copy(superpixels, c.superpixels);
+  c.last_superpixel = last_superpixel;
+  c.mt = mt_global;
+  std::ranges::copy(sp.slots, cxx.superpixels);
+  cxx.last_superpixel = sp.last;
+  cxx.mt = mt;
+  tyrx::check::diff_check("JE_doSP", c, cxx);
 }
