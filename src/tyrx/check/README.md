@@ -13,7 +13,6 @@ shrinks as the C++ game takes over.
 | `diff.cpp` | Call-by-call checks of the ports in `../sim/` |
 | `render_diff.cpp` | Call-by-call checks of the ports in `../render/` |
 | `roundtrip.cpp` | The round-trip test of snapshots |
-| `rewind.cpp` | A rewind prototype on snapshots of the C state, to be replaced by rewind on the C++ game's own state |
 | [`draw/`](draw/README.md) | Recording the C code's draw lists, and checking them |
 
 ## Verifying that a C change preserves gameplay
@@ -261,31 +260,10 @@ a round trip restored, so the round trip also checks that the `State`, the level
 data and the input are all that the C++ tick depends on. The runs above give
 the same hash logs with it as without it.
 
-## Rewind (prototype)
+## Rewind
 
-With `TYRX_REWIND=TICKS`, Tyrian X keeps a snapshot of each of the last TICKS
-level ticks. 350 ticks is about 10 seconds at Normal speed. Unchanged blocks
-are shared between consecutive snapshots, so each tick costs about 20 KB rather
-than 500 KB.
-
-Holding the rewind key (Backspace, or `TYRX_REWIND_KEY=<SDL scancode name>`)
-steps back one tick per frame: each tick drops the newest snapshot and restores
-the one before it, and the game then simulates and draws one tick from there.
-Input isn't restored, so releasing the key resumes play with the keys actually
-held. Rewind is off in demos and network games, and the buffer is cleared at
-each level start.
-
-```sh
-TYRX_REWIND=350 ./opentyrian
-```
-
-Backspace is also the modifier for the game's debug key combinations (e.g.
-Backspace+1 changes the game speed); those still work while rewinding.
-
-For testing, `TYRX_INPUT_REWIND=1` makes the synthetic input hold the rewind
-key for 40 of every 400 ticks. `TYRX_REWIND_VERIFY=1` checks each restored
-state against the hash recorded when it was captured; exits that Tyrian X
-initiates return status 6 on a mismatch.
-
-This works on snapshots of the C state. The rewind to keep will work on the C++
-game's own state instead.
+Rewind (`../rewind.hpp`) works on the C++ tick's `State`. For testing,
+`TYRX_INPUT_REWIND=1` makes the synthetic input hold the rewind key for 40 of
+every 400 ticks. Rewind used to work on snapshots of the C state; with seed 2,
+5,000 ticks and the same input, the C++ rewind presents the same frames as that
+did, and ends in the same state.

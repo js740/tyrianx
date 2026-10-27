@@ -25,6 +25,7 @@
 #include "port/level.hpp"
 #include "port/port.hpp"
 #include "render/draw_list.hpp"
+#include "rewind.hpp"
 #include "runtime.hpp"
 
 #include <cstdio>
@@ -47,6 +48,7 @@ class CxxTick final : public port::Runner {
     gold::read_sim_state(state_);
     owned_ = true;
     port::level_locals() = {};
+    rewind_level_start();
   }
 
   void c_state_restored() { owned_ = false; }
@@ -60,6 +62,7 @@ class CxxTick final : public port::Runner {
       gold::read_sim_state(state_);
       owned_ = true;
     }
+    rewind_before_pass(state_, port::level_locals());
 
     gold::scramble_sim_state_globals();
     port::state_target() = &state_;
@@ -130,7 +133,7 @@ bool const enabled = [] {
   if (env("TYRX_CXX_TICK") == nullptr) {
     return false;
   }
-  for (char const *check : {"TYRX_SHADOW", "TYRX_DRAWLIST_CHECK", "TYRX_REWIND"}) {
+  for (char const *check : {"TYRX_SHADOW", "TYRX_DRAWLIST_CHECK"}) {
     if (env(check) != nullptr) {
       std::fprintf(stderr, "tyrx: TYRX_CXX_TICK doesn't run with %s\n", check);
       std::exit(EXIT_FAILURE);

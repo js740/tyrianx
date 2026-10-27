@@ -13,9 +13,9 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 
 | Directory | Namespace | What it holds |
 |---|---|---|
-| `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits; `cxx_tick.cpp`: the C++ level tick in place of the C code's |
+| `.` | `tyrx` | `runtime.cpp`: the hooks the C code calls, the environment controls and exits; `cxx_tick.cpp`: the C++ level tick in place of the C code's; `rewind.cpp`: rewind on its state |
 | [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry, hashing, snapshots, its memory, and the globals that hold the C++ game's state |
-| [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, the shadow tick, call-by-call checks, round trips and the rewind prototype |
+| [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, the shadow tick, call-by-call checks and round trips |
 | [`check/draw/`](check/draw/README.md) | `tyrx::check::draw` | Recording the C code's draw lists, and checking them |
 | [`port/`](port/README.md) | `tyrx::port` | The C level tick ported to C++ as it is, line by line, working on the C globals and the C++ game's state, with its simulation and drawing separated |
 | [`sim/`](sim/README.md) | `tyrx::sim` | The C++ game's state, and game logic that owns its state |
@@ -78,10 +78,34 @@ checks it against it.
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick ([check](check/README.md)) |
 | `TYRX_INPUT_SCREENS=1` | With `TYRX_INPUT_SEED`: also open and close the pause screen, the in-game help and menu ([check](check/README.md)) |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots ([check](check/README.md)) |
-| `TYRX_REWIND=TICKS` | Rewind by holding a key ([check](check/README.md)) |
+| `TYRX_REWIND=TICKS` | With `TYRX_CXX_TICK`: rewind by holding a key (see below) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that Tyrian X initiates return a status that names the first check that
 failed: 3 for `TYRX_DIFF`, 4 for pointers the hashes couldn't describe, 5 for
-round trips, 6 for `TYRX_REWIND_VERIFY`, 7 for `TYRX_RENDER_DIFF`, 8 for
-`TYRX_DRAWLIST_CHECK` and 9 for `TYRX_SHADOW`.
+round trips, 7 for `TYRX_RENDER_DIFF`, 8 for `TYRX_DRAWLIST_CHECK` and 9 for
+`TYRX_SHADOW`.
+
+## Rewind
+
+With `TYRX_CXX_TICK=1` and `TYRX_REWIND=TICKS`, the C++ tick keeps its `State`
+from the start of each of the last TICKS passes (`rewind.hpp`), about 64 KB
+each. 350 ticks is about 10 seconds at Normal speed. Holding the rewind key
+(Backspace, or `TYRX_REWIND_KEY=<SDL scancode name>`) steps back one tick per
+frame: each pass drops the newest state and restores the one before it, and
+then simulates and draws one tick from there. Input isn't restored, so
+releasing the key resumes play with the keys actually held. Rewind is off in
+demos and network games, and the states are dropped when a level starts.
+
+```sh
+TYRX_CXX_TICK=1 TYRX_REWIND=350 ./opentyrian
+```
+
+Backspace is also the modifier for the game's debug key combinations (e.g.
+Backspace+1 changes the game speed); those still work while rewinding.
+
+The `State` doesn't hold `enemyDat[0]`, the level data that events 49 to 52
+change for the enemies they create (`sim/README.md`), but each of those events
+changes it again before using it. Round trips with the C++ tick
+(`check/README.md`) check that the `State`, the level data and the input are
+all that a tick depends on.

@@ -26,8 +26,7 @@
 //
 // Exits that Tyrian X initiates return status 3 if a C++ port mismatched
 // (TYRX_DIFF), 4 if the hashes may be incomplete because some pointers could
-// not be described, 5 if a round trip failed (TYRX_ROUNDTRIP), 6 if a rewind
-// did not restore the captured state (TYRX_REWIND_VERIFY), 7 if a C++ drawing
+// not be described, 5 if a round trip failed (TYRX_ROUNDTRIP), 7 if a C++ drawing
 // port drew different pixels (TYRX_RENDER_DIFF), and 8 if a draw list was
 // incomplete or didn't reproduce its tick (TYRX_DRAWLIST_CHECK).
 //------------------------------------------------------------------------------
@@ -39,7 +38,6 @@
 #include "check/hashlog.hpp"
 #include "check/input_driver.hpp"
 #include "check/render_diff.hpp"
-#include "check/rewind.hpp"
 #include "check/roundtrip.hpp"
 #include "check/shadow.hpp"
 #include "cxx_tick.hpp"
@@ -66,9 +64,6 @@ namespace {
   }
   else if (check::round_trip_failed()) {
     status = 5;
-  }
-  else if (check::rewind_verify_failed()) {
-    status = 6;
   }
   else if (check::render_diff_mismatches()) {
     status = 7;
@@ -107,7 +102,6 @@ struct Runtime {
     check::shadow_level_start();
     ++level_count;
     check::round_trip_level_start();
-    check::rewind_level_start();
     if (playDemo && exit_after_demos >= 0 && ++demo_count > exit_after_demos) {
       exit_run();
     }
@@ -127,7 +121,6 @@ struct Runtime {
       exit_run();
     }
     tick = check::round_trip_begin_tick(tick);  // may restore a snapshot and go back
-    check::rewind_tick();                       // may restore an earlier game state
     check::input_driver_level_tick();
 
     std::vector<std::uint64_t> hashes;

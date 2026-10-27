@@ -30,8 +30,8 @@
 namespace tyrx {
 
 // Whether TYRX_CXX_TICK is set.  It doesn't run with the checks that run the C
-// code's ticks (TYRX_SHADOW, TYRX_DRAWLIST_CHECK) or restore the C state to
-// rewind (TYRX_REWIND), nor in network games, whose passes run in C.
+// code's ticks (TYRX_SHADOW, TYRX_DRAWLIST_CHECK), nor in network games, whose
+// passes run in C.  It rewinds with TYRX_REWIND (rewind.hpp).
 bool cxx_tick_enabled();
 
 // The level has loaded, before its first tick.
