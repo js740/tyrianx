@@ -104,7 +104,7 @@ ifeq ($(WITH_TYRX), true)
                      -Wl,--wrap=showNormal,--wrap=update_and_draw_starfield,--wrap=JE_drawSP,--wrap=JE_clr256 \
                      -Wl,--wrap=multiSamplePlay,--wrap=play_song,--wrap=set_volume,--wrap=push_joysticks_as_keyboard,--wrap=poll_joystick \
                      -Wl,--wrap=JE_loadCompShapes,--wrap=free_sprite2s,--wrap=JE_pauseGame,--wrap=JE_doInGameSetup \
-                     -Wl,--wrap=JE_showVGA,--wrap=handleSdlEvents \
+                     -Wl,--wrap=JE_showVGA,--wrap=scale_and_render_screen,--wrap=handleSdlEvents \
                      -Wl,--wrap=fileReadAtMost,--wrap=fileReadExactly \
                      -Wl,--wrap=keyboardHasInput,--wrap=hasInput,--wrap=keyboardClearInput,--wrap=mouseClearInput \
                      -Wl,--wrap=mouseGetRelativePosition
