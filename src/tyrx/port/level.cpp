@@ -294,7 +294,8 @@ void backgrounds_under_tick() {
   }
 
   if (starActive || astralDuration > 0) {
-    starfield_tick(VGAScreen, starfield_speed);
+    sim::update_starfield(state().starfield, VGAScreen->pitch);
+    r.starfield = VGAScreen;
   }
 
   if (processorType > 1 && smoothies[5 - 1]) {

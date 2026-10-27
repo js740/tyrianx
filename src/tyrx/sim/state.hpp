@@ -44,9 +44,15 @@ struct Superpixels {
   unsigned int last;  // the slot of the last one created
 };
 
+struct Starfield {
+  std::array<StarfieldStar, MAX_STARS> stars;  // their positions are offsets into the screen
+  int speed;                                   // how much faster than their own speed all stars move
+};
+
 struct State {
   Explosions explosions;
   Superpixels superpixels;
+  Starfield starfield;
 };
 
 }  // namespace tyrx::sim

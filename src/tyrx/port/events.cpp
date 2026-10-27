@@ -35,7 +35,7 @@ namespace tyrx::port {
 void event_system() {
   switch (eventRec[eventLoc - 1].eventtype) {
     case 1:
-      starfield_speed = eventRec[eventLoc - 1].eventdat;
+      state().starfield.speed = eventRec[eventLoc - 1].eventdat;
       break;
 
     case 2:

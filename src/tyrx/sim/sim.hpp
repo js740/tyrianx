@@ -80,4 +80,8 @@ void do_sp(Superpixels& superpixels, MtState& mt, JE_word x, JE_word y, JE_word 
 // Returns the slots of those it updated, which the drawing draws.
 std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels);
 
+// backgrnd.c: the stars' update in update_and_draw_starfield, which moves
+// them down a screen whose rows are pitch bytes apart.
+void update_starfield(Starfield& starfield, int pitch);
+
 }  // namespace tyrx::sim

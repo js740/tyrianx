@@ -51,7 +51,7 @@ inline sim::State& state() { return *state_target(); }
 // that code in port/ can't use them by mistake.
 struct InSimState {};
 inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
-    explosionFollowAmountY, superpixels, last_superpixel;
+    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed;
 
 // background.cpp
 void background_1_tick(SDL_Surface *screen, bool clr);  // draw_background_1, or JE_clr256
@@ -61,7 +61,6 @@ void background_2_tick(SDL_Surface *screen, bool blend,
 void background_2_draw(Background2Drawn const& d);
 void background_3_tick(SDL_Surface *screen, std::optional<Background3Drawn>& drawn);  // draw_background_3
 void background_3_draw(Background3Drawn const& d);
-void starfield_tick(SDL_Surface *screen, int move_speed);  // update_and_draw_starfield
 void starfield_draw(SDL_Surface *screen);
 
 // effects.cpp
