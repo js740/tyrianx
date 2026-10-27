@@ -39,7 +39,8 @@ the C game, moved into structures, a subsystem at a time. So far it has:
 - `EnemyShots`: the enemy shots' slots, and which are free.
 
 The C++ level tick works on a `State` that the code running it provides
-(`../port/README.md`).
+(`../port/README.md`): the shadow tick, or the C++ tick in place of the C
+code's (`../cxx_tick.hpp`), which owns the game's `State` during a level.
 
 While the C game runs, it is the reference, so its globals hold the state at a
 tick boundary. `../gold/sim_state.hpp` lists the C global that holds each member

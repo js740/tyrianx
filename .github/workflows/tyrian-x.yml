@@ -53,6 +53,16 @@ jobs:
           tools/run_headless.sh ./opentyrian data shadow-cheats.log input 1 10000 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
           tools/run_headless.sh ./opentyrian data shadow-2p.log input 1 10000 TYRX_INPUT_TWO_PLAYER=1 TYRX_INPUT_MOUSE=1 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
           tools/run_headless.sh ./opentyrian data shadow-screens.log input 2 10000 TYRX_INPUT_SCREENS=1 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
+      - name: The C++ tick plays as the C tick does
+        run: |
+          tools/run_headless.sh ./opentyrian data c-demos.log demos TYRX_FRAMELOG="$PWD/c-demos.frames"
+          tools/run_headless.sh ./opentyrian data x-demos.log demos TYRX_FRAMELOG="$PWD/x-demos.frames" TYRX_CXX_TICK=1
+          tools/compare_hashlogs.py c-demos.log x-demos.log
+          cmp c-demos.frames x-demos.frames
+          tools/run_headless.sh ./opentyrian data c-screens.log input 1 10000 TYRX_INPUT_SCREENS=1 TYRX_INPUT_CHEATS=1 TYRX_FRAMELOG="$PWD/c-screens.frames"
+          tools/run_headless.sh ./opentyrian data x-screens.log input 1 10000 TYRX_INPUT_SCREENS=1 TYRX_INPUT_CHEATS=1 TYRX_FRAMELOG="$PWD/x-screens.frames" TYRX_CXX_TICK=1
+          tools/compare_hashlogs.py c-screens.log x-screens.log
+          cmp c-screens.frames x-screens.frames
       - name: C++ ports match the C code
         run: |
           tools/run_headless.sh ./opentyrian data diff-demos.log demos TYRX_DIFF=1 TYRX_RENDER_DIFF=1

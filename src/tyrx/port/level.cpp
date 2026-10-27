@@ -70,6 +70,11 @@ LevelPass simulate(bool& frame);
 
 }  // namespace
 
+void draw_so_far() {
+  draw_tick(draw_record());
+  draw_record() = DrawRecord{};
+}
+
 LevelLocals& level_locals() {
   static LevelLocals locals;
   return locals;
