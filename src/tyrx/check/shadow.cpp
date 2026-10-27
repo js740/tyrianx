@@ -21,9 +21,11 @@
 
 #include "../gold/api.hpp"
 #include "../gold/memory.hpp"
+#include "../gold/sim_state.hpp"
 #include "../gold/state.hpp"
 #include "../port/draw.hpp"
 #include "../port/level.hpp"
+#include "../port/port.hpp"
 #include "../runtime.hpp"
 #include "draw/record.hpp"
 #include "vclock.hpp"
@@ -104,6 +106,9 @@ class Shadow {
     if (!gold::CMemory::available()) {
       std::fprintf(stderr, "tyrx: TYRX_SHADOW: the C data isn't where it is expected\n");
       return;
+    }
+    if (!gold::sim_state_bound()) {
+      std::exit(EXIT_FAILURE);
     }
     enabled_ = true;
   }
@@ -299,6 +304,12 @@ class Shadow {
     port::level_locals().old_weapon_bar[0] = pre_old_weapon_bar_[0];
     port::level_locals().old_weapon_bar[1] = pre_old_weapon_bar_[1];
 
+    // The pass works on the C++ State, and the C globals it holds the state of
+    // are scrambled until it is written back.
+    gold::read_sim_state(sim_state_);
+    gold::scramble_sim_state_globals();
+    port::state_target() = &sim_state_;
+
     next_read_ = 0;
     next_poll_ = 0;
     vclock_set_quiet(true);
@@ -313,6 +324,8 @@ class Shadow {
     }
     active_ = false;
     port::draw::target() = nullptr;
+    port::state_target() = nullptr;
+    gold::write_sim_state(sim_state_);
     DrawList shadow_list = std::move(pass_list_);
     for (std::size_t i = 0; i < shadow_list.calls.size(); ++i) {
       std::size_t const op = static_cast<std::size_t>(shadow_list.calls[i].op);
@@ -453,6 +466,7 @@ class Shadow {
 
   bool enabled_ = false;
   bool active_ = false;
+  sim::State sim_state_;
   // The pass's draw list, which the C++ code draws into (port/draw.hpp), and
   // how many of its calls the simulation made (all, until drawing begins).
   DrawList pass_list_;

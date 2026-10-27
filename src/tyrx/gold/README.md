@@ -10,6 +10,8 @@ against. This directory is how C++ code sees it:
   (`.data` and `.bss`), for the shadow tick (`../check/shadow.hpp`).
   `data_end.cpp` marks where that data ends; the Makefile links it first among
   the C++ objects.
+- `sim_state.hpp`: the C globals that hold the state of the C++ game's
+  `sim::State` (`../sim/README.md`), and copying between the two.
 
 ## State registry
 

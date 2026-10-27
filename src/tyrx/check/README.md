@@ -123,7 +123,9 @@ tick, after the C code has run the previous one, it:
    had suppressed: sound, music, presenting and polling. File reads (demo
    input) get the data the C tick read, and joystick polls the joystick state
    the C tick's polls left (the next tick's input has already arrived). The
-   pass draws into a draw list of its own (`../port/draw.hpp`).
+   pass draws into a draw list of its own (`../port/draw.hpp`), and works on a
+   `sim::State` read from the C globals, which are scrambled until the State
+   is written back after the pass (`../sim/README.md`).
 4. Compares the hashed state, the draw list and the pixels with the C tick's
    (`draw/`). The lists are compared surface by surface: for each surface, the
    calls that draw on it or read it (copies and filters) must be the same, in

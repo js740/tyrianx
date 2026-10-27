@@ -670,7 +670,7 @@ redo:
   }
 
   if (!this_player->is_alive) {
-    explosionFollowAmountX = explosionFollowAmountY = 0;
+    state().explosions.follow_x = state().explosions.follow_y = 0;
     return;
   }
 
@@ -1077,11 +1077,12 @@ redo:
 
     int ship_sprite = ship_banking * 2 + shipGr_;
 
-    explosionFollowAmountX = this_player->x - this_player->last_x_explosion_follow;
-    explosionFollowAmountY = this_player->y - this_player->last_y_explosion_follow;
+    sim::Explosions& e = state().explosions;
+    e.follow_x = this_player->x - this_player->last_x_explosion_follow;
+    e.follow_y = this_player->y - this_player->last_y_explosion_follow;
 
-    if (explosionFollowAmountY < 0) {
-      explosionFollowAmountY = 0;
+    if (e.follow_y < 0) {
+      e.follow_y = 0;
     }
 
     this_player->last_x_explosion_follow = this_player->x;

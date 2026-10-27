@@ -23,17 +23,34 @@
 // records what the drawing needs in the tick's draw record, and their drawing
 // (X_draw), which draw_tick runs after the simulation is complete.
 //
-// Code moves from here to sim/ as the globals it uses move into structures.
+// The state of the subsystems moved into sim::State is in the State that the
+// code running the tick provides (state()) instead of the C globals.  Code
+// moves from here to sim/ as the globals it uses move into structures.
 
 #pragma once
 
 #include "../gold/api.hpp"
 #include "../sim/sim.hpp"
+#include "../sim/state.hpp"
 #include "draw_record.hpp"
 
 #include <vector>
 
 namespace tyrx::port {
+
+// The State the tick works on, set by the code running the tick (the shadow
+// tick, check/shadow.cpp).
+inline sim::State *& state_target() {
+  static sim::State *state = nullptr;
+  return state;
+}
+
+inline sim::State& state() { return *state_target(); }
+
+// The C globals whose state sim::State holds.  These names hide them here, so
+// that code in port/ can't use them by mistake.
+struct InSimState {};
+inline constexpr InSimState explosions, explodeMove, explosionFollowAmountX, explosionFollowAmountY;
 
 // background.cpp
 void background_1_tick(SDL_Surface *screen, bool clr);  // draw_background_1, or JE_clr256
@@ -58,7 +75,7 @@ void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color)
 // JE_setupExplosion, in sim/explosion.cpp
 inline void setup_explosion(JE_integer x, JE_integer y, JE_integer deltaY, JE_integer type,
                             bool fixedPosition, bool followPlayer) {
-  sim::setup_explosion(explosions, x, y, deltaY, type, fixedPosition, followPlayer);
+  sim::setup_explosion(state().explosions.slots, x, y, deltaY, type, fixedPosition, followPlayer);
 }
 
 // enemy.cpp

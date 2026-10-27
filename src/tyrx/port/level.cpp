@@ -905,31 +905,33 @@ void explosions_tick() {
   }
 
   // ---------------------------- Draw Explosions ----------------------------
+  sim::Explosions& e = state().explosions;
   r.explosions = ExplosionsDrawn{VGAScreen, {}, {}};
   for (int j = 0; j < MAX_EXPLOSIONS; j++) {
-    if (explosions[j].ttl == 0) {
+    Explosion& explosion = e.slots[j];
+    if (explosion.ttl == 0) {
       continue;
     }
 
-    if (!explosions[j].fixedPosition) {
-      explosions[j].sprite++;
-      explosions[j].y += explodeMove;
+    if (!explosion.fixedPosition) {
+      explosion.sprite++;
+      explosion.y += e.move;
     }
-    else if (explosions[j].followPlayer) {
-      explosions[j].x += explosionFollowAmountX;
-      explosions[j].y += explosionFollowAmountY;
+    else if (explosion.followPlayer) {
+      explosion.x += e.follow_x;
+      explosion.y += e.follow_y;
     }
-    explosions[j].y += explosions[j].deltaY;
+    explosion.y += explosion.deltaY;
 
-    if (explosions[j].y > 200 - 14) {
-      explosions[j].ttl = 0;
+    if (explosion.y > 200 - 14) {
+      explosion.ttl = 0;
     }
     else {
       r.explosions->drawn[j] = true;
 
-      explosions[j].ttl--;
-      if (explosions[j].ttl == 0) {
-        r.explosions->ended.push_back({j, explosions[j].x, explosions[j].y, explosions[j].sprite});
+      explosion.ttl--;
+      if (explosion.ttl == 0) {
+        r.explosions->ended.push_back({j, explosion.x, explosion.y, explosion.sprite});
       }
     }
   }
@@ -1293,7 +1295,7 @@ LevelPass simulate(bool& frame) {
     backMove = 1;
     backMove2 = 2;
     backMove3 = 3;
-    explodeMove = 2;
+    state().explosions.move = 2;
     stopBackgroundNum = 0;
     stopBackgrounds = false;
     if (waitToEndLevel) {
@@ -1322,7 +1324,7 @@ LevelPass simulate(bool& frame) {
       backMove = 1;
       backMove2 = 2;
       backMove3 = 3;
-      explodeMove = 2;
+      state().explosions.move = 2;
     }
   }
 
