@@ -72,6 +72,20 @@ void for_each_binding(State& s, F f) {
   f(s.players.ship_gr2, ::shipGr2);
   f(s.players.ship_gr_ptr, ::shipGrPtr);
   f(s.players.ship_gr2_ptr, ::shipGr2ptr);
+  f(s.specials.wait, ::specialWait);
+  f(s.specials.next_wait, ::nextSpecialWait);
+  f(s.specials.sf_current_code, ::SFCurrentCode);
+  f(s.specials.sf_executed, ::SFExecuted);
+  f(s.specials.spray, ::spraySpecial);
+  f(s.specials.weapon_wpn, ::specialWeaponWpn);
+  f(s.specials.weapon_filter, ::specialWeaponFilter);
+  f(s.specials.weapon_freq, ::specialWeaponFreq);
+  f(s.specials.link_to_player, ::linkToPlayer);
+  f(s.specials.flare_duration, ::flareDuration);
+  f(s.specials.flare_start, ::flareStart);
+  f(s.specials.flare_col_chg, ::flareColChg);
+  f(s.specials.zinglon_duration, ::zinglonDuration);
+  f(s.specials.astral_duration, ::astralDuration);
   f(s.enemies.slots, ::enemy);
   f(s.enemies.status, ::enemyAvail);
   f(s.enemies.on_screen, ::enemyOnScreen);
@@ -84,20 +98,24 @@ void for_each_binding(State& s, F f) {
 }
 
 // Copies between a member and its global, which must have the same type, or
-// be arrays of the same type and size.
+// be arrays of the same size whose elements copy so.
 template <typename T>
 void copy(T& to, T const& from) {
   to = from;
 }
 
-template <typename T, std::size_t N>
-void copy(std::array<T, N>& to, T const (&from)[N]) {
-  std::ranges::copy(from, to.begin());
+template <typename T, typename U, std::size_t N>
+void copy(std::array<T, N>& to, U const (&from)[N]) {
+  for (std::size_t i = 0; i < N; ++i) {
+    copy(to[i], from[i]);
+  }
 }
 
-template <typename T, std::size_t N>
-void copy(T (&to)[N], std::array<T, N> const& from) {
-  std::ranges::copy(from, to);
+template <typename T, typename U, std::size_t N>
+void copy(T (&to)[N], std::array<U, N> const& from) {
+  for (std::size_t i = 0; i < N; ++i) {
+    copy(to[i], from[i]);
+  }
 }
 
 // Where a member or global is, and where its counterpart is.

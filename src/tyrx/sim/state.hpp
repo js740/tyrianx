@@ -76,6 +76,24 @@ struct Players {
   Sprite2_array *ship_gr_ptr, *ship_gr2_ptr;
 };
 
+struct Specials {
+  JE_byte wait, next_wait;
+  std::array<std::array<JE_byte, 21>, 2> sf_current_code;  // the keys of each player's special moves so far
+  std::array<JE_byte, 2> sf_executed;
+  JE_boolean spray;
+
+  // The special weapon.
+  JE_word weapon_wpn;
+  JE_shortint weapon_filter, weapon_freq;
+  JE_boolean link_to_player;
+
+  // The specials that last a while.
+  JE_word flare_duration;
+  JE_boolean flare_start;
+  JE_shortint flare_col_chg;
+  JE_byte zinglon_duration, astral_duration;
+};
+
 struct Enemies {
   std::array<JE_SingleEnemyType, 100> slots;
   std::array<JE_byte, 100> status;  // 1 for a free slot, 0 for an enemy, 2 for one without armor
@@ -99,6 +117,7 @@ struct State {
   Superpixels superpixels;
   Starfield starfield;
   Players players;
+  Specials specials;
   Enemies enemies;
   PlayerShots player_shots;
   EnemyShots enemy_shots;

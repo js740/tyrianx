@@ -259,6 +259,7 @@ void hud_tick() {
 
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under_tick() {
+  auto& astralDuration = state().specials.astral_duration;
   DrawRecord& r = draw_record();
 
   // SMOOTHIES!
@@ -435,6 +436,7 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& zinglonDuration = state().specials.zinglon_duration;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
