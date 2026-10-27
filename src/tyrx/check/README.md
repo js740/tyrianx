@@ -38,6 +38,15 @@ the blocks that differ. Rerun both builds with `TYRX_DUMP_TICK=<tick>` and
 
 `DATA` is a Tyrian 2.1 data directory (`./get_data.sh` fetches one).
 
+## Comparing frames
+
+`TYRX_FRAMELOG=FILE` writes a line per frame presented (`JE_showVGA`): the
+tick, and a hash of the screen's pixels and the palette. Two runs that show the
+same frames write the same log, so `cmp` compares them. The logs of two builds
+differ outside the levels: the title screen shows the build's version, and the
+screens between the demos present more frames in a release build than in a
+debug build.
+
 ## Synthetic input
 
 With `TYRX_INPUT_SEED=S` (and `TYRX_VCLOCK`), `input_driver.cpp` plays the game

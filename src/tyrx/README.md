@@ -53,6 +53,7 @@ checks it against it.
 | Variable | Effect |
 |---|---|
 | `TYRX_HASHLOG=FILE` | Per-tick hash of every hashed block, plus level-start markers ([check](check/README.md)) |
+| `TYRX_FRAMELOG=FILE` | A hash of each frame presented, with its tick ([check](check/README.md)) |
 | `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N ([check](check/README.md)) |
 | `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
 | `TYRX_DIFF=1` | Check the C++ ports in `sim/` against the C functions they port, call by call ([check](check/README.md)) |

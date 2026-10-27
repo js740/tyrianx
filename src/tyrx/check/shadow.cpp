@@ -28,6 +28,7 @@
 #include "../port/port.hpp"
 #include "../runtime.hpp"
 #include "draw/record.hpp"
+#include "framelog.hpp"
 #include "vclock.hpp"
 
 #include <algorithm>
@@ -663,11 +664,13 @@ void __wrap_JE_doInGameSetup(void) {
 }
 
 // The C++ level pass presents and polls by itself, so a call from C code
-// means a screen of its own (pause, menu, help).
+// means a screen of its own (pause, menu, help).  Each frame presented goes in
+// the frame log (TYRX_FRAMELOG) too.
 void __wrap_JE_showVGA(void) {
   if (tyrx::check::shadow_active()) {
     tyrx::check::shadow_abort("another screen presented");
   }
+  tyrx::check::framelog_frame();
   __real_JE_showVGA();
 }
 
