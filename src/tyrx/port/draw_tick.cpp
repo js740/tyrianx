@@ -58,16 +58,16 @@ void enemy_shots_draw(EnemyShotsDrawn const& d) {
 // Explosions that ended may have had their slots taken, so those are drawn
 // from the record.
 void explosions_draw(ExplosionsDrawn const& d) {
-  auto e = d.ended.begin();
+  auto e = d.visible.ended.begin();
   for (int j = 0; j < MAX_EXPLOSIONS; j++) {
-    if (!d.drawn[j]) {
+    if (!d.visible.slots[j]) {
       continue;
     }
 
     Explosion const& explosion = state().explosions.slots[j];
     JE_integer x = explosion.x, y = explosion.y;
     JE_word sprite = explosion.sprite;
-    if (e != d.ended.end() && e->j == j) {
+    if (e != d.visible.ended.end() && e->slot == j) {
       x = e->x, y = e->y, sprite = e->sprite;
       ++e;
     }

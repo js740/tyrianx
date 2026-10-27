@@ -21,15 +21,18 @@
 // takes the state it works on instead of using the C globals.  Code moves
 // here from port/ as the globals it uses move into structures.
 //
-// Each function must match the C function it ports exactly.  The shadow tick
+// Each function must match the C code it ports exactly.  The shadow tick
 // checks that for the code the level tick runs, and check/diff.cpp checks the
 // functions it wraps call by call (TYRX_DIFF).
 
 #pragma once
 
 #include "../gold/api.hpp"
+#include "state.hpp"
 
+#include <bitset>
 #include <span>
+#include <vector>
 
 namespace tyrx::sim {
 
@@ -39,5 +42,24 @@ namespace tyrx::sim {
 // varz.c
 void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, JE_integer x, JE_integer y,
                      JE_integer delta_y, JE_integer type, bool fixed_position, bool follow_player);
+
+// The explosions visible in a tick, for its drawing: the slots of those still
+// on screen after the update moved them, and the last position and frame of
+// those whose time ran out, as a new explosion may take their slots later in
+// the tick.
+struct EndedExplosion {
+  int slot;
+  JE_integer x, y;
+  JE_word sprite;
+};
+struct VisibleExplosions {
+  std::bitset<MAX_EXPLOSIONS> slots;
+  std::vector<EndedExplosion> ended;
+};
+
+// tyrian2.c: the explosions' update in JE_main's level loop ("Draw
+// Explosions"), which moves them and ends those whose time ran out or that
+// left the screen.
+VisibleExplosions update_explosions(Explosions& explosions);
 
 }  // namespace tyrx::sim

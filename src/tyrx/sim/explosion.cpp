@@ -17,7 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// Port of JE_setupExplosion (varz.c).
+// The explosions: ports of JE_setupExplosion (varz.c) and of their update in
+// JE_main's level loop (tyrian2.c).
 
 #include "sim.hpp"
 
@@ -78,6 +79,38 @@ void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, JE_integer
     e.deltaY = delta_y;
     return;
   }
+}
+
+VisibleExplosions update_explosions(Explosions& explosions) {
+  VisibleExplosions visible;
+  for (int j = 0; j < MAX_EXPLOSIONS; j++) {
+    Explosion& e = explosions.slots[j];
+    if (e.ttl == 0) {
+      continue;
+    }
+
+    if (!e.fixedPosition) {
+      e.sprite++;
+      e.y += explosions.move;
+    }
+    else if (e.followPlayer) {
+      e.x += explosions.follow_x;
+      e.y += explosions.follow_y;
+    }
+    e.y += e.deltaY;
+
+    if (e.y > 200 - 14) {
+      e.ttl = 0;
+      continue;
+    }
+
+    visible.slots[j] = true;
+    e.ttl--;
+    if (e.ttl == 0) {
+      visible.ended.push_back({j, e.x, e.y, e.sprite});
+    }
+  }
+  return visible;
 }
 
 }  // namespace tyrx::sim

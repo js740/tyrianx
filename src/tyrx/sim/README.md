@@ -21,12 +21,15 @@ that each member has exactly one global.
 
 ## Ports
 
-Each port here takes the state it works on explicitly: `setup_explosion`, the
-port of `JE_setupExplosion` and the only one so far, takes the explosion slots
-it fills in. The level tick's ports in `../port/` work on the C globals and on
-the `State`, with the C code's names, so that they can be compared with it
-line by line. As state moves into `State`, the code that uses it moves from
-`../port/` to `sim/`, and the shadow tick checks it there as before.
+Each port here takes the state it works on explicitly. So far there are the
+explosions (`explosion.cpp`): `setup_explosion`, the port of
+`JE_setupExplosion`, takes the explosion slots it fills in, and
+`update_explosions`, the explosions' update in the level loop, moves the
+`Explosions` and returns the ones visible in the tick for its drawing. The
+level tick's ports in `../port/` work on the C globals and on the `State`,
+with the C code's names, so that they can be compared with it line by line.
+As state moves into `State`, the code that uses it moves from `../port/` to
+`sim/`, and the shadow tick checks it there as before.
 
 A port in `sim/` can also be checked on its own, call by call, with `TYRX_DIFF`
 (`../check/README.md`).

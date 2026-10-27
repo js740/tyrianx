@@ -30,6 +30,7 @@
 #pragma once
 
 #include "../gold/api.hpp"
+#include "../sim/sim.hpp"
 
 #include <array>
 #include <bitset>
@@ -199,15 +200,9 @@ struct EnemyShotsDrawn {  // drawn shots stay in their slots for the rest of the
   std::bitset<ENEMY_SHOT_MAX> drawn;
 };
 
-struct ExplosionDrawn {  // one that ended, whose slot a new explosion may take
-  int j;
-  JE_integer x, y;
-  JE_word sprite;
-};
 struct ExplosionsDrawn {
   SDL_Surface *screen;
-  std::bitset<MAX_EXPLOSIONS> drawn;
-  std::vector<ExplosionDrawn> ended;
+  sim::VisibleExplosions visible;
 };
 
 struct DebugDrawn {
