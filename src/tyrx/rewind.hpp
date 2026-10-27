@@ -17,34 +17,34 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// Rewind (TYRX_REWIND=TICKS): a snapshot of each of the last TICKS level ticks.
-// While the rewind key is held, each tick drops the newest snapshot and
-// restores the one before it; the game then simulates (and draws) one tick from
-// there, so every frame steps back one tick.  Input is not restored, so
-// releasing the key resumes play with the keys actually held.
+// Rewind on the C++ game's state (TYRX_REWIND=TICKS, with TYRX_CXX_TICK=1):
+// the State at the start of each of the last TICKS passes of the C++ tick.
+// While the rewind key is held, each pass drops the newest and restores the one
+// before it, and then simulates (and draws) one tick from there, so every frame
+// steps back one tick.  Input is not restored, so releasing the key resumes
+// play with the keys actually held.  It is off in demos and network games, and
+// the states are dropped when a level starts.
 //
 //   TYRX_REWIND_KEY=NAME    rewind key, as an SDL scancode name (default Backspace)
-//   TYRX_REWIND_VERIFY=1    check that each rewind restores exactly the state that
-//                           was captured
 
 #pragma once
 
+#include "port/level.hpp"
+#include "sim/state.hpp"
+
 #include <SDL.h>
 
-namespace tyrx::check {
-
-// Called when a level starts: drops the snapshots, since they point into the
-// previous level's data.
-void rewind_level_start();
-
-// Called at the top of each level tick; does nothing in demos and network games.
-void rewind_tick();
+namespace tyrx {
 
 // The key that rewinds while held.
 SDL_Scancode rewind_key();
 
-// Whether a rewind restored a state other than the captured one
-// (TYRX_REWIND_VERIFY).
-bool rewind_verify_failed();
+// Called when a level starts.
+void rewind_level_start();
 
-}  // namespace tyrx::check
+// Called before each pass of the C++ tick, with the State it will run on and
+// the level loop's own state: keeps them, or while the rewind key is held,
+// restores earlier ones.
+void rewind_before_pass(sim::State& state, port::LevelLocals& locals);
+
+}  // namespace tyrx

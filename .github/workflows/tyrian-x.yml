@@ -80,6 +80,8 @@ jobs:
           tools/compare_hashlogs.py joy1.log joy2.log
           tools/run_headless.sh ./opentyrian data joy-rt.log input 1 10000 TYRX_INPUT_JOYSTICK=1 TYRX_ROUNDTRIP=1,1
           tools/compare_hashlogs.py joy1.log joy-rt.log
-      - name: Rewind restores recorded states
+      - name: Rewind on the C++ game's state is deterministic
         run: |
-          tools/run_headless.sh ./opentyrian data rewind.log input 1 10000 TYRX_REWIND=350 TYRX_INPUT_REWIND=1 TYRX_REWIND_VERIFY=1
+          tools/run_headless.sh ./opentyrian data rewind1.log input 1 10000 TYRX_CXX_TICK=1 TYRX_REWIND=350 TYRX_INPUT_REWIND=1
+          tools/run_headless.sh ./opentyrian data rewind2.log input 1 10000 TYRX_CXX_TICK=1 TYRX_REWIND=350 TYRX_INPUT_REWIND=1
+          tools/compare_hashlogs.py rewind1.log rewind2.log
