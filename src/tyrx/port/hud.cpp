@@ -279,6 +279,8 @@ void hud_draw(hud::Draw const& draw) {
 // The bars follow the most damaged enemy of their link group, and flash after
 // a hit; the drawing gets where they are and how they look.
 void boss_bar_tick() {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
   for (unsigned b = 0; b < COUNTOF(boss_bar); b++) {
     if (boss_bar[b].link_num == 0) {
       continue;

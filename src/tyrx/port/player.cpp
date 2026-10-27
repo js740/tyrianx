@@ -39,6 +39,8 @@ namespace {
 
 // Port of JE_specialComplete.
 void special_complete(JE_byte playerNum, JE_byte specialType) {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
   auto& enemyShot = state().enemy_shots.slots;
   auto& enemyShotAvail = state().enemy_shots.available;
   nextSpecialWait = 0;
@@ -1648,6 +1650,8 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
 
 // Port of JE_playerCollide.
 void player_collide(Player *this_player, JE_byte playerNum_) {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
   auto& shotAvail = state().player_shots.ttl;
   char tempStr[256];
 

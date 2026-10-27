@@ -135,6 +135,7 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& enemyOnScreen = state().enemies.on_screen;
   unsigned *const old_weapon_bar = level_locals().old_weapon_bar;
 
   if (endLevel) {
@@ -334,6 +335,7 @@ void backgrounds_under_tick() {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under_tick() {
+  auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   int lastEnemyOnScreen;
 
@@ -426,6 +428,9 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& enemy = state().enemies.slots;
+  auto& enemyAvail = state().enemies.status;
+  auto& enemyKilled = state().enemies.killed;
   auto& playerShotData = state().player_shots.slots;
   auto& shotAvail = state().player_shots.ttl;
   DrawRecord& r = draw_record();
@@ -744,6 +749,7 @@ void players_tick() {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
+  auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   auto& enemyShot = state().enemy_shots.slots;
   auto& enemyShotAvail = state().enemy_shots.available;
@@ -882,6 +888,7 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& enemy = state().enemies.slots;
   DrawRecord& r = draw_record();
 
   // -----------------------BACKGROUNDS------------------------
@@ -954,6 +961,7 @@ void warning_tick() {
 
 // The sound routine, and the return event.
 void sound_tick() {
+  auto& enemyOnScreen = state().enemies.on_screen;
   // =================================
   // =======The Sound Routine=========
   // =================================
@@ -990,6 +998,7 @@ void sound_tick() {
 
 // The debug display, the bonus message, the speed mode and the level timer.
 void texts_tick() {
+  auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   char buffer[256];
 
@@ -1167,6 +1176,7 @@ bool game_over_and_input_tick() {
 }
 
 LevelPass simulate(bool& frame) {
+  auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
   r = DrawRecord{};
 

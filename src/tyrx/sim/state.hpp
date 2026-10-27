@@ -53,6 +53,13 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct Enemies {
+  std::array<JE_SingleEnemyType, 100> slots;
+  std::array<JE_byte, 100> status;  // 1 for a free slot, 0 for an enemy, 2 for one without armor
+  JE_word on_screen;                // how many were updated in the tick
+  JE_word total, killed;            // for the destruction ratio
+};
+
 struct PlayerShots {
   std::array<PlayerShotDataType, MAX_PWEAPON + 1> slots;
   std::array<JE_byte, MAX_PWEAPON> ttl;  // ticks each shot has left, 0 for a free slot
@@ -68,6 +75,7 @@ struct State {
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  Enemies enemies;
   PlayerShots player_shots;
   EnemyShots enemy_shots;
 };

@@ -44,6 +44,11 @@ void for_each_binding(State& s, F f) {
   f(s.superpixels.last, ::last_superpixel);
   f(s.starfield.stars, ::starfield_stars);
   f(s.starfield.speed, ::starfield_speed);
+  f(s.enemies.slots, ::enemy);
+  f(s.enemies.status, ::enemyAvail);
+  f(s.enemies.on_screen, ::enemyOnScreen);
+  f(s.enemies.total, ::totalEnemy);
+  f(s.enemies.killed, ::enemyKilled);
   f(s.player_shots.slots, ::playerShotData);
   f(s.player_shots.ttl, ::shotAvail);
   f(s.enemy_shots.slots, ::enemyShot);
