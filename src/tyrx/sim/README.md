@@ -13,6 +13,7 @@ the C game, moved into structures, a subsystem at a time. So far it has:
   each tick, and how far the player moved, for those that follow the player.
 - `Superpixels`: sparks that move and fade.
 - `Starfield`: the stars, and how much faster than their own speed they move.
+- `PlayerShots`: the player shots' slots, and how many ticks each has left.
 - `EnemyShots`: the enemy shots' slots, and which are free.
 
 The C++ level tick works on a `State` that the code running it provides

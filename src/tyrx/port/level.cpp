@@ -426,6 +426,8 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& playerShotData = state().player_shots.slots;
+  auto& shotAvail = state().player_shots.ttl;
   DrawRecord& r = draw_record();
 
   // Player Shot Images
