@@ -40,6 +40,7 @@ namespace {
 
 // Port of JE_specialComplete.
 void special_complete(JE_byte playerNum, JE_byte specialType) {
+  auto& superArcadeMode = state().game.super_arcade_mode;
   auto& soundQueue = state().sound.queue;
   auto& nextSpecialWait = state().specials.next_wait;
   auto& spraySpecial = state().specials.spray;
@@ -241,6 +242,7 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
+  auto& superArcadeMode = state().game.super_arcade_mode;
   auto& button = state().input.button;
   auto& fireButtonHeld = state().input.fire_button_held;
   auto& levelFilter = state().display.filter;
@@ -594,6 +596,18 @@ bool play_demo_keys() {
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& onePlayerAction = state().game.one_player_action;
+  auto& galagaMode = state().game.galaga_mode;
+  auto& superArcadeMode = state().game.super_arcade_mode;
+  auto& difficultyLevel = state().game.difficulty_level;
+  auto& playDemo = state().game.play_demo;
+  auto& recordDemo = state().game.record_demo;
+  auto& superWild = state().cheats.super_wild;
+  auto& constantPlay = state().cheats.constant_play;
+  auto& constantDie = state().cheats.constant_die;
+  auto& constantLastX = state().cheats.constant_last_x;
+  auto& episodeNum = state().progress.episode_num;
   auto& button = state().input.button;
   auto& soundQueue = state().sound.queue;
   auto& smoothies = state().display.smoothies;
@@ -1618,6 +1632,8 @@ redo:
 
 // Port of JE_mainGamePlayerFunctions.
 void main_game_player_functions() {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& galagaMode = state().game.galaga_mode;
   auto& portConfigChange = state().display.port_config_change;
   auto& mapXPos = state().map.map_x_pos;
   auto& oldMapXOfs = state().map.old_map_x_ofs;
@@ -1693,6 +1709,8 @@ void main_game_player_functions() {
 
 // Port of JE_playerDamage.
 JE_byte player_damage(JE_byte temp, Player *this_player) {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& youAreCheating = state().cheats.you_are_cheating;
   auto& soundQueue = state().sound.queue;
   auto& tempVolume = state().sound.temp_volume;
   auto& levelEnd = state().ending.countdown;
@@ -1755,6 +1773,11 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
 
 // Port of JE_playerCollide.
 void player_collide(Player *this_player, JE_byte playerNum_) {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& onePlayerAction = state().game.one_player_action;
+  auto& galagaMode = state().game.galaga_mode;
+  auto& superArcadeMode = state().game.super_arcade_mode;
+  auto& cubeMax = state().progress.cube_max;
   auto& soundQueue = state().sound.queue;
   auto& displayTime = state().display.display_time;
   auto& bonusLevel = state().ending.bonus_level;
@@ -2146,6 +2169,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
 
 // Port of JE_SFCodes (mainint.c).
 void sf_codes(JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_, JE_integer mouseY_) {
+  auto& superTyrian = state().game.super_tyrian;
   auto& button = state().input.button;
   auto& SFCurrentCode = state().specials.sf_current_code;
   auto& SFExecuted = state().specials.sf_executed;
@@ -2296,6 +2320,7 @@ void get_ship_info(void) {
 
 // Port of JE_portConfigs (varz.c).
 JE_word port_configs(void) {
+  auto& twoPlayerMode = state().game.two_player_mode;
   auto& player = state().players.slots;
   uint const player_index = twoPlayerMode ? 1 : 0;
   return tempW = weaponPort[player[player_index].items.weapon[REAR_WEAPON].id].opnum;

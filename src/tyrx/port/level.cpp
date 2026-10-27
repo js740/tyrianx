@@ -46,6 +46,7 @@ namespace {
 // polls events after the end-of-level checks, which the simulation has made
 // already.)
 void present_frame() {
+  auto& frameCountMax = state().game.frame_count_max;
   auto& playerEndLevel = state().ending.player_end_level;
   if (!playerEndLevel && !skipStarShowVGA) {
     // Scale the screen before the delay so that it can be presented
@@ -92,6 +93,8 @@ namespace {
 // The start of the tick: the smoothie screen code, background wrapping, and
 // music.
 void tick_start() {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& onePlayerAction = state().game.one_player_action;
   auto& musicFade = state().sound.music_fade;
   auto& tempVolume = state().sound.temp_volume;
   auto& levelSong = state().sound.level_song;
@@ -160,6 +163,9 @@ void tick_start() {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_tick() {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& onePlayerAction = state().game.one_player_action;
+  auto& galagaMode = state().game.galaga_mode;
   auto& soundQueue = state().sound.queue;
   auto& textErase = state().display.text_erase;
   auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
@@ -289,6 +295,8 @@ void hud_tick() {
 
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under_tick() {
+  auto& processorType = state().game.processor_type;
+  auto& wild = state().cheats.wild;
   auto& smoothies = state().display.smoothies;
   auto& smoothie_data = state().display.smoothie_data;
   auto& anySmoothies = state().display.any_smoothies;
@@ -388,6 +396,9 @@ void backgrounds_under_tick() {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under_tick() {
+  auto& processorType = state().game.processor_type;
+  auto& superWild = state().cheats.super_wild;
+  auto& wild = state().cheats.wild;
   auto& soundQueue = state().sound.queue;
   auto& smoothies = state().display.smoothies;
   auto& smoothie_data = state().display.smoothie_data;
@@ -503,6 +514,13 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
+  auto& galagaMode = state().game.galaga_mode;
+  auto& superArcadeMode = state().game.super_arcade_mode;
+  auto& superArcadePowerUp = state().game.super_arcade_power_up;
+  auto& doIced = state().cheats.do_iced;
+  auto& infiniteShot = state().cheats.infinite_shot;
+  auto& globalFlags = state().cheats.global_flags;
+  auto& cubeMax = state().progress.cube_max;
   auto& soundQueue = state().sound.queue;
   auto& boss_bar = state().display.boss_bars;
   auto& enemyContinualDamage = state().level.enemy_continual_damage;
@@ -808,6 +826,7 @@ void player_shots_tick() {
 
 // The players: collisions, then movement and firing.
 void players_tick() {
+  auto& twoPlayerMode = state().game.two_player_mode;
   auto& endLevel = state().ending.end_level;
   auto& firstGameOver = state().ending.first_game_over;
   auto& player = state().players.slots;
@@ -834,6 +853,7 @@ void players_tick() {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
+  auto& twoPlayerMode = state().game.two_player_mode;
   auto& backMove3 = state().map.back_move3;
   auto& oldMapXOfs = state().map.old_map_x_ofs;
   auto& mapX2Ofs = state().map.map_x2_ofs;
@@ -991,6 +1011,10 @@ void explosions_tick() {
 
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning_tick() {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& galagaMode = state().game.galaga_mode;
+  auto& processorType = state().game.processor_type;
+  auto& wild = state().cheats.wild;
   auto& soundQueue = state().sound.queue;
   auto& smoothies = state().display.smoothies;
   auto& warningCol = state().display.warning_col;
@@ -1195,6 +1219,10 @@ void texts_tick() {
 // Returns true if the in-game menu or help opened, which ends the tick
 // without a frame (the C code jumps back to level_loop).
 bool game_over_and_input_tick() {
+  auto& galagaMode = state().game.galaga_mode;
+  auto& playDemo = state().game.play_demo;
+  auto& constantPlay = state().cheats.constant_play;
+  auto& constantDie = state().cheats.constant_die;
   auto& musicFade = state().sound.music_fade;
   auto& reallyEndLevel = state().ending.really_end_level;
   auto& firstGameOver = state().ending.first_game_over;
