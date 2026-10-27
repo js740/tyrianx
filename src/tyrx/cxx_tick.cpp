@@ -49,6 +49,8 @@ class CxxTick final : public port::Runner {
     port::level_locals() = {};
   }
 
+  void c_state_restored() { owned_ = false; }
+
   TyrxPass level_pass() {
     if (isNetworkGame) {
       owned_ = false;
@@ -128,7 +130,7 @@ bool const enabled = [] {
   if (env("TYRX_CXX_TICK") == nullptr) {
     return false;
   }
-  for (char const *check : {"TYRX_SHADOW", "TYRX_DRAWLIST_CHECK", "TYRX_ROUNDTRIP", "TYRX_REWIND"}) {
+  for (char const *check : {"TYRX_SHADOW", "TYRX_DRAWLIST_CHECK", "TYRX_REWIND"}) {
     if (env(check) != nullptr) {
       std::fprintf(stderr, "tyrx: TYRX_CXX_TICK doesn't run with %s\n", check);
       std::exit(EXIT_FAILURE);
@@ -148,6 +150,12 @@ bool cxx_tick_enabled() { return enabled; }
 void cxx_tick_level_start() {
   if (enabled) {
     cxx_tick().level_start();
+  }
+}
+
+void cxx_tick_c_state_restored() {
+  if (enabled) {
+    cxx_tick().c_state_restored();
   }
 }
 

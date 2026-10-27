@@ -256,6 +256,11 @@ tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
 Demos are skipped because their input comes from a file whose read position
 isn't part of the snapshot.
 
+With `TYRX_CXX_TICK=1`, the C++ tick reads its `State` from the C globals that
+a round trip restored, so the round trip also checks that the `State`, the level
+data and the input are all that the C++ tick depends on. The runs above give
+the same hash logs with it as without it.
+
 ## Rewind (prototype)
 
 With `TYRX_REWIND=TICKS`, Tyrian X keeps a snapshot of each of the last TICKS

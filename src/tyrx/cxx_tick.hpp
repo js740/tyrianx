@@ -29,12 +29,16 @@
 
 namespace tyrx {
 
-// Whether TYRX_CXX_TICK is set.  It doesn't run with the checks that run or
-// restore the C code's ticks (TYRX_SHADOW, TYRX_DRAWLIST_CHECK, TYRX_ROUNDTRIP,
-// TYRX_REWIND), nor in network games, whose passes run in C.
+// Whether TYRX_CXX_TICK is set.  It doesn't run with the checks that run the C
+// code's ticks (TYRX_SHADOW, TYRX_DRAWLIST_CHECK) or restore the C state to
+// rewind (TYRX_REWIND), nor in network games, whose passes run in C.
 bool cxx_tick_enabled();
 
 // The level has loaded, before its first tick.
 void cxx_tick_level_start();
+
+// The C globals have been restored to an earlier tick's state (a round trip,
+// TYRX_ROUNDTRIP): the next pass reads the State from them.
+void cxx_tick_c_state_restored();
 
 }  // namespace tyrx

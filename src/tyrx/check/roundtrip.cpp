@@ -19,6 +19,7 @@
 
 #include "roundtrip.hpp"
 
+#include "../cxx_tick.hpp"
 #include "../gold/api.hpp"
 #include "../gold/state.hpp"
 #include "../runtime.hpp"
@@ -118,6 +119,7 @@ std::uint64_t round_trip_begin_tick(std::uint64_t tick) {
       rt.recorded.push_back(gold::block_hashes());
       rt.snapshot.restore();
       input_driver_snapshot_restored();
+      cxx_tick_c_state_restored();
       rt.replaying = true;
       return rt.start_tick;
     }
