@@ -71,6 +71,8 @@ jobs:
         run: |
           tools/run_headless.sh ./opentyrian data rt.log input 1 10000 TYRX_ROUNDTRIP=7,13
           tools/compare_hashlogs.py input1.log rt.log
+          tools/run_headless.sh ./opentyrian data rt-cxx.log input 1 10000 TYRX_ROUNDTRIP=7,13 TYRX_CXX_TICK=1
+          tools/compare_hashlogs.py input1.log rt-cxx.log
       - name: Joystick play is deterministic and survives round trips
         run: |
           tools/run_headless.sh ./opentyrian data joy1.log input 1 10000 TYRX_INPUT_JOYSTICK=1
