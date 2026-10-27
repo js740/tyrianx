@@ -53,11 +53,17 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct EnemyShots {
+  std::array<EnemyShotType, ENEMY_SHOT_MAX> slots;
+  std::array<JE_boolean, ENEMY_SHOT_MAX> available;  // whether each slot is free
+};
+
 struct State {
   Random random;
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  EnemyShots enemy_shots;
 };
 
 }  // namespace tyrx::sim

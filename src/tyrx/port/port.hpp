@@ -51,7 +51,8 @@ inline sim::State& state() { return *state_target(); }
 // that code in port/ can't use them by mistake.
 struct InSimState {};
 inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
-    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed, mt_global;
+    explosionFollowAmountY, superpixels, last_superpixel, starfield_stars, starfield_speed, mt_global,
+    enemyShot, enemyShotAvail;
 
 // The random number generator's state is in the State too.  These hide the C
 // functions, which draw from mt_global.

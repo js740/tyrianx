@@ -39,6 +39,8 @@ namespace {
 
 // Port of JE_specialComplete.
 void special_complete(JE_byte playerNum, JE_byte specialType) {
+  auto& enemyShot = state().enemy_shots.slots;
+  auto& enemyShotAvail = state().enemy_shots.available;
   nextSpecialWait = 0;
   switch (special[specialType].stype) {
     // Weapon

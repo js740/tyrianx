@@ -743,6 +743,8 @@ void players_tick() {
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
   DrawRecord& r = draw_record();
+  auto& enemyShot = state().enemy_shots.slots;
+  auto& enemyShotAvail = state().enemy_shots.available;
   int lastEnemyOnScreen;
 
   // MAIN DRAWING IS STOPPED STARTING HERE
