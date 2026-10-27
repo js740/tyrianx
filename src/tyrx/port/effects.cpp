@@ -17,8 +17,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// Superpixels, explosions and the screen filter (JE_drawSP, JE_doSP and
-// JE_setupExplosionLarge in varz.c, and JE_filterScreen in backgrnd.c).
+// Superpixels and the screen filter (JE_drawSP and JE_doSP in varz.c, and
+// JE_filterScreen in backgrnd.c).
 
 #include "draw.hpp"
 #include "port.hpp"
@@ -81,53 +81,6 @@ void filter_screen_tick() {
 
 void filter_screen_draw(FilterDrawn const& d) {
   draw::JE_filterScreen(d.screen, d.col, d.brightness, filtrationAvail, explosionTransparent);
-}
-
-// Port of JE_setupExplosionLarge (varz.c).
-void setup_explosion_large(JE_boolean enemyGround, JE_byte exploNum, JE_integer x, JE_integer y) {
-  if (y < 0) {
-    return;
-  }
-
-  if (enemyGround) {
-    setup_explosion(x - 6, y - 14, 0, 2, false, false);
-    setup_explosion(x + 6, y - 14, 0, 4, false, false);
-    setup_explosion(x - 6, y, 0, 3, false, false);
-    setup_explosion(x + 6, y, 0, 5, false, false);
-  }
-  else {
-    setup_explosion(x - 6, y - 14, 0, 7, false, false);
-    setup_explosion(x + 6, y - 14, 0, 9, false, false);
-    setup_explosion(x - 6, y, 0, 8, false, false);
-    setup_explosion(x + 6, y, 0, 10, false, false);
-  }
-
-  bool big;
-
-  if (exploNum > 10) {
-    exploNum -= 10;
-    big = true;
-  }
-  else {
-    big = false;
-  }
-
-  if (!exploNum) {
-    return;
-  }
-
-  for (int i = 0; i < MAX_REPEATING_EXPLOSIONS; i++) {
-    if (rep_explosions[i].ttl != 0) {
-      continue;
-    }
-
-    rep_explosions[i].ttl = exploNum;
-    rep_explosions[i].delay = 2;
-    rep_explosions[i].x = x;
-    rep_explosions[i].y = y;
-    rep_explosions[i].big = big;
-    break;
-  }
 }
 
 // Port of JE_doSP (varz.c).

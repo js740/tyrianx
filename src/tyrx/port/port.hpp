@@ -50,7 +50,8 @@ inline sim::State& state() { return *state_target(); }
 // The C globals whose state sim::State holds.  These names hide them here, so
 // that code in port/ can't use them by mistake.
 struct InSimState {};
-inline constexpr InSimState explosions, explodeMove, explosionFollowAmountX, explosionFollowAmountY;
+inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
+    explosionFollowAmountY;
 
 // background.cpp
 void background_1_tick(SDL_Surface *screen, bool clr);  // draw_background_1, or JE_clr256
@@ -68,14 +69,17 @@ void superpixels_tick();  // JE_drawSP
 void superpixels_draw(SuperpixelsDrawn const& d);
 void filter_screen_tick();  // JE_filterScreen(levelFilter, levelBrightness)
 void filter_screen_draw(FilterDrawn const& d);
-void setup_explosion_large(JE_boolean enemyGround, JE_byte exploNum, JE_integer x,
-                           JE_integer y);                                          // JE_setupExplosionLarge
 void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color);  // JE_doSP (superpixels)
 
 // JE_setupExplosion, in sim/explosion.cpp
 inline void setup_explosion(JE_integer x, JE_integer y, JE_integer deltaY, JE_integer type,
                             bool fixedPosition, bool followPlayer) {
   sim::setup_explosion(state().explosions.slots, x, y, deltaY, type, fixedPosition, followPlayer);
+}
+
+// JE_setupExplosionLarge, in sim/explosion.cpp
+inline void setup_explosion_large(JE_boolean enemyGround, JE_byte exploNum, JE_integer x, JE_integer y) {
+  sim::setup_explosion_large(state().explosions, enemyGround, exploNum, x, y);
 }
 
 // enemy.cpp

@@ -17,8 +17,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-// The explosions: ports of JE_setupExplosion (varz.c) and of their update in
-// JE_main's level loop (tyrian2.c).
+// The explosions: ports of JE_setupExplosion and JE_setupExplosionLarge
+// (varz.c), and of the explosions' updates in JE_main's level loop
+// (tyrian2.c).
 
 #include "sim.hpp"
 
@@ -79,6 +80,92 @@ void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, JE_integer
     e.deltaY = delta_y;
     return;
   }
+}
+
+void setup_explosion_large(Explosions& explosions, bool enemy_ground, JE_byte explo_num, JE_integer x,
+                           JE_integer y) {
+  if (y < 0) {
+    return;
+  }
+
+  if (enemy_ground) {
+    setup_explosion(explosions.slots, x - 6, y - 14, 0, 2, false, false);
+    setup_explosion(explosions.slots, x + 6, y - 14, 0, 4, false, false);
+    setup_explosion(explosions.slots, x - 6, y, 0, 3, false, false);
+    setup_explosion(explosions.slots, x + 6, y, 0, 5, false, false);
+  }
+  else {
+    setup_explosion(explosions.slots, x - 6, y - 14, 0, 7, false, false);
+    setup_explosion(explosions.slots, x + 6, y - 14, 0, 9, false, false);
+    setup_explosion(explosions.slots, x - 6, y, 0, 8, false, false);
+    setup_explosion(explosions.slots, x + 6, y, 0, 10, false, false);
+  }
+
+  bool big = explo_num > 10;
+  if (big) {
+    explo_num -= 10;
+  }
+
+  if (!explo_num) {
+    return;
+  }
+
+  for (rep_explosion_type& r : explosions.repeating) {
+    if (r.ttl != 0) {
+      continue;
+    }
+
+    r.ttl = explo_num;
+    r.delay = 2;
+    r.x = x;
+    r.y = y;
+    r.big = big;
+    return;
+  }
+}
+
+bool update_repeating_explosions(Explosions& explosions, MtState& mt, JE_integer back_move,
+                                 std::span<JE_byte, 8> sound_queue) {
+  bool still_exploding = false;
+  for (rep_explosion_type& r : explosions.repeating) {
+    if (r.ttl == 0) {
+      continue;
+    }
+
+    still_exploding = true;
+
+    if (r.delay > 0) {
+      r.delay--;
+      continue;
+    }
+
+    r.y += back_move + 1;
+    JE_integer x = r.x + (mt_rand_r(&mt) % 24) - 12;
+    JE_integer y = r.y + (mt_rand_r(&mt) % 27) - 24;
+
+    if (r.big) {
+      setup_explosion_large(explosions, false, 2, x, y);
+
+      if (r.ttl == 1 || mt_rand_r(&mt) % 5 == 1) {
+        sound_queue[7] = S_EXPLOSION_11;
+      }
+      else {
+        sound_queue[6] = S_EXPLOSION_9;
+      }
+
+      r.delay = 4 + (mt_rand_r(&mt) % 3);
+    }
+    else {
+      setup_explosion(explosions.slots, x, y, 0, 1, false, false);
+
+      sound_queue[5] = S_EXPLOSION_4;
+
+      r.delay = 3;
+    }
+
+    r.ttl--;
+  }
+  return still_exploding;
 }
 
 VisibleExplosions update_explosions(Explosions& explosions) {

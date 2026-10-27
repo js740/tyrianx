@@ -6,10 +6,11 @@ compared with it line by line. The shadow tick (`../check/README.md`) checks
 them against the C code tick by tick. As state moves out of the globals into
 structures, the code that uses it moves to `../sim/`.
 
-The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the
-code running the tick provides (`state()`): the explosions, whose update has
-moved to `../sim/` as well. `port.hpp` hides the C globals that held it from
-code here, so using one by mistake doesn't compile.
+The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the code
+running the tick provides (`state()`): the explosions and the repeating
+explosions, whose setup and update have moved to `../sim/` as well. `port.hpp`
+hides the C globals that held it from code here, so using one by mistake doesn't
+compile.
 
 ## The level loop
 

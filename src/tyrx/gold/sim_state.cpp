@@ -35,6 +35,7 @@ namespace {
 template <typename State, typename F>
 void for_each_binding(State& s, F f) {
   f(s.explosions.slots, ::explosions);
+  f(s.explosions.repeating, ::rep_explosions);
   f(s.explosions.follow_x, ::explosionFollowAmountX);
   f(s.explosions.follow_y, ::explosionFollowAmountY);
   f(s.explosions.move, ::explodeMove);
