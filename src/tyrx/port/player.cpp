@@ -239,6 +239,9 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
+  auto& levelFilter = state().display.filter;
+  auto& levelBrightness = state().display.brightness;
+  auto& filterActive = state().display.filter_active;
   auto& specialWait = state().specials.wait;
   auto& nextSpecialWait = state().specials.next_wait;
   auto& SFExecuted = state().specials.sf_executed;
@@ -584,6 +587,9 @@ bool play_demo_keys() {
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
+  auto& smoothies = state().display.smoothies;
+  auto& portConfigChange = state().display.port_config_change;
+  auto& portConfigDone = state().display.port_config_done;
   auto& mapX2Ofs = state().map.map_x2_ofs;
   auto& background2 = state().map.background2;
   auto& endLevel = state().ending.end_level;
@@ -1603,6 +1609,7 @@ redo:
 
 // Port of JE_mainGamePlayerFunctions.
 void main_game_player_functions() {
+  auto& portConfigChange = state().display.port_config_change;
   auto& mapXPos = state().map.map_x_pos;
   auto& oldMapXOfs = state().map.old_map_x_ofs;
   auto& mapXOfs = state().map.map_x_ofs;
@@ -1737,6 +1744,7 @@ JE_byte player_damage(JE_byte temp, Player *this_player) {
 
 // Port of JE_playerCollide.
 void player_collide(Player *this_player, JE_byte playerNum_) {
+  auto& displayTime = state().display.display_time;
   auto& bonusLevel = state().ending.bonus_level;
   auto& nextLevel = state().ending.next_level;
   auto& shotRepeat = state().players.shot_repeat;

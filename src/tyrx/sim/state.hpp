@@ -53,6 +53,37 @@ struct Random {
   MtState mt;  // the random number generator that the game logic draws from
 };
 
+struct Display {
+  // The screen filter, and its fades.
+  JE_shortint filter, filter_new, brightness, brightness_chg;
+  JE_boolean filtration_avail, filter_active, filter_fade, filter_fade_start;
+  JE_boolean explosion_transparent;
+
+  // The smoothies, effects on parts of the screen.
+  std::array<JE_boolean, 9> smoothies;
+  std::array<JE_byte, 9> smoothie_data;
+  JE_boolean any_smoothies;
+
+  // Flashes, warnings and texts.
+  JE_byte flash;
+  JE_shortint flash_change;
+  JE_byte warning_col;
+  JE_shortint warning_col_change;
+  JE_boolean warning_red;
+  JE_byte warning_sound_delay;
+  JE_boolean level_warning_display;
+  JE_byte level_warning_lines;
+  std::array<std::array<char, 61>, 10> level_warning_text;
+  JE_word text_erase;
+  JE_byte display_time;
+  JE_word neat;
+  JE_byte star_show_vga_special_code;
+  JE_boolean star_active;
+
+  std::array<boss_bar_t, 2> boss_bars;
+  JE_boolean port_config_change, port_config_done;
+};
+
 struct Map {
   // Where each of the three map layers is, and how far it moved in the tick.
   JE_word back_pos, back_pos2, back_pos3;
@@ -182,6 +213,7 @@ struct State {
   Explosions explosions;
   Superpixels superpixels;
   Starfield starfield;
+  Display display;
   Map map;
   Level level;
   Ending ending;

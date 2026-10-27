@@ -103,6 +103,7 @@ void draw_port_config_buttons_tick() {
 // JE_drawTextWindow: a message in the message bar, which the HUD erases when
 // textErase runs out.
 void draw_text_window_tick(char const *text) {
+  auto& textErase = state().display.text_erase;
   bool const erase = textErase > 0;  // erase current text
 
   textErase = 100;
@@ -288,6 +289,7 @@ void hud_draw(hud::Draw const& draw) {
 // The bars follow the most damaged enemy of their link group, and flash after
 // a hit; the drawing gets where they are and how they look.
 void boss_bar_tick() {
+  auto& boss_bar = state().display.boss_bars;
   auto& levelTimer = state().level.timer;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
