@@ -33,6 +33,12 @@ namespace tyrx::port {
 
 // Port of JE_eventSystem.
 void event_system() {
+  auto& endLevel = state().ending.end_level;
+  auto& reallyEndLevel = state().ending.really_end_level;
+  auto& readyToEndLevel = state().ending.ready_to_end_level;
+  auto& levelEnd = state().ending.countdown;
+  auto& firstGameOver = state().ending.first_game_over;
+  auto& allPlayersGone = state().ending.all_players_gone;
   auto& eventRec = state().level.events;
   auto& maxEvent = state().level.max_event;
   auto& eventLoc = state().level.event_loc;

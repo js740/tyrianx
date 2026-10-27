@@ -16,6 +16,7 @@ the C game, moved into structures, a subsystem at a time. So far it has:
 - `Level`: the level's events and where the level is in them, and what events
   set: random enemies, the level timer, Galaga mode's settings, and where the
   map screen goes next.
+- `Ending`: how the level ends, game over, and which level comes next.
 - `Players`: the players, their shots' timing, the generator's power and the
   shield's recharging, the charge weapon, two-player linking, the sidekicks'
   attachment and the ships' sprites.
