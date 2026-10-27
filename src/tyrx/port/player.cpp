@@ -29,6 +29,7 @@
 #include "draw.hpp"
 #include "port.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -240,6 +241,8 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
 
 // Port of JE_doSpecialShot.
 void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& drawn) {
+  auto& button = state().input.button;
+  auto& fireButtonHeld = state().input.fire_button_held;
   auto& levelFilter = state().display.filter;
   auto& levelBrightness = state().display.brightness;
   auto& filterActive = state().display.filter_active;
@@ -573,21 +576,25 @@ void player_draw(PlayerDrawn const& d) {
 namespace {
 
 // playDemoKeys (demo.c), which reads the demo's input, whose state is static
-// there, and moves player 1 in the C global: it gets the State's player 1's
-// position there.
+// there, and moves player 1 and sets the buttons in the C globals: it gets the
+// State's player 1's position there, and the State gets the result.
 bool play_demo_keys() {
   auto& player = state().players.slots;
+  auto& button = state().input.button;
   ::player[0].x = player[0].x;
   ::player[0].y = player[0].y;
+  std::ranges::copy(button, ::button);
   bool const more = playDemoKeys();
   player[0].x = ::player[0].x;
   player[0].y = ::player[0].y;
+  std::ranges::copy(::button, button.begin());
   return more;
 }
 
 // Port of JE_playerMovement.
 void player_movement(Player *this_player, JE_byte inputDevice, JE_byte playerNum_, JE_word shipGr_,
                      Sprite2_array *shipGrPtr_, JE_word *mouseX_, JE_word *mouseY_) {
+  auto& button = state().input.button;
   auto& soundQueue = state().sound.queue;
   auto& smoothies = state().display.smoothies;
   auto& portConfigChange = state().display.port_config_change;
@@ -2139,6 +2146,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
 
 // Port of JE_SFCodes (mainint.c).
 void sf_codes(JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_, JE_integer mouseY_) {
+  auto& button = state().input.button;
   auto& SFCurrentCode = state().specials.sf_current_code;
   auto& SFExecuted = state().specials.sf_executed;
   auto& player = state().players.slots;
