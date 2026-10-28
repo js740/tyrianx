@@ -72,6 +72,11 @@ inline constexpr InSimState playerShotData, shotAvail;
 inline constexpr InSimState enemyShot, enemyShotAvail;
 inline constexpr InSimState temp2;
 
+// The C structs that sim/state.hpp's C++ structs stand for
+// (../gold/mirror.hpp).
+inline constexpr InSimState JE_EventRecType, Explosion, rep_explosion_type, superpixel_type, StarfieldStar,
+    boss_bar_t, EnemyShotType, PlayerShotDataType;
+
 // mtrand.h's functions, which draw from mt_global.
 inline constexpr InSimState mt_rand, mt_rand_1, mt_rand_lt1;
 

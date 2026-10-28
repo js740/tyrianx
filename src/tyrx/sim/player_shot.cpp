@@ -58,113 +58,113 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, uint8_t& player_num,
   auto& enemies = state.enemies;
   auto& ttl = state.player_shots.ttl;
 
-  PlayerShotDataType& shot = state.player_shots.slots[shot_id];
+  PlayerShot& shot = state.player_shots.slots[shot_id];
 
   ttl[shot_id]--;
   if (shot_id == MAX_PWEAPON - 1) {
     return true;
   }
 
-  auto const player = [&]() -> Player const& { return players[shot.playerNumber - 1]; };
+  auto const player = [&]() -> Player const& { return players[shot.player_num - 1]; };
 
-  shot.shotXM += shot.shotXC;
-  shot.shotX += shot.shotXM;
-  int16_t const tmp_shot_xm = shot.shotXM;
+  shot.x_speed += shot.x_accel;
+  shot.x += shot.x_speed;
+  int16_t const tmp_shot_xm = shot.x_speed;
 
-  if (shot.shotXM > 100) {
-    if (shot.shotXM == 101) {
-      shot.shotX -= 101;
-      shot.shotX += player().delta_x_shot_move;
-      shot.shotY += player().delta_y_shot_move;
+  if (shot.x_speed > 100) {
+    if (shot.x_speed == 101) {
+      shot.x -= 101;
+      shot.x += player().delta_x_shot_move;
+      shot.y += player().delta_y_shot_move;
     }
     else {
-      shot.shotX -= 120;
-      shot.shotX += player().delta_x_shot_move;
+      shot.x -= 120;
+      shot.x += player().delta_x_shot_move;
     }
   }
 
-  shot.shotYM += shot.shotYC;
-  shot.shotY += shot.shotYM;
+  shot.y_speed += shot.y_accel;
+  shot.y += shot.y_speed;
 
-  if (shot.shotYM > 100) {
-    shot.shotY -= 120;
-    shot.shotY += player().delta_y_shot_move;
+  if (shot.y_speed > 100) {
+    shot.y -= 120;
+    shot.y += player().delta_y_shot_move;
   }
 
-  if (shot.shotComplicated != 0) {
-    shot.shotDevX += shot.shotDirX;
-    shot.shotX += shot.shotDevX;
+  if (shot.circling != 0) {
+    shot.x_circle += shot.x_circle_dir;
+    shot.x += shot.x_circle;
 
-    if (abs(shot.shotDevX) == shot.shotCirSizeX) {
-      shot.shotDirX = -shot.shotDirX;
+    if (abs(shot.x_circle) == shot.x_circle_size) {
+      shot.x_circle_dir = -shot.x_circle_dir;
     }
 
-    shot.shotDevY += shot.shotDirY;
-    shot.shotY += shot.shotDevY;
+    shot.y_circle += shot.y_circle_dir;
+    shot.y += shot.y_circle;
 
-    if (abs(shot.shotDevY) == shot.shotCirSizeY) {
-      shot.shotDirY = -shot.shotDirY;
+    if (abs(shot.y_circle) == shot.y_circle_size) {
+      shot.y_circle_dir = -shot.y_circle_dir;
     }
 
     // Double Speed Circle Shots - add a second copy of above loop
   }
 
-  moved.x = shot.shotX;
-  moved.y = shot.shotY;
+  moved.x = shot.x;
+  moved.y = shot.y;
 
-  if (shot.shotX < -34 || shot.shotX > 290 || shot.shotY < -15 || shot.shotY > 190) {
+  if (shot.x < -34 || shot.x > 290 || shot.y < -15 || shot.y > 190) {
     ttl[shot_id] = 0;
     return false;
   }
 
-  if (shot.shotTrail != 255) {
-    if (shot.shotTrail == 98) {
-      setup_explosion(state.explosions.slots, shot.shotX - shot.shotXM, shot.shotY - shot.shotYM, 0,
-                      shot.shotTrail, false, false);
+  if (shot.trail != 255) {
+    if (shot.trail == 98) {
+      setup_explosion(state.explosions.slots, shot.x - shot.x_speed, shot.y - shot.y_speed, 0, shot.trail,
+                      false, false);
     }
     else {
-      setup_explosion(state.explosions.slots, shot.shotX, shot.shotY, 0, shot.shotTrail, false, false);
+      setup_explosion(state.explosions.slots, shot.x, shot.y, 0, shot.trail, false, false);
     }
   }
 
-  if (shot.aimAtEnemy != 0 && --shot.aimDelay == 0) {
-    shot.aimDelay = shot.aimDelayMax;
+  if (shot.aim_at_enemy != 0 && --shot.aim_delay == 0) {
+    shot.aim_delay = shot.aim_delay_max;
 
-    if (enemies.status[shot.aimAtEnemy - 1] != 1) {
-      JE_SingleEnemyType const& target = enemies.slots[shot.aimAtEnemy - 1];
-      if (shot.shotX < target.ex) {
-        shot.shotXM++;
+    if (enemies.status[shot.aim_at_enemy - 1] != 1) {
+      JE_SingleEnemyType const& target = enemies.slots[shot.aim_at_enemy - 1];
+      if (shot.x < target.ex) {
+        shot.x_speed++;
       }
       else {
-        shot.shotXM--;
+        shot.x_speed--;
       }
 
-      if (shot.shotY < target.ey) {
-        shot.shotYM++;
+      if (shot.y < target.ey) {
+        shot.y_speed++;
       }
       else {
-        shot.shotYM--;
+        shot.y_speed--;
       }
     }
     else {
-      if (shot.shotXM > 0) {
-        shot.shotXM++;
+      if (shot.x_speed > 0) {
+        shot.x_speed++;
       }
       else {
-        shot.shotXM--;
+        shot.x_speed--;
       }
     }
   }
 
-  uint16_t sprite_frame = shot.shotGr + shot.shotAni;
-  if (++shot.shotAni == shot.shotAniMax) {
-    shot.shotAni = 0;
+  uint16_t sprite_frame = shot.sprite + shot.frame;
+  if (++shot.frame == shot.frames) {
+    shot.frame = 0;
   }
 
-  moved.damage = shot.shotDmg;
-  state.scratch.temp2 = shot.shotBlastFilter;
-  moved.chain = shot.chainReaction;
-  player_num = shot.playerNumber;
+  moved.damage = shot.damage;
+  state.scratch.temp2 = shot.blast_filter;
+  moved.chain = shot.chain_reaction;
+  player_num = shot.player_num;
 
   moved.is_special = sprite_frame > 60000;
 
@@ -245,7 +245,7 @@ void hit_enemies(State& state, int z, MovedShot& shot, uint8_t player_num) {
       return;
     }
 
-    state.player_shots.slots[z].shotDmg -= armorleft;
+    state.player_shots.slots[z].damage -= armorleft;
   }
 }
 
@@ -320,79 +320,79 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
     }
     int const pos = multi_pos - 1;
 
-    PlayerShotDataType& shot = state.player_shots.slots[shot_id];
-    shot.chainReaction = 0;
+    PlayerShot& shot = state.player_shots.slots[shot_id];
+    shot.chain_reaction = 0;
 
-    shot.playerNumber = player_num;
+    shot.player_num = player_num;
 
-    shot.shotAni = 0;
+    shot.frame = 0;
 
-    shot.shotComplicated = weapon.circlesize != 0;
+    shot.circling = weapon.circlesize != 0;
 
     if (weapon.circlesize == 0) {
-      shot.shotDevX = 0;
-      shot.shotDirX = 0;
-      shot.shotDevY = 0;
-      shot.shotDirY = 0;
-      shot.shotCirSizeX = 0;
-      shot.shotCirSizeY = 0;
+      shot.x_circle = 0;
+      shot.x_circle_dir = 0;
+      shot.y_circle = 0;
+      shot.y_circle_dir = 0;
+      shot.x_circle_size = 0;
+      shot.y_circle_size = 0;
     }
     else {
       uint8_t circsize = weapon.circlesize;
 
       if (circsize > 19) {
         uint8_t circsize_mod20 = circsize % 20;
-        shot.shotCirSizeX = circsize_mod20;
-        shot.shotDevX = circsize_mod20 >> 1;
+        shot.x_circle_size = circsize_mod20;
+        shot.x_circle = circsize_mod20 >> 1;
 
         circsize = circsize / 20;
-        shot.shotCirSizeY = circsize;
-        shot.shotDevY = circsize >> 1;
+        shot.y_circle_size = circsize;
+        shot.y_circle = circsize >> 1;
       }
       else {
-        shot.shotCirSizeX = circsize;
-        shot.shotCirSizeY = circsize;
-        shot.shotDevX = circsize >> 1;
-        shot.shotDevY = circsize >> 1;
+        shot.x_circle_size = circsize;
+        shot.y_circle_size = circsize;
+        shot.x_circle = circsize >> 1;
+        shot.y_circle = circsize >> 1;
       }
-      shot.shotDirX = 1;
-      shot.shotDirY = -1;
+      shot.x_circle_dir = 1;
+      shot.y_circle_dir = -1;
     }
 
-    shot.shotTrail = weapon.trail;
+    shot.trail = weapon.trail;
 
     if (weapon.attack[pos] > 99 && weapon.attack[pos] < 250) {
-      shot.chainReaction = weapon.attack[pos] - 100;
-      shot.shotDmg = 1;
+      shot.chain_reaction = weapon.attack[pos] - 100;
+      shot.damage = 1;
     }
     else {
-      shot.shotDmg = weapon.attack[pos];
+      shot.damage = weapon.attack[pos];
     }
 
-    shot.shotBlastFilter = weapon.shipblastfilter;
+    shot.blast_filter = weapon.shipblastfilter;
 
     int16_t tmp_by = weapon.by[pos];
 
     // Note: Only front selection used for player shots...
 
-    shot.shotX = px + weapon.bx[pos];
+    shot.x = px + weapon.bx[pos];
 
-    shot.shotY = py + tmp_by;
-    shot.shotYC = -weapon.acceleration;
-    shot.shotXC = weapon.accelerationx;
+    shot.y = py + tmp_by;
+    shot.y_accel = -weapon.acceleration;
+    shot.x_accel = weapon.accelerationx;
 
-    shot.shotXM = weapon.sx[pos];
+    shot.x_speed = weapon.sx[pos];
 
     // Not sure what this field does exactly.
     uint8_t del = weapon.del[pos];
 
     if (del == 121) {
-      shot.shotTrail = 0;
+      shot.trail = 0;
       del = 255;
     }
 
-    shot.shotGr = weapon.sg[pos];
-    if (shot.shotGr == 0) {
+    shot.sprite = weapon.sg[pos];
+    if (shot.sprite == 0) {
       ttl[shot_id] = 0;
     }
     else {
@@ -400,10 +400,10 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
     }
 
     if (del > 100 && del < 120) {
-      shot.shotAniMax = (del - 100 + 1);
+      shot.frames = (del - 100 + 1);
     }
     else {
-      shot.shotAniMax = weapon.weapani + 1;
+      shot.frames = weapon.weapani + 1;
     }
 
     if (del == 99 || del == 98) {
@@ -414,10 +414,10 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
       else if (tmp_by > 5) {
         tmp_by = 5;
       }
-      shot.shotXM += tmp_by;
+      shot.x_speed += tmp_by;
     }
 
-    auto const player = [&]() -> Player const& { return players.slots[shot.playerNumber - 1]; };
+    auto const player = [&]() -> Player const& { return players.slots[shot.player_num - 1]; };
 
     if (del == 99 || del == 100) {
       tmp_by = py - mouse_y - weapon.sy[pos];
@@ -427,25 +427,25 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
       else if (tmp_by > 4) {
         tmp_by = 4;
       }
-      shot.shotYM = tmp_by;
+      shot.y_speed = tmp_by;
     }
     else if (weapon.sy[pos] == 98) {
-      shot.shotYM = 0;
-      shot.shotYC = -1;
+      shot.y_speed = 0;
+      shot.y_accel = -1;
     }
     else if (weapon.sy[pos] > 100) {
-      shot.shotYM = weapon.sy[pos];
-      shot.shotY -= player().delta_y_shot_move;
+      shot.y_speed = weapon.sy[pos];
+      shot.y -= player().delta_y_shot_move;
     }
     else {
-      shot.shotYM = -weapon.sy[pos];
+      shot.y_speed = -weapon.sy[pos];
     }
 
     if (weapon.sx[pos] > 100) {
-      shot.shotXM = weapon.sx[pos];
-      shot.shotX -= player().delta_x_shot_move;
-      if (shot.shotXM == 101) {
-        shot.shotY -= player().delta_y_shot_move;
+      shot.x_speed = weapon.sx[pos];
+      shot.x -= player().delta_x_shot_move;
+      if (shot.x_speed == 101) {
+        shot.y -= player().delta_y_shot_move;
       }
     }
 
@@ -459,18 +459,18 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
           continue;
         }
 
-        uint16_t const dist = abs(enemies.slots[i].ex - shot.shotX) + abs(enemies.slots[i].ey - shot.shotY);
+        uint16_t const dist = abs(enemies.slots[i].ex - shot.x) + abs(enemies.slots[i].ey - shot.y);
         if (dist < best_dist) {
           best_dist = dist;
           closest_enemy = i + 1;
         }
       }
-      shot.aimAtEnemy = closest_enemy;
-      shot.aimDelay = 5;
-      shot.aimDelayMax = weapon.aim - 5;
+      shot.aim_at_enemy = closest_enemy;
+      shot.aim_delay = 5;
+      shot.aim_delay_max = weapon.aim - 5;
     }
     else {
-      shot.aimAtEnemy = 0;
+      shot.aim_at_enemy = 0;
     }
 
     players.shot_repeat[bay_i] = weapon.shotrepeat;
@@ -479,9 +479,9 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
   return shot_id;
 }
 
-void set_player_shot_direction(PlayerShotDataType& shot, unsigned weapon_id, float direction) {
-  shot.shotXM = -roundf(sinf(direction) * shot.shotYM);
-  shot.shotYM = -roundf(cosf(direction) * shot.shotYM);
+void set_player_shot_direction(PlayerShot& shot, unsigned weapon_id, float direction) {
+  shot.x_speed = -roundf(sinf(direction) * shot.y_speed);
+  shot.y_speed = -roundf(cosf(direction) * shot.y_speed);
 
   // Some weapons have sprites for each direction, use those.
   int rounded_dir;
@@ -491,25 +491,25 @@ void set_player_shot_direction(PlayerShotDataType& shot, unsigned weapon_id, flo
     case 32:
     case 10:
       rounded_dir = roundf(direction * (16 / (2 * M_PI)));  // 16 directions
-      shot.shotGr = link_multi_gr[rounded_dir];
+      shot.sprite = link_multi_gr[rounded_dir];
       break;
     case 28:
     case 33:
     case 11:
       rounded_dir = roundf(direction * (16 / (2 * M_PI)));  // 16 directions
-      shot.shotGr = link_sonic_gr[rounded_dir];
+      shot.sprite = link_sonic_gr[rounded_dir];
       break;
     case 30:
     case 35:
     case 14:
       if (direction > M_PI_2 && direction < M_PI + M_PI_2) {
-        shot.shotYC = 1;
+        shot.y_accel = 1;
       }
       break;
     case 38:
     case 22:
       rounded_dir = roundf(direction * (16 / (2 * M_PI)));  // 16 directions
-      shot.shotGr = link_mult2_gr[rounded_dir];
+      shot.sprite = link_mult2_gr[rounded_dir];
       break;
   }
 }

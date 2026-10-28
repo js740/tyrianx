@@ -134,38 +134,38 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, i
       state.scratch.temp2 = 4;
     }
 
-    EnemyShotType& shot = shots.slots[b];
-    shot.sx = x + weapon.bx[pos] + layer.map_x_ofs;
-    shot.sy = y + weapon.by[pos];
-    shot.sdmg = weapon.attack[pos];
-    shot.tx = weapon.tx;
-    shot.ty = weapon.ty;
+    EnemyShot& shot = shots.slots[b];
+    shot.x = x + weapon.bx[pos] + layer.map_x_ofs;
+    shot.y = y + weapon.by[pos];
+    shot.damage = weapon.attack[pos];
+    shot.x_track = weapon.tx;
+    shot.y_track = weapon.ty;
     shot.duration = weapon.del[pos];
-    shot.animate = 0;
-    shot.animax = weapon.weapani;
+    shot.frame = 0;
+    shot.frames = weapon.weapani;
 
-    shot.sgr = weapon.sg[pos];
+    shot.sprite = weapon.sg[pos];
     switch (j) {
       case 1:
-        shot.syc = weapon.acceleration;
-        shot.sxc = weapon.accelerationx;
+        shot.y_accel = weapon.acceleration;
+        shot.x_accel = weapon.accelerationx;
 
-        shot.sxm = weapon.sx[pos];
-        shot.sym = weapon.sy[pos];
+        shot.x_speed = weapon.sx[pos];
+        shot.y_speed = weapon.sy[pos];
         break;
       case 3:
-        shot.sxc = -weapon.acceleration;
-        shot.syc = weapon.accelerationx;
+        shot.x_accel = -weapon.acceleration;
+        shot.y_accel = weapon.accelerationx;
 
-        shot.sxm = -weapon.sy[pos];
-        shot.sym = -weapon.sx[pos];
+        shot.x_speed = -weapon.sy[pos];
+        shot.y_speed = -weapon.sx[pos];
         break;
       case 2:
-        shot.sxc = weapon.acceleration;
-        shot.syc = -weapon.acceleration;
+        shot.x_accel = weapon.acceleration;
+        shot.y_accel = -weapon.acceleration;
 
-        shot.sxm = weapon.sy[pos];
-        shot.sym = -weapon.sx[pos];
+        shot.x_speed = weapon.sy[pos];
+        shot.y_speed = -weapon.sx[pos];
         break;
     }
 
@@ -211,8 +211,8 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, i
       aim_y = 1;
     }
     int16_t const max_mag_aim = std::max(abs(aim_x), abs(aim_y));
-    shot.sxm = roundf((float)aim_x / max_mag_aim * aim);
-    shot.sym = roundf((float)aim_y / max_mag_aim * aim);
+    shot.x_speed = roundf((float)aim_x / max_mag_aim * aim);
+    shot.y_speed = roundf((float)aim_y / max_mag_aim * aim);
   }
   return true;
 }
@@ -1006,7 +1006,7 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
   }
 
   if (hit.armorleft < 255) {
-    for (boss_bar_t& bar : state.display.boss_bars) {
+    for (BossBar& bar : state.display.boss_bars) {
       if (link == bar.link_num) {
         bar.color = 6;
       }

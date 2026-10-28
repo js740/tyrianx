@@ -56,17 +56,17 @@ std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record)
       continue;
     }
 
-    EnemyShotType& shot = shots.slots[z];
+    EnemyShot& shot = shots.slots[z];
 
-    shot.sxm += shot.sxc;
-    shot.sx += shot.sxm;
-    track(shot.tx, shot.sx, players[0].x, shot.sxm);
+    shot.x_speed += shot.x_accel;
+    shot.x += shot.x_speed;
+    track(shot.x_track, shot.x, players[0].x, shot.x_speed);
 
-    shot.sym += shot.syc;
-    shot.sy += shot.sym;
-    track(shot.ty, shot.sy, players[0].y, shot.sym);
+    shot.y_speed += shot.y_accel;
+    shot.y += shot.y_speed;
+    track(shot.y_track, shot.y, players[0].y, shot.y_speed);
 
-    if (shot.duration-- == 0 || shot.sy > 190 || shot.sy <= -14 || shot.sx > 275 || shot.sx <= 0) {
+    if (shot.duration-- == 0 || shot.y > 190 || shot.y <= -14 || shot.x > 275 || shot.x <= 0) {
       shots.available[z] = true;
       continue;
     }
@@ -74,23 +74,23 @@ std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record)
     // check if shot collided with player
     for (unsigned i = 0; i < (state.game.two_player_mode ? 2 : 1); ++i) {
       Player& player = players[i];
-      if (!(player.is_alive && shot.sx > player.x - (signed)player.shot_hit_area_x &&
-            shot.sx < player.x + (signed)player.shot_hit_area_x &&
-            shot.sy > player.y - (signed)player.shot_hit_area_y &&
-            shot.sy < player.y + (signed)player.shot_hit_area_y))
+      if (!(player.is_alive && shot.x > player.x - (signed)player.shot_hit_area_x &&
+            shot.x < player.x + (signed)player.shot_hit_area_x &&
+            shot.y > player.y - (signed)player.shot_hit_area_y &&
+            shot.y < player.y + (signed)player.shot_hit_area_y))
       {
         continue;
       }
 
       shots.available[z] = true;
 
-      setup_explosion(state.explosions.slots, shot.sx, shot.sy, 0, 0, false, false);
+      setup_explosion(state.explosions.slots, shot.x, shot.y, 0, 0, false, false);
 
       if (player.invulnerable_ticks == 0) {
-        uint8_t const through = damage_player(state, record, player, shot.sdmg);
+        uint8_t const through = damage_player(state, record, player, shot.damage);
         if (through > 0) {
-          player.x_velocity += (shot.sxm * through) / 2;
-          player.y_velocity += (shot.sym * through) / 2;
+          player.x_velocity += (shot.x_speed * through) / 2;
+          player.y_velocity += (shot.y_speed * through) / 2;
         }
       }
 
@@ -101,8 +101,8 @@ std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record)
       continue;
     }
 
-    if (shot.animax != 0 && ++shot.animate >= shot.animax) {
-      shot.animate = 0;
+    if (shot.frames != 0 && ++shot.frame >= shot.frames) {
+      shot.frame = 0;
     }
 
     visible[z] = true;

@@ -63,19 +63,19 @@ void special_complete(State& state, HudLog& hud, uint8_t player_num, uint8_t spe
           continue;
         }
 
-        EnemyShotType& shot = state.enemy_shots.slots[i];
-        if (players[0].x > shot.sx) {
-          shot.sxm--;
+        EnemyShot& shot = state.enemy_shots.slots[i];
+        if (players[0].x > shot.x) {
+          shot.x_speed--;
         }
-        else if (players[0].x < shot.sx) {
-          shot.sxm++;
+        else if (players[0].x < shot.x) {
+          shot.x_speed++;
         }
 
-        if (players[0].y > shot.sy) {
-          shot.sym--;
+        if (players[0].y > shot.y) {
+          shot.y_speed--;
         }
-        else if (players[0].y < shot.sy) {
-          shot.sym++;
+        else if (players[0].y < shot.y) {
+          shot.y_speed++;
         }
       }
       break;
@@ -322,11 +322,11 @@ void update_flare(State& state, uint8_t player_num) {
       }
 
       if (specials.spray && b != MAX_PWEAPON) {
-        PlayerShotDataType& shot = state.player_shots.slots[b];
-        shot.shotXM = (mt_rand_r(&mt) % 5) - 2;
-        shot.shotYM = (mt_rand_r(&mt) % 5) - 2;
-        if (shot.shotYM == 0) {
-          shot.shotYM++;
+        PlayerShot& shot = state.player_shots.slots[b];
+        shot.x_speed = (mt_rand_r(&mt) % 5) - 2;
+        shot.y_speed = (mt_rand_r(&mt) % 5) - 2;
+        if (shot.y_speed == 0) {
+          shot.y_speed++;
         }
       }
     }

@@ -110,7 +110,7 @@ void show_flipped(Canvas dst, Canvas src);
 void show_normal(Canvas dst, Canvas src);
 
 // backgrnd.c, varz.c: the starfield and superpixels move as they are drawn.
-void update_and_draw_starfield(Canvas dst, StarfieldStar (&stars)[MAX_STARS], int move_speed);
-void draw_superpixels(Canvas dst, superpixel_type (&superpixels)[MAX_SUPERPIXELS]);
+void update_and_draw_starfield(Canvas dst, ::StarfieldStar (&stars)[MAX_STARS], int move_speed);
+void draw_superpixels(Canvas dst, ::superpixel_type (&superpixels)[MAX_SUPERPIXELS]);
 
 }  // namespace tyrx::render
