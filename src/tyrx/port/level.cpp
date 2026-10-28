@@ -941,10 +941,6 @@ LevelPass simulate(bool& frame) {
   auto& levelEnd = state().ending.countdown;
   auto& allPlayersGone = state().ending.all_players_gone;
   auto& enemyStillExploding = state().ending.enemy_still_exploding;
-  auto& eventRec = state().level.events;
-  auto& maxEvent = state().level.max_event;
-  auto& eventLoc = state().level.event_loc;
-  auto& curLoc = state().level.cur_loc;
   auto& levelTimer = state().level.timer;
   auto& levelTimerCountdown = state().level.timer_countdown;
   auto& enemyOnScreen = state().enemies.on_screen;
@@ -963,9 +959,7 @@ LevelPass simulate(bool& frame) {
   VGAScreen = game_screen;
 
   // ---------------------------EVENTS-------------------------
-  while (eventRec[eventLoc - 1].eventtime <= curLoc && eventLoc <= maxEvent) {
-    event_system();
-  }
+  sim::update_events(state(), r.hud);
 
   if (isNetworkGame && reallyEndLevel) {
     return LevelPass::start_level;

@@ -126,12 +126,6 @@ void draw_enemy_tick(int enemyOffset, JE_word mapXOfs, JE_word backMove,
                      std::optional<EnemiesDrawn>& drawn);  // JE_drawEnemy, in sim/enemy.cpp
 void enemies_draw(EnemiesDrawn const& d);
 
-// events.cpp
-void event_system();  // JE_eventSystem
-void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset,
-                            Sint16 uniqueShapeTableI);  // JE_createNewEventEnemy
-bool search_for(JE_byte PLType, JE_byte *out_index);    // JE_searchFor
-
 // hud.cpp; the HUD's log is in ../sim/hud.cpp
 void draw_shield_tick();                       // JE_drawShield
 void draw_armor_tick();                        // JE_drawArmor

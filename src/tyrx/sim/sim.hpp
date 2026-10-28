@@ -121,6 +121,10 @@ std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_of
 int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zinglon, int shot_x, int shot_y,
               JE_byte player_num);
 
+// tyrian2.c: the events' part of JE_main's level loop: runs the events that
+// the level has reached (JE_eventSystem).
+void update_events(State& state, HudLog& hud);
+
 // tyrian2.c: JE_eventJump, which jumps to the level position jump, or back
 // to where the last jump came from if jump is 65535, and to the first event
 // at or after it.

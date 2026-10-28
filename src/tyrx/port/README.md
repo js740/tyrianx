@@ -14,10 +14,11 @@ compile. Code here uses it in one of three ways:
 - The explosions, the repeating explosions, the superpixels and the starfield,
   the enemies' creation and update (`JE_makeEnemy`, `JE_newEnemy` and
   `JE_drawEnemy`), the player shots (`player_shot_create` and the like) and
-  what they do to the enemies they hit, event jumps (`JE_eventJump`), the
-  enemy shots, the players (`JE_mainGamePlayerFunctions`, `JE_playerCollide`,
-  `JE_playerDamage` and the like) and their specials, and the HUD's log: their
-  code has moved to `../sim/`, which code here calls with `state()`.
+  what they do to the enemies they hit, the level's events (`JE_eventSystem`
+  and the like), the enemy shots, the players (`JE_mainGamePlayerFunctions`,
+  `JE_playerCollide`, `JE_playerDamage` and the like) and their specials, and
+  the HUD's log: their code has moved to `../sim/`, which code here calls with
+  `state()`.
 - `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
 - Functions here bind references with the C globals' names to it, and are
   otherwise unchanged: the game's modes, cheats and progress, the sound queue
@@ -94,7 +95,7 @@ copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
 | Screen filter | The filter and brightness before the fade moves on |
 | Smoothie filters, darkening | The surfaces, and the darkening's level |
 | Warning, level timer, game over, in-game displays | Nothing but the surface; for the debug display and the bonus message, the texts and the flash |
-| HUD (`hud.cpp`; the log is `../sim/hud.hpp`'s) | A log of the shield, armor, weapon power, power bar, sidekick, charge and ammo gauges and messages as drawn, from the level tick, the player functions, collisions and damage (`JE_playerCollide`, `JE_playerDamage`), events (`events.cpp`, `JE_eventSystem`) and key commands (`keyboard.cpp`, `JE_mainKeyboardInput`) |
+| HUD (`hud.cpp`; the log is `../sim/hud.hpp`'s) | A log of the shield, armor, weapon power, power bar, sidekick, charge and ammo gauges and messages as drawn, from the level tick, the player functions, collisions and damage (`JE_playerCollide`, `JE_playerDamage`), events (`../sim/events.cpp`, `JE_eventSystem`) and key commands (`keyboard.cpp`, `JE_mainKeyboardInput`) |
 
 To see which C++ lines the checks reach, build a copy with coverage and run
 gcov on `port/`:
