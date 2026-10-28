@@ -92,7 +92,7 @@ unsigned long random_channel(MtState& mt) {
 
 // What the enemies' update knows of the layer it updates.
 struct Layer {
-  int end;             // the enemies are the 25 before this slot
+  int      end;        // the enemies are the 25 before this slot
   uint16_t map_x_ofs;  // how far the layer has scrolled sideways
   uint16_t back_move;  // how far it moved down in the tick
 };
@@ -104,6 +104,7 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, i
                 Layer const& layer) {
   auto& players = state.players.slots;
   auto& shots = state.enemy_shots;
+
   JE_WeaponType const& weapon = weapons[weapon_id];
 
   for (int n = weapon.multi; n > 0; n--) {
@@ -221,7 +222,7 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, i
 // enemy's update.
 bool fire(State& state, JE_SingleEnemyType& e, int j, int16_t x, int16_t y, int player_x,
           Layer const& layer) {
-  auto& players = state.players.slots;
+  auto&        players = state.players.slots;
   int8_t const difficulty = state.game.difficulty_level;
 
   if (!e.freq[j - 1]) {
@@ -305,7 +306,7 @@ bool fire(State& state, JE_SingleEnemyType& e, int j, int16_t x, int16_t y, int 
 
 // The enemy, at (x, y), launches an enemy if it is due.
 void launch(State& state, JE_SingleEnemyType& e, int16_t x, int16_t y, Layer const& layer) {
-  auto& players = state.players.slots;
+  auto&    players = state.players.slots;
   MtState& mt = state.random.mt;
 
   if (!e.launchfreq || --e.launchwait != 0) {
@@ -375,8 +376,9 @@ void launch(State& state, JE_SingleEnemyType& e, int16_t x, int16_t y, Layer con
 // pixels to the left.
 void update_enemy(State& state, int i, int player_x, Layer const& layer, std::vector<VisibleEnemy>& visible) {
   auto& players = state.players.slots;
+
   JE_SingleEnemyType& e = state.enemies.slots[i];
-  MtState& mt = state.random.mt;
+  MtState&            mt = state.random.mt;
 
   e.mapoffset = layer.map_x_ofs;
 
@@ -484,6 +486,7 @@ void damage_enemy(State& state, int b, int armorleft, int16_t damage, uint8_t fi
                   bool zinglon, int shot_x, int shot_y) {
   auto& slots = state.enemies.slots;
   auto& status = state.enemies.status;
+
   JE_SingleEnemyType& hit = slots[b];
 
   if (!zinglon) {
@@ -511,7 +514,7 @@ void damage_enemy(State& state, int b, int armorleft, int16_t damage, uint8_t fi
     }
 
     JE_SingleEnemyType& e = slots[i];
-    int const linknum = e.linknum;
+    int const           linknum = e.linknum;
     bool const linked = link != 255 && ((e.edlevel > 0 && linknum == link) ||
                                         (state.level.enemy_continual_damage && link - 100 == linknum) ||
                                         (linknum > 40 && linknum / 20 == link / 20 && linknum <= link));
@@ -577,8 +580,8 @@ void destroy_enemy(State& state, int b, uint8_t link, uint8_t player_num) {
     }
 
     JE_SingleEnemyType& e = slots[i];
-    uint8_t const linknum = e.linknum;
-    bool const linked =
+    uint8_t const       linknum = e.linknum;
+    bool const          linked =
         link == 254 || (link != 255 && (link == linknum || link - 100 == linknum ||
                                         (linknum > 40 && linknum / 20 == link / 20 && linknum <= link)));
     if (i != b && !linked) {
@@ -594,7 +597,7 @@ void destroy_enemy(State& state, int b, uint8_t link, uint8_t player_num) {
 
     if ((e.enemydie > 0) && !((game.super_arcade_mode != SA_NONE) && (enemyDat[e.enemydie].value == 30000))) {
       uint16_t const die = e.enemydie;
-      int first = i - (i % 25);
+      int            first = i - (i % 25);
       if (enemyDat[die].value > 30000) {
         first = 0;
       }
@@ -691,8 +694,8 @@ int new_enemy(State& state, int first, uint16_t e_dat_i, int16_t unique_shape_ta
 
 uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i) {
   int8_t const difficulty = state.game.difficulty_level;
-  MtState& mt = state.random.mt;
-  uint8_t avail;
+  MtState&     mt = state.random.mt;
+  uint8_t      avail;
 
   if (state.game.super_arcade_mode != SA_NONE && e_dat_i == 534) {
     e_dat_i = 533;
@@ -975,8 +978,9 @@ uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, in
 
 int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglon, int shot_x, int shot_y,
               uint8_t player_num) {
-  auto& slots = state.enemies.slots;
+  auto&   slots = state.enemies.slots;
   Cheats& cheats = state.cheats;
+
   JE_SingleEnemyType& hit = slots[b];
 
   cheats.infinite_shot = false;

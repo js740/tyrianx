@@ -62,7 +62,7 @@ void hud_port_config(State const& state, HudLog& hud) {
 }
 
 void hud_text_window(State& state, HudLog& hud, char const *text) {
-  uint16_t& text_erase = state.display.text_erase;
+  uint16_t&  text_erase = state.display.text_erase;
   bool const erase = text_erase > 0;  // erase current text
 
   text_erase = 100;
@@ -71,7 +71,7 @@ void hud_text_window(State& state, HudLog& hud, char const *text) {
 
 void hud_options(State& state, HudLog& hud) {
   bool const two = state.game.two_player_mode;
-  Player& player = state.players.slots[two ? 1 : 0];
+  Player&    player = state.players.slots[two ? 1 : 0];
 
   for (unsigned i = 0; i < std::size(player.sidekick); ++i) {
     JE_OptionType const& option = options[player.items.sidekick[i]];

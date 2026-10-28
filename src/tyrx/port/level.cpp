@@ -56,7 +56,7 @@ void present_frame() {
 struct RunnerHost final : sim::Host {
   void in_game_help_ahead() override { port::in_game_help_ahead(); }
   void c_loop(void (*loop)()) override { port::c_loop(loop); }
-  int pitch(Surface s) override { return render::surface(s)->pitch; }
+  int  pitch(Surface s) override { return render::surface(s)->pitch; }
 };
 
 // The record of the tick being simulated, or last simulated.
@@ -90,8 +90,8 @@ LevelLocals& level_locals() {
 LevelPass level_pass() {
   DrawRecord& r = draw_record();
   r = DrawRecord{};
-  RunnerHost host;
-  bool frame = false;
+  RunnerHost      host;
+  bool            frame = false;
   LevelPass const next = sim::level_tick(state(), level_locals(), r, host, frame);
   VGAScreen = render::surface(r.screen);
   if (next != LevelPass::unsupported) {

@@ -45,8 +45,9 @@ namespace {
 // code returns it in the global b).
 int create_new_event_enemy(State& state, uint8_t enemy_type_ofs, uint16_t first,
                            int16_t unique_shape_table_i) {
-  Level& level = state.level;
+  Level&     level = state.level;
   Map const& map = state.map;
+
   JE_EventRecType const& ev = level.events[level.event_loc - 1];
 
   int b = 0;
@@ -138,7 +139,7 @@ bool search_for(State& state, uint8_t link, uint8_t *out_index) {
 // The first and end slots of the enemies that event 19 moves, and whether it
 // moves all of them, or only those with its link number.
 struct Group {
-  int first = 0, end = 0;
+  int  first = 0, end = 0;
   bool all = false;
 };
 
@@ -152,16 +153,16 @@ void take_link_from_new_pl(Level& level, JE_EventRecType& ev) {
 
 // JE_eventSystem: runs the current event.
 void event_system(State& state, HudLog& hud) {
-  auto& game = state.game;
-  auto& display = state.display;
-  auto& map = state.map;
-  auto& ending = state.ending;
-  auto& level = state.level;
-  auto& players = state.players;
-  auto& sound = state.sound;
-  auto& enemy = state.enemies.slots;
-  auto& enemy_avail = state.enemies.status;
-  MtState& mt = state.random.mt;
+  auto&            game = state.game;
+  auto&            display = state.display;
+  auto&            map = state.map;
+  auto&            ending = state.ending;
+  auto&            level = state.level;
+  auto&            players = state.players;
+  auto&            sound = state.sound;
+  auto&            enemy = state.enemies.slots;
+  auto&            enemy_avail = state.enemies.status;
+  MtState&         mt = state.random.mt;
   JE_EventRecType& ev = level.events[level.event_loc - 1];
 
   switch (ev.eventtype) {

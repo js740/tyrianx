@@ -136,7 +136,7 @@ PointerRef describe_pointer(void const *p) {
   if (p == nullptr) {
     return {};
   }
-  auto const addr = reinterpret_cast<uintptr_t>(p);
+  auto const  addr = reinterpret_cast<uintptr_t>(p);
   auto const& blocks = blocks_by_address();
   // The last block starting at or before addr; blocks never overlap, so it is
   // the only one that can contain addr.
@@ -144,7 +144,7 @@ PointerRef describe_pointer(void const *p) {
       blocks, addr, {}, [](StateBlock const *b) { return reinterpret_cast<uintptr_t>(b->addr); });
   if (it != blocks.begin()) {
     StateBlock const *b = *--it;
-    uintptr_t const offset = addr - reinterpret_cast<uintptr_t>(b->addr);
+    uintptr_t const   offset = addr - reinterpret_cast<uintptr_t>(b->addr);
     if (offset < b->size) {
       return {PointerRef::Kind::block, b->name, offset};
     }
@@ -224,8 +224,8 @@ void dump_state(std::FILE *out) {
 }
 
 Snapshot Snapshot::capture(bool (*include)(StateClass), Snapshot const *previous) {
-  Snapshot s;
-  size_t i = 0;  // index into previous->copies_
+  Snapshot   s;
+  size_t     i = 0;  // index into previous->copies_
   auto const copy = [&](StateBlock const& b) {
     if (!include(b.cls)) {
       return;

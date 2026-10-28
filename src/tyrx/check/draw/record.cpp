@@ -95,10 +95,10 @@ class PixelAudit {
 
  private:
   struct Watched {
-    SDL_Surface *const *surface;
+    SDL_Surface *const  *surface;
     std::vector<uint8_t> copy;
   };
-  Watched watched_[3] = {{&game_screen, {}}, {&VGAScreen2, {}}, {&VGAScreenSeg, {}}};
+  Watched  watched_[3] = {{&game_screen, {}}, {&VGAScreen2, {}}, {&VGAScreenSeg, {}}};
   uint64_t unrecorded_writes_ = 0, unrecorded_ticks_ = 0;
   uint64_t last_reported_tick_ = UINT64_MAX;
 };
@@ -186,7 +186,7 @@ class ReplayCheck {
     }
     for (size_t n = 0; n < list.calls.size(); ++n) {
       DrawCall const& c = list.calls[n];
-      SDL_Surface *dst = map(c.dst), *src = map(c.src);
+      SDL_Surface    *dst = map(c.dst), *src = map(c.src);
       if ((c.dst != nullptr && dst == nullptr) || (c.src != nullptr && src == nullptr)) {
         continue;
       }
@@ -244,7 +244,7 @@ class ReplayCheck {
   template <typename Rows>
   bool compare(uint64_t tick, char const *by, SDL_Surface const *real, Rows replayed) {
     uint64_t differing = 0;
-    int first_x = 0, first_y = 0;
+    int      first_x = 0, first_y = 0;
     for (int y = 0; y < real->h; ++y) {
       uint8_t const *r = row(real, y), *s = replayed(y);
       for (int x = 0; x < real->w; ++x) {
@@ -263,10 +263,10 @@ class ReplayCheck {
     return differing != 0;
   }
 
-  SDL_Surface *scratch_[3] = {};
+  SDL_Surface         *scratch_[3] = {};
   std::vector<uint8_t> cxx_[3];    // the C++ replay
   std::vector<uint8_t> start_[3];  // the surfaces at the start of the tick
-  uint64_t ticks_ = 0, mismatched_ticks_[2] = {}, unreplayable_ = 0, reported_ = 0;
+  uint64_t             ticks_ = 0, mismatched_ticks_[2] = {}, unreplayable_ = 0, reported_ = 0;
 };
 
 class Recorder {
@@ -376,7 +376,7 @@ class Recorder {
     depth_ = 0;
     if (check_ && render::draw::target() == nullptr) {
       SDL_Surface const *dst = list_.calls.back().dst;
-      bool const watched = dst == game_screen || dst == VGAScreen2 || dst == VGAScreenSeg;
+      bool const         watched = dst == game_screen || dst == VGAScreen2 || dst == VGAScreenSeg;
       audit_.sync(watched ? dst : nullptr);
     }
   }
@@ -405,18 +405,18 @@ class Recorder {
     }
   }
 
-  bool enabled_ = false;
-  bool check_ = false;
-  std::FILE *out_ = nullptr;
-  bool in_level_ = false;
-  bool in_tick_ = false;
-  int depth_ = 0;
-  uint64_t tick_ = 0;
-  DrawList list_;
-  PixelAudit audit_;
+  bool        enabled_ = false;
+  bool        check_ = false;
+  std::FILE  *out_ = nullptr;
+  bool        in_level_ = false;
+  bool        in_tick_ = false;
+  int         depth_ = 0;
+  uint64_t    tick_ = 0;
+  DrawList    list_;
+  PixelAudit  audit_;
   ReplayCheck replay_;
-  uint64_t ticks_ = 0, calls_ = 0, nested_ = 0;
-  uint64_t op_calls_[kOps] = {};
+  uint64_t    ticks_ = 0, calls_ = 0, nested_ = 0;
+  uint64_t    op_calls_[kOps] = {};
 };
 
 Recorder& recorder() {

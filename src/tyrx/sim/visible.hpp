@@ -44,8 +44,8 @@ enum class Surface : uint8_t {
 // those whose time ran out, as a new explosion may take their slots later in
 // the tick.
 struct EndedExplosion {
-  int slot;
-  int16_t x, y;
+  int      slot;
+  int16_t  x, y;
   uint16_t sprite;
 };
 struct VisibleExplosions {
@@ -55,27 +55,29 @@ struct VisibleExplosions {
 
 // An enemy as it was drawn, before it moved.
 struct VisibleEnemy {
-  int16_t x, y;
-  uint16_t sprite;  // egr[enemycycle - 1]
-  uint8_t filter, size;
+  int16_t        x, y;
+  uint16_t       sprite;  // egr[enemycycle - 1]
+  uint8_t        filter, size;
   Sprite2_array *sprite2s;
 };
 
 // A player shot as it was drawn.
 struct VisiblePlayerShot {
-  int x, y;
+  int      x, y;
   uint16_t sprite_frame;  // over 60000 for special shots
-  bool shadow;
+  bool     shadow;
 };
 
 // A player as JE_playerMovement drew it, each part on the surface it was
 // drawn on.
 struct VisiblePlayer {
-  uint16_t ship_gr;
+  uint16_t       ship_gr;
   Sprite2_array *ship_gr_ptr;
   struct Trail {  // at the end of a level
     Surface screen;
+
     int x;
+
     std::vector<int> trail_y;
   };
   std::optional<Trail> trail;
@@ -84,33 +86,33 @@ struct VisiblePlayer {
   };
   std::optional<InsertCoin> insert_coin;
   struct Ship {
-    Surface screen;
-    int x, y;
-    int sprite;
+    Surface  screen;
+    int      x, y;
+    int      sprite;
     uint16_t map_x2_ofs;
-    bool background2, super_wild, invulnerable;
+    bool     background2, super_wild, invulnerable;
   };
   std::optional<Ship> ship;
   struct SpecialIcon {
     Surface screen;
-    bool ready;
+    bool    ready;
   };
   std::optional<SpecialIcon> special_icon;
   struct Zinglon {
     Surface screen;
-    int x;
+    int     x;
     uint8_t width;
   };
   std::optional<Zinglon> zinglon;
   struct Charge {
     Surface screen;
-    int x, y;
-    int sprite;
+    int     x, y;
+    int     sprite;
   };
   std::optional<Charge> charge;
   struct Sidekick {
-    Surface screen;
-    int x, y;
+    Surface  screen;
+    int      x, y;
     unsigned sprite;
     unsigned style;
   };

@@ -54,15 +54,15 @@ void enemy_shots_draw(sim::State const& state, EnemyShotsDrawn const& d) {
 // from the record.
 void explosions_draw(sim::State const& state, ExplosionsDrawn const& d) {
   auto const& explosionTransparent = state.display.explosion_transparent;
-  auto e = d.visible.ended.begin();
+  auto        e = d.visible.ended.begin();
   for (int j = 0; j < MAX_EXPLOSIONS; j++) {
     if (!d.visible.slots[j]) {
       continue;
     }
 
     Explosion const& explosion = state.explosions.slots[j];
-    int16_t x = explosion.x, y = explosion.y;
-    uint16_t sprite = explosion.sprite;
+    int16_t          x = explosion.x, y = explosion.y;
+    uint16_t         sprite = explosion.sprite;
     if (e != d.visible.ended.end() && e->slot == j) {
       x = e->x, y = e->y, sprite = e->sprite;
       ++e;
@@ -185,6 +185,7 @@ void draw_tick(sim::State const& state, DrawRecord const& r) {
   // --------  Level Timer    ---------
   if (r.level_timer) {
     SDL_Surface *const screen = surface(*r.level_timer);
+
     char buffer[256];
     draw::JE_textShade(screen, 140, 6, miscText[66], 7, (levelTimerCountdown % 20) / 3, FULL_SHADE);
     std::sprintf(buffer, "%.1f", levelTimerCountdown / 100.0f);

@@ -38,7 +38,7 @@ constexpr char const *kOpNames[] = {
 std::string sheet_name(Sprite2_array const& a) {
   struct Named {
     Sprite2_array const *sheet;
-    char const *name;
+    char const          *name;
   };
   static Named const kSheets[] = {
       {&explosionSpriteSheet, "explosionSpriteSheet"},
@@ -67,7 +67,7 @@ std::string sheet_name(Sprite2_array const& a) {
 void append_format(std::string& s, char const *format, ...) __attribute__((format(printf, 2, 3)));
 
 void append_format(std::string& s, char const *format, ...) {
-  char buf[256];
+  char    buf[256];
   va_list args;
   va_start(args, format);
   std::vsnprintf(buf, sizeof buf, format, args);

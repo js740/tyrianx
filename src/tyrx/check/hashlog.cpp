@@ -32,8 +32,8 @@ namespace tyrx::check {
 namespace {
 
 struct HashLog {
-  std::FILE *out = nullptr;
-  long dump_tick = -1;
+  std::FILE  *out = nullptr;
+  long        dump_tick = -1;
   std::string dump_path;
 
   HashLog() {
@@ -89,7 +89,7 @@ void hashlog_tick(uint64_t tick, std::vector<uint64_t> const& hashes) {
     gold::Hasher total;
     std::fprintf(log.out, "T %" PRIu64, tick);
     std::string line;
-    char buf[24];
+    char        buf[24];
     for (uint64_t const h : hashes) {
       total.u64(h);
       std::snprintf(buf, sizeof buf, " %016" PRIx64, h);

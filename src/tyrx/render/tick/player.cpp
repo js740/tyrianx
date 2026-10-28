@@ -47,8 +47,8 @@ void draw_ship_trail(SDL_Surface *screen, uint16_t shipGr_, Sprite2_array *shipG
 
 void draw_ship(SDL_Surface *screen, uint16_t shipGr_, Sprite2_array *shipGrPtr_,
                sim::VisiblePlayer::Ship const& d) {
-  int const x = d.x, y = d.y;
-  int const ship_sprite = d.sprite;
+  int const      x = d.x, y = d.y;
+  int const      ship_sprite = d.sprite;
   uint16_t const mapX2Ofs = d.map_x2_ofs;
 
   if (shipGr_ == 0) {
@@ -146,7 +146,7 @@ void player_draw(sim::VisiblePlayer const& p) {
   }
   if (p.zinglon) {
     SDL_Surface *const screen = surface(p.zinglon->screen);
-    int const x = p.zinglon->x, temp = p.zinglon->width;
+    int const          x = p.zinglon->x, temp = p.zinglon->width;
     draw::JE_barBright(screen, x + 7 - temp, 0, x + 7 + temp, 184);
     draw::JE_barBright(screen, x + 7 - temp - 2, 0, x + 7 + temp + 2, 184);
   }

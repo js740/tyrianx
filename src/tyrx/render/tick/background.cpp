@@ -56,7 +56,7 @@ void background_3_draw(Background3Drawn const& d) {
 // C code records them), moved back.  Their speed is still the one they moved
 // by, as only events change it, and they come before.
 void starfield_draw(sim::State const& state, SDL_Surface *screen) {
-  int const move_speed = state.starfield.speed;
+  int const     move_speed = state.starfield.speed;
   StarfieldStar before[MAX_STARS];
   std::ranges::copy(state.starfield.stars, before);
   for (StarfieldStar& star : before) {

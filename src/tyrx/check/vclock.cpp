@@ -29,8 +29,8 @@ namespace tyrx::check {
 namespace {
 
 bool const enabled = env("TYRX_VCLOCK") != nullptr;
-uint32_t now_ms = 0;
-bool quiet = false;
+uint32_t   now_ms = 0;
+bool       quiet = false;
 
 }  // namespace
 
@@ -46,8 +46,8 @@ void vclock_set_quiet(bool q) { quiet = q; }
 
 // Linked with -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time so that the
 // C code's calls come here.
-extern "C" uint32_t __real_SDL_GetTicks(void);
-extern "C" void __real_SDL_Delay(uint32_t ms);
+extern "C" uint32_t    __real_SDL_GetTicks(void);
+extern "C" void        __real_SDL_Delay(uint32_t ms);
 extern "C" std::time_t __real_time(std::time_t *t);
 
 extern "C" uint32_t __wrap_SDL_GetTicks(void) {

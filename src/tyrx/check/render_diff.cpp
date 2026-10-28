@@ -42,7 +42,9 @@ struct SliceStats {
 
 struct RenderDiffState {
   bool enabled = env("TYRX_RENDER_DIFF") != nullptr;
+
   std::map<std::string, SliceStats, std::less<>> slices;
+
   uint64_t mismatches = 0;
 
   ~RenderDiffState() {
@@ -78,13 +80,14 @@ class SurfaceCopy {
 
  private:
   int w_, h_, pitch_;
+
   std::vector<uint8_t> pixels_;
 };
 
 // Compares what the C function drew on `c` with what the port drew on `cxx`.
 void render_diff_check(std::string_view slice, SDL_Surface const *c, render::Canvas cxx) {
   RenderDiffState& rd = render_diff_state();
-  auto it = rd.slices.find(slice);
+  auto             it = rd.slices.find(slice);
   if (it == rd.slices.end()) {
     it = rd.slices.emplace(std::string(slice), SliceStats{}).first;
   }
@@ -92,7 +95,7 @@ void render_diff_check(std::string_view slice, SDL_Surface const *c, render::Can
   ++stats.calls;
 
   uint64_t differing = 0;
-  int first_x = 0, first_y = 0;
+  int      first_x = 0, first_y = 0;
   for (int y = 0; y < c->h; ++y) {
     uint8_t const *cr = static_cast<uint8_t const *>(c->pixels) + y * c->pitch;
     uint8_t const *xr = cxx.pixels + y * cxx.pitch;

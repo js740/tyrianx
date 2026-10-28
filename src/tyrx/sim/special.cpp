@@ -33,13 +33,13 @@ namespace {
 // JE_specialComplete: sets off special special_type for player player_num.
 // Some specials take their power from the C code's temp2 (Scratch).
 void special_complete(State& state, HudLog& hud, uint8_t player_num, uint8_t special_type) {
-  auto& players = state.players.slots;
-  auto& shot_repeat = state.players.shot_repeat;
-  auto& shot_multi_pos = state.players.shot_multi_pos;
-  auto& sound_queue = state.sound.queue;
-  Specials& specials = state.specials;
+  auto&         players = state.players.slots;
+  auto&         shot_repeat = state.players.shot_repeat;
+  auto&         shot_multi_pos = state.players.shot_multi_pos;
+  auto&         sound_queue = state.sound.queue;
+  Specials&     specials = state.specials;
   uint8_t const temp2 = state.scratch.temp2;
-  auto const& special_data = special[special_type];
+  auto const&   special_data = special[special_type];
 
   specials.next_wait = 0;
   switch (special_data.stype) {
@@ -270,11 +270,11 @@ bool pay_for_special(uint8_t& temp2, unsigned& armor, unsigned& shield) {
 
 // The flares and the specials that fire while they last.
 void update_flare(State& state, uint8_t player_num) {
-  auto& players = state.players.slots;
-  auto& shot_repeat = state.players.shot_repeat;
+  auto&     players = state.players.slots;
+  auto&     shot_repeat = state.players.shot_repeat;
   Specials& specials = state.specials;
-  Display& display = state.display;
-  MtState& mt = state.random.mt;
+  Display&  display = state.display;
+  MtState&  mt = state.random.mt;
 
   if (specials.flare_duration > 1) {
     if (specials.weapon_filter != -99) {
@@ -356,11 +356,11 @@ void update_flare(State& state, uint8_t player_num) {
 
 void do_special_shot(State& state, DrawRecord& record, uint8_t player_num, unsigned& armor, unsigned& shield,
                      VisiblePlayer& visible) {
-  HudLog& hud = record.hud;
-  auto& players = state.players.slots;
-  auto& shot_repeat = state.players.shot_repeat;
-  auto& shot_multi_pos = state.players.shot_multi_pos;
-  auto& button = state.input.button;
+  HudLog&   hud = record.hud;
+  auto&     players = state.players.slots;
+  auto&     shot_repeat = state.players.shot_repeat;
+  auto&     shot_multi_pos = state.players.shot_multi_pos;
+  auto&     button = state.input.button;
   Specials& specials = state.specials;
 
   if (players[0].items.special > 0) {
@@ -439,8 +439,8 @@ void do_special_shot(State& state, DrawRecord& record, uint8_t player_num, unsig
 
 void sf_codes(State& state, uint8_t player_num, int16_t px, int16_t py, int16_t mouse_x, int16_t mouse_y) {
   auto const& button = state.input.button;
-  Specials& specials = state.specials;
-  uint8_t temp, temp2, temp3, temp4, temp5;
+  Specials&   specials = state.specials;
+  uint8_t     temp, temp2, temp3, temp4, temp5;
 
   unsigned ship = state.players.slots[player_num - 1].items.ship;
 

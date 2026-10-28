@@ -38,7 +38,7 @@ void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, uint16_t mapXO
     return;
   }
 
-  int const x = e.x + x_offset + mapXOfs, y = e.y + y_offset;
+  int const          x = e.x + x_offset + mapXOfs, y = e.y + y_offset;
   unsigned int const index = e.sprite + sprite_offset;
 
   if (e.filter != 0) {
@@ -53,7 +53,7 @@ void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, uint16_t mapXO
 
 void enemies_draw(EnemiesDrawn const& d) {
   SDL_Surface *const screen = surface(d.screen);
-  uint16_t const mapXOfs = d.mapXOfs;
+  uint16_t const     mapXOfs = d.mapXOfs;
   for (sim::VisibleEnemy const& e : d.drawn) {
     // 2x2 enemy
     if (e.size == 1) {
