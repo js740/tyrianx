@@ -236,7 +236,7 @@ void hit_enemies(State& state, int z, MovedShot& shot, uint8_t player_num) {
     int const armorleft =
         hit_enemy(state, b, shot.damage, state.scratch.temp2, zinglon, shot.x, shot.y, player_num);
 
-    if (state.cheats.infinite_shot || zinglon) {
+    if (state.player_shots.infinite_shot || zinglon) {
       continue;
     }
 

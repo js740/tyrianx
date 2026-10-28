@@ -591,8 +591,8 @@ void destroy_enemy(State& state, int b, uint8_t link, uint8_t player_num) {
     int enemy_screen_x = e.ex + e.mapoffset;
 
     if (e.special) {
-      assert((unsigned int)e.flagnum - 1 < std::size(state.cheats.global_flags));
-      state.cheats.global_flags[e.flagnum - 1] = e.setto;
+      assert((unsigned int)e.flagnum - 1 < std::size(state.level.global_flags));
+      state.level.global_flags[e.flagnum - 1] = e.setto;
     }
 
     if ((e.enemydie > 0) && !((game.super_arcade_mode != SA_NONE) && (enemyDat[e.enemydie].value == 30000))) {
@@ -978,23 +978,23 @@ uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, in
 
 int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglon, int shot_x, int shot_y,
               uint8_t player_num) {
-  auto&   slots = state.enemies.slots;
-  Cheats& cheats = state.cheats;
+  auto&        slots = state.enemies.slots;
+  PlayerShots& shots = state.player_shots;
 
   JE_SingleEnemyType& hit = slots[b];
 
-  cheats.infinite_shot = false;
+  shots.infinite_shot = false;
 
   if (damage == 99) {
     damage = 0;
-    cheats.do_iced = 40;
+    shots.do_iced = 40;
     hit.iced = 40;
   }
   else {
-    cheats.do_iced = 0;
+    shots.do_iced = 0;
     if (damage >= 250) {
       damage = damage - 250;
-      cheats.infinite_shot = true;
+      shots.infinite_shot = true;
     }
   }
 
@@ -1021,8 +1021,8 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
         continue;
       }
 
-      if (cheats.do_iced) {
-        slots[e].iced = cheats.do_iced;
+      if (shots.do_iced) {
+        slots[e].iced = shots.do_iced;
       }
       slots[e].filter = filter;
     }
@@ -1038,7 +1038,7 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
     filter = 100;
   }
 
-  if (cheats.infinite_shot) {
+  if (shots.infinite_shot) {
     damage += 250;
   }
   return armorleft;

@@ -59,13 +59,13 @@ void for_each_binding(State& s, F f) {
   f(s.cheats.you_are_cheating, ::youAreCheating);
   f(s.cheats.super_wild, ::superWild);
   f(s.cheats.wild, ::wild);
-  f(s.cheats.do_iced, ::doIced);
-  f(s.cheats.infinite_shot, ::infiniteShot);
+  f(s.player_shots.do_iced, ::doIced);
+  f(s.player_shots.infinite_shot, ::infiniteShot);
   f(s.cheats.constant_play, ::constantPlay);
   f(s.cheats.constant_die, ::constantDie);
   f(s.cheats.constant_last_x, ::constantLastX);
   f(s.cheats.super_pause, ::superPause);
-  f(s.cheats.global_flags, ::globalFlags);
+  f(s.level.global_flags, ::globalFlags);
   f(s.progress.episode_num, ::episodeNum);
   f(s.progress.initial_episode_num, ::initial_episode_num);
   f(s.progress.episode_avail, ::episodeAvail);
@@ -81,7 +81,7 @@ void for_each_binding(State& s, F f) {
   f(s.progress.editor_level, ::editorLevel);
   f(s.progress.editor_item_avail, ::editorItemAvail);
   f(s.progress.secret_hint, ::secretHint);
-  f(s.progress.use_last_bank, ::useLastBank);
+  f(s.display.use_last_bank, ::useLastBank);
   f(s.progress.trent_win, ::trentWin);
   f(s.progress.jump_back_to_episode1, ::jumpBackToEpisode1);
   f(s.progress.extra_game, ::extraGame);
