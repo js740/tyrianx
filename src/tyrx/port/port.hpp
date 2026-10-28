@@ -149,21 +149,8 @@ void in_game_displays_draw(SDL_Surface *screen);  // JE_inGameDisplays
 // keyboard.cpp
 void main_keyboard_input();  // JE_mainKeyboardInput
 
-// player.cpp
-void main_game_player_functions();  // JE_mainGamePlayerFunctions
+// player.cpp; the players' update is in sim/player.cpp
 void player_draw(PlayerDrawn const& d);
-void player_collide(Player *this_player, JE_byte playerNum_);  // JE_playerCollide
-JE_byte player_damage(JE_byte temp, Player *this_player);      // JE_playerDamage, in sim/player.cpp
-void sf_codes(JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_,
-              JE_integer mouseY_);                // JE_SFCodes
-JE_word s_gr(JE_word ship, Sprite2_array **ptr);  // JE_SGr
-void get_ship_info();                             // JE_getShipInfo
-JE_word port_configs();                           // JE_portConfigs
-// player.c, called as port:: (argument-dependent lookup also finds the C
-// functions of the same names)
-void calc_purple_balls_needed(Player *this_player);
-bool power_up_weapon(Player *this_player, uint port);
-void handle_got_purple_ball(Player *this_player);
 
 // shots.cpp
 void player_shots_draw(PlayerShotsDrawn const& d);

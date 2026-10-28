@@ -34,6 +34,7 @@
 
 #include <array>
 #include <bitset>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -136,6 +137,81 @@ void hud_options(State& state, HudLog& hud);             // JE_drawOptions, whic
 void hud_option_level(State const& state, HudLog& hud);  // JE_drawOptionLevel
 void hud_charge_level(State const& state, HudLog& hud, JE_byte color);
 void hud_sidekick_ammo(HudLog& hud, int y, int ammo_max, int ammo, bool discharged);
+
+// A player as JE_playerMovement drew it.  Each part says whether the C code
+// drew it on game_screen, as the HUD's drawing had left VGAScreen there
+// (HudLog::game_screen).
+struct VisiblePlayer {
+  JE_word ship_gr;
+  Sprite2_array *ship_gr_ptr;
+  struct Trail {  // at the end of a level
+    bool game_screen;
+    int x;
+    std::vector<int> trail_y;
+  };
+  std::optional<Trail> trail;
+  struct InsertCoin {  // in demos
+    bool game_screen;
+  };
+  std::optional<InsertCoin> insert_coin;
+  struct Ship {
+    bool game_screen;
+    int x, y;
+    int sprite;
+    JE_word map_x2_ofs;
+    bool background2, super_wild, invulnerable;
+  };
+  std::optional<Ship> ship;
+  struct SpecialIcon {
+    bool game_screen;
+    bool ready;
+  };
+  std::optional<SpecialIcon> special_icon;
+  struct Zinglon {
+    bool game_screen;
+    int x;
+    JE_byte width;
+  };
+  std::optional<Zinglon> zinglon;
+  struct Charge {
+    bool game_screen;
+    int x, y;
+    int sprite;
+  };
+  std::optional<Charge> charge;
+  struct Sidekick {
+    bool game_screen;
+    int x, y;
+    uint sprite;
+    uint style;
+  };
+  std::array<std::optional<Sidekick>, 2> sidekicks;
+};
+
+// tyrian2.c: the players' part of JE_main's level loop: their collisions
+// (JE_playerCollide), then their movement, firing, specials and sidekicks
+// (JE_mainGamePlayerFunctions and JE_playerMovement, in mainint.c), and the
+// map's sideways scrolling, which follows them.  Returns the players drawn.
+std::vector<VisiblePlayer> update_players(State& state, HudLog& hud);
+
+// varz.c: JE_getShipInfo, which sets up the players' ships: their sprites,
+// armor, hit areas and generator.
+void get_ship_info(State& state);
+
+// varz.c: JE_portConfigs, the number of modes of the rear weapon.
+JE_word port_configs(State const& state);
+
+// varz.c: JE_doSpecialShot, the specials of player player_num, whose armor
+// and shield pay for them: those set off by the special-move codes or the
+// fire button, and the flares and the Zinglon while they last.
+void do_special_shot(State& state, HudLog& hud, JE_byte player_num, uint& armor, uint& shield,
+                     VisiblePlayer& visible);
+
+// mainint.c: JE_SFCodes, which follows player player_num's input (the
+// movement from (mouse_x, mouse_y) to (px, py), and the fire button) through
+// the ship's special-move codes.
+void sf_codes(State& state, JE_byte player_num, JE_integer px, JE_integer py, JE_integer mouse_x,
+              JE_integer mouse_y);
 
 // varz.c: JE_playerDamage, which damages the player's shield, and its armor
 // if the damage gets through, and draws them in the HUD (which limits both

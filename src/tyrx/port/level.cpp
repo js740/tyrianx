@@ -514,29 +514,11 @@ void player_shots_tick() {
 
 // The players: collisions, then movement and firing.
 void players_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& endLevel = state().ending.end_level;
-  auto& firstGameOver = state().ending.first_game_over;
-  auto& player = state().players.slots;
-  // Player movement indicators for shots that track your ship
-  for (uint i = 0; i < COUNTOF(player); ++i) {
-    player[i].last_x_shot_move = player[i].x;
-    player[i].last_y_shot_move = player[i].y;
+  SDL_Surface *const screen = VGAScreen;
+  for (sim::VisiblePlayer& p : sim::update_players(state(), draw_record().hud)) {
+    draw_record().players.push_back({screen, std::move(p)});
   }
-
-  // =================================
-  // =======Collisions Detection======
-  // =================================
-
-  for (uint i = 0; i < (twoPlayerMode ? 2 : 1); ++i) {
-    if (player[i].is_alive && !endLevel) {
-      player_collide(&player[i], i + 1);
-    }
-  }
-
-  if (firstGameOver) {
-    main_game_player_functions();  // --------PLAYER DRAW+MOVEMENT---------
-  }
+  apply_hud_screen();
 }
 
 // The enemy shots, and background 3 and the enemies over them.

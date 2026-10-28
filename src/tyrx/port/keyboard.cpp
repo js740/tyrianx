@@ -127,12 +127,12 @@ void main_keyboard_input() {
         player[0].items.shield = extraShips[z + 8];
         shotMultiPos.fill(0);
 
-        if (player[0].weapon_mode > port_configs()) {
+        if (player[0].weapon_mode > sim::port_configs(state())) {
           player[0].weapon_mode = 1;
         }
 
         tempW = player[0].armor;
-        get_ship_info();
+        sim::get_ship_info(state());
         if (player[0].armor > tempW && editShip1) {
           player[0].armor = tempW;
         }
@@ -172,12 +172,12 @@ void main_keyboard_input() {
         player[1].items.shield = extraShips[z + 8];
         shotMultiPos.fill(0);
 
-        if (player[1].weapon_mode > port_configs()) {
+        if (player[1].weapon_mode > sim::port_configs(state())) {
           player[1].weapon_mode = 1;
         }
 
         tempW = player[1].armor;
-        get_ship_info();
+        sim::get_ship_info(state());
         if (player[1].armor > tempW && editShip2) {
           player[1].armor = tempW;
         }

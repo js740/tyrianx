@@ -90,48 +90,9 @@ struct PlayerShotsDrawn {
   std::vector<sim::VisiblePlayerShot> drawn;
 };
 
-struct ShipDrawn {
-  SDL_Surface *screen;
-  int x, y;
-  int ship_sprite;
-  JE_word mapX2Ofs;
-  bool background2, superWild, invulnerable;
-};
-struct PlayerDrawn {  // by one JE_playerMovement
-  JE_word shipGr_;
-  Sprite2_array *shipGrPtr_;
-  struct Trail {  // at the end of a level
-    SDL_Surface *screen;
-    int x;
-    std::vector<int> trail_y;
-  };
-  std::optional<Trail> trail;
-  SDL_Surface *insert_coin = nullptr;  // in demos
-  std::optional<ShipDrawn> ship;
-  struct SpecialIcon {
-    SDL_Surface *screen;
-    bool ready;
-  };
-  std::optional<SpecialIcon> special_icon;
-  struct Zinglon {
-    SDL_Surface *screen;
-    int x;
-    JE_byte temp;
-  };
-  std::optional<Zinglon> zinglon;
-  struct Charge {
-    SDL_Surface *screen;
-    int x, y;
-    int sprite;
-  };
-  std::optional<Charge> charge;
-  struct Sidekick {
-    SDL_Surface *screen;
-    int x, y;
-    uint sprite;
-    uint style;
-  };
-  std::array<std::optional<Sidekick>, 2> sidekicks;
+struct PlayerDrawn {    // by one JE_playerMovement
+  SDL_Surface *screen;  // VGAScreen when the players' update began
+  sim::VisiblePlayer player;
 };
 
 struct EnemyShotsDrawn {  // drawn shots stay in their slots for the rest of the tick

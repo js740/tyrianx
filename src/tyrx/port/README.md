@@ -15,7 +15,8 @@ compile. Code here uses it in one of three ways:
   the enemies' creation and update (`JE_makeEnemy`, `JE_newEnemy` and
   `JE_drawEnemy`), the player shots (`player_shot_create` and the like) and
   what they do to the enemies they hit, event jumps (`JE_eventJump`), the
-  enemy shots' update and damage to the players (`JE_playerDamage`): their
+  enemy shots, the players (`JE_mainGamePlayerFunctions`, `JE_playerCollide`,
+  `JE_playerDamage` and the like) and their specials, and the HUD's log: their
   code has moved to `../sim/`, which code here calls with `state()`.
 - `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
 - Functions here bind references with the C globals' names to it, and are
@@ -23,11 +24,12 @@ compile. Code here uses it in one of three ways:
   and the music's fade, the display effects, the map, the level's events and
   ending, the buttons, the players, the specials, the enemies, and the player
   and enemy shots. `COUNTOF` counts their arrays, and `port.hpp` has versions of
-  `player.h`'s inline functions. The one C function that the tick calls that
-  uses them, `playDemoKeys` (the demo input, which moves player 1 and sets the
-  buttons), gets player 1's position and the buttons in the C globals. The pause
-  screen, the in-game menu and help (`JE_pauseGame`, `JE_doInGameSetup` and
-  `JE_inGameHelp`), which the shadow tick doesn't run, use them too.
+  `player.h`'s inline functions. The C functions that use them and that the
+  tick runs are the pause screen, the in-game menu and help (`JE_pauseGame`,
+  `JE_doInGameSetup` and `JE_inGameHelp`), which the shadow tick doesn't run,
+  and `playDemoKeys` (the demo input, which moves player 1 and sets the
+  buttons), which `../sim/player.cpp` gives player 1's position and the buttons
+  in the C globals.
 
 ## The level loop
 
@@ -85,7 +87,7 @@ copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
 | Starfield, superpixels | Nothing: the drawing moves them back by their speed; for superpixels, which ones were active |
 | Enemies (`enemy.cpp`, `JE_drawEnemy`'s drawing; the update is in `../sim/enemy.cpp`) | The enemies that their update returns: each drawn enemy's position before it moved, frame, filter, sprite sheet and size (damage changes the frame and filter, and the slot can be reused) |
 | Player shots (`shots.cpp`, `player_shot_move_and_draw`'s drawing; the update is in `../sim/player_shot.cpp`) | Each drawn shot's position and frame, and whether it has a shadow: a hit can free the slot for a chain-reaction shot |
-| Players (`player.cpp`, `JE_mainGamePlayerFunctions`, `JE_playerMovement`, `JE_doSpecialShot`) | The positions and ship and sidekick frames they were drawn with, and the charge |
+| Players (`player.cpp`, `JE_playerMovement`'s and `JE_doSpecialShot`'s drawing; the update is in `../sim/player.cpp` and `../sim/special.cpp`) | The players that their update returns: the positions and ship and sidekick frames they were drawn with, and the charge, each with whether the HUD's drawing had left `VGAScreen` at `game_screen` |
 | Explosions (`../sim/explosion.cpp`) | The visible explosions that their update returns: which slots were drawn, and the position and frame of those that ended (a new explosion can take the slot) |
 | Enemy shots (their update is in `../sim/enemy_shot.cpp`) | Which slots their update drew (drawn shots stay in their slots for the rest of the tick) |
 | Boss bars | The bars' positions, armor and colours |
