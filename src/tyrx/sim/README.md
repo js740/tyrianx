@@ -63,7 +63,12 @@ from the C globals:
 
 ## Ports
 
-Each port here takes the state it works on explicitly:
+Each port here takes the state it works on explicitly. `hidden.hpp` hides the C
+globals that the `State` holds, and the random number generator's functions that
+use them, from code here and in `../port/`, so using one by mistake doesn't
+compile.
+
+The ports:
 - `explosion.cpp`: `setup_explosion` (`JE_setupExplosion`) takes the explosion
   slots it fills in, and `setup_explosion_large` (`JE_setupExplosionLarge`) the
   `Explosions`. In the level loop, `update_repeating_explosions` sets off the

@@ -30,6 +30,7 @@
 #pragma once
 
 #include "../gold/api.hpp"
+#include "../sim/hidden.hpp"
 #include "../sim/sim.hpp"
 #include "../sim/state.hpp"
 #include "draw_record.hpp"
@@ -52,56 +53,11 @@ inline sim::State *& state_target() {
 
 inline sim::State& state() { return *state_target(); }
 
-// The C globals whose state sim::State holds.  These names hide them here, so
-// that code in port/ can't use them by mistake.
-struct InSimState {};
-inline constexpr InSimState twoPlayerMode, onePlayerAction, galagaMode, superArcadeMode, superArcadePowerUp,
-    difficultyLevel, initialDifficulty, oldDifficultyLevel, superTyrian, processorType, pentiumMode,
-    frameCountMax, fastPlay, gameSpeed, playDemo, recordDemo, xmas, displayScore, richMode;
-inline constexpr InSimState youAreCheating, superWild, wild, doIced, infiniteShot, constantPlay, constantDie,
-    constantLastX, superPause, globalFlags;
-inline constexpr InSimState episodeNum, initial_episode_num, episodeAvail, lvlFileNum, levelName,
-    lastLevelName, loadLevelOk, cubeList, cubeMax, lastCubeMax, itemAvail, itemAvailMax, editorLevel,
-    editorItemAvail, secretHint, useLastBank, trentWin, jumpBackToEpisode1, extraGame, gameLoaded,
-    gameJustLoaded, gameHasRepeated, doNotSaveBackup;
-inline constexpr InSimState mt_global;
-inline constexpr InSimState explosions, rep_explosions, explodeMove, explosionFollowAmountX,
-    explosionFollowAmountY;
-inline constexpr InSimState superpixels, last_superpixel;
-inline constexpr InSimState starfield_stars, starfield_speed;
-inline constexpr InSimState soundQueue, musicFade, tempVolume, levelSong;
-inline constexpr InSimState levelFilter, levelFilterNew, levelBrightness, levelBrightnessChg, filtrationAvail,
-    filterActive, filterFade, filterFadeStart, explosionTransparent, smoothies, smoothie_data, anySmoothies,
-    flash, flashChange, warningCol, warningColChange, warningRed, warningSoundDelay, levelWarningDisplay,
-    levelWarningLines, levelWarningText, textErase, displayTime, neat, starShowVGASpecialCode, starActive,
-    boss_bar, portConfigChange, portConfigDone;
-inline constexpr InSimState backPos, backPos2, backPos3, backMove, backMove2, backMove3, mapX, mapY, mapX2,
-    mapX3, mapY2, mapY3, mapYPos, mapY2Pos, mapY3Pos, mapXPos, oldMapXOfs, mapXOfs, mapX2Ofs, mapX2Pos,
-    mapX3Pos, oldMapX3Ofs, mapX3Ofs, tempMapXOfs, mapXbpPos, mapX2bpPos, mapX3bpPos, map1YDelay,
-    map1YDelayMax, map2YDelay, map2YDelayMax, tempBackMove, BKwrap1, BKwrap2, BKwrap3, BKwrap1to, BKwrap2to,
-    BKwrap3to, stopBackgrounds, stopBackgroundNum, background2, background2notTransparent, background3x1,
-    background3x1b, background2over, background3over, skyEnemyOverAll, topEnemyOver;
-inline constexpr InSimState eventRec, maxEvent, eventLoc, curLoc, returnLoc, returnActive, forceEvents,
-    jumpSection, enemiesActive, levelEnemy, levelEnemyMax, levelEnemyFrequency, enemyContinualDamage,
-    superEnemy254Jump, randomExplosions, smallEnemyAdjust, galagaShotFreq, galagaLife, levelTimer,
-    levelTimerCountdown, levelTimerJumpTo, mapOrigin, mapPNum, mapPlanet, mapSection, newPL;
-inline constexpr InSimState endLevel, reallyEndLevel, waitToEndLevel, playerEndLevel, readyToEndLevel,
-    levelEnd, levelEndFxWait, levelEndWarp, firstGameOver, allPlayersGone, enemyStillExploding, stoppedDemo,
-    bonusLevel, bonusLevelCurrent, normalBonusLevelCurrent, mainLevel, nextLevel;
-inline constexpr InSimState button, fireButtonHeld;
-inline constexpr InSimState player, shotRepeat, shotMultiPos, power, lastPower, powerAdd, shieldWait, shieldT,
-    chargeWait, chargeLevel, chargeMax, chargeGr, chargeGrWait, damageRate, armorShipDelay, twoPlayerLinked,
-    linkGunDirec, optionSatelliteRotate, optionAttachmentMove, optionAttachmentLinked, optionAttachmentReturn,
-    shipGr, shipGr2, shipGrPtr, shipGr2ptr;
-inline constexpr InSimState specialWait, nextSpecialWait, SFCurrentCode, SFExecuted, spraySpecial,
-    specialWeaponWpn, specialWeaponFilter, specialWeaponFreq, linkToPlayer, flareDuration, flareStart,
-    flareColChg, zinglonDuration, astralDuration;
-inline constexpr InSimState enemy, enemyAvail, enemyOnScreen, totalEnemy, enemyKilled, enemyOffset;
-inline constexpr InSimState playerShotData, shotAvail;
-inline constexpr InSimState enemyShot, enemyShotAvail;
+// The C globals that sim::State holds are hidden here (../sim/hidden.hpp).
+using namespace hidden;
 
-// The random number generator's state is in the State too.  These hide the C
-// functions, which draw from mt_global.
+// The random number generator's state is in the State too.  These draw from
+// it, in place of the C functions, which draw from mt_global.
 inline unsigned long mt_rand() { return mt_rand_r(&state().random.mt); }
 inline float mt_rand_1() { return mt_rand_1_r(&state().random.mt); }
 inline float mt_rand_lt1() { return mt_rand_lt1_r(&state().random.mt); }

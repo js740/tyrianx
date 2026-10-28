@@ -8,9 +8,9 @@ game's levels in place of the C code (`../cxx_tick.hpp`). As state moves out of
 the globals into structures, the code that uses it moves to `../sim/`.
 
 The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the code
-running the tick provides (`state()`). `port.hpp` hides the C globals that held
-it from code here, so using one by mistake doesn't compile. Code here uses it in
-one of three ways:
+running the tick provides (`state()`). `../sim/hidden.hpp` hides the C globals
+that held it from code here and in `../sim/`, so using one by mistake doesn't
+compile. Code here uses it in one of three ways:
 - The explosions, the repeating explosions, the superpixels and the starfield:
   their setup and update have moved to `../sim/`, and the few other uses here
   go through `state()`.
