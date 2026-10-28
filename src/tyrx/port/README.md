@@ -13,10 +13,10 @@ that held it from code here and in `../sim/`, so using one by mistake doesn't
 compile. Code here uses it in one of three ways:
 - The explosions, the repeating explosions, the superpixels and the starfield,
   the enemies' creation and update (`JE_makeEnemy`, `JE_newEnemy` and
-  `JE_drawEnemy`), what player shots do to the enemies they hit, event jumps
-  (`JE_eventJump`), the enemy shots' update and damage to the players
-  (`JE_playerDamage`): their code has moved to `../sim/`, which code here calls
-  with `state()`.
+  `JE_drawEnemy`), the player shots (`player_shot_create` and the like) and
+  what they do to the enemies they hit, event jumps (`JE_eventJump`), the
+  enemy shots' update and damage to the players (`JE_playerDamage`): their
+  code has moved to `../sim/`, which code here calls with `state()`.
 - `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
 - Functions here bind references with the C globals' names to it, and are
   otherwise unchanged: the game's modes, cheats and progress, the sound queue
@@ -84,7 +84,7 @@ copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
 | Backgrounds 1-3 (`background.cpp`) | The scroll position each was drawn at |
 | Starfield, superpixels | Nothing: the drawing moves them back by their speed; for superpixels, which ones were active |
 | Enemies (`enemy.cpp`, `JE_drawEnemy`'s drawing; the update is in `../sim/enemy.cpp`) | The enemies that their update returns: each drawn enemy's position before it moved, frame, filter, sprite sheet and size (damage changes the frame and filter, and the slot can be reused) |
-| Player shots (`shots.cpp`, `player_shot_move_and_draw`) | Each drawn shot's position and frame, and whether it has a shadow: a hit can free the slot for a chain-reaction shot |
+| Player shots (`shots.cpp`, `player_shot_move_and_draw`'s drawing; the update is in `../sim/player_shot.cpp`) | Each drawn shot's position and frame, and whether it has a shadow: a hit can free the slot for a chain-reaction shot |
 | Players (`player.cpp`, `JE_mainGamePlayerFunctions`, `JE_playerMovement`, `JE_doSpecialShot`) | The positions and ship and sidekick frames they were drawn with, and the charge |
 | Explosions (`../sim/explosion.cpp`) | The visible explosions that their update returns: which slots were drawn, and the position and frame of those that ended (a new explosion can take the slot) |
 | Enemy shots (their update is in `../sim/enemy_shot.cpp`) | Which slots their update drew (drawn shots stay in their slots for the rest of the tick) |

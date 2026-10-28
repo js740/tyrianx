@@ -161,15 +161,14 @@ bool power_up_weapon(Player *this_player, uint port);
 void handle_got_purple_ball(Player *this_player);
 
 // shots.cpp
-// player_shot_move_and_draw, adding the shot to `drawn` if drawn
-bool player_shot_move(int shot_id, bool *out_is_special, int *out_shotx, int *out_shoty,
-                      JE_integer *out_shot_damage, JE_byte *out_blast_filter, JE_byte *out_chain,
-                      JE_byte *out_playerNum, JE_word *out_special_radiusw, JE_word *out_special_radiush,
-                      std::vector<PlayerShotDrawn>& drawn);
 void player_shots_draw(PlayerShotsDrawn const& d);
-// shots.c, called as port::, as for player.c
-JE_integer player_shot_create(JE_word portNum, uint bay_i, JE_word PX, JE_word PY, JE_word mouseX,
-                              JE_word mouseY, JE_word wpNum, JE_byte playerNum);
-void player_shot_set_direction(JE_integer shot_id, uint weapon_id, JE_real direction);
+// shots.c's, in sim/player_shot.cpp, called as port::, as for player.c
+inline JE_integer player_shot_create(JE_word portNum, uint bay_i, JE_word PX, JE_word PY, JE_word mouseX,
+                                     JE_word mouseY, JE_word wpNum, JE_byte playerNum) {
+  return sim::create_player_shot(state(), portNum, bay_i, PX, PY, mouseX, mouseY, wpNum, playerNum);
+}
+inline void player_shot_set_direction(JE_integer shot_id, uint weapon_id, JE_real direction) {
+  sim::set_player_shot_direction(state().player_shots.slots[shot_id], weapon_id, direction);
+}
 
 }  // namespace tyrx::port

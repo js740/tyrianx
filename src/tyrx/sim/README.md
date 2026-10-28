@@ -91,6 +91,12 @@ The ports:
 - `enemy_shot.cpp`: `update_enemy_shots` moves the enemy shots and ends those
   that time out, leave the screen or hit a player. It returns the shots it
   drew, and the damage it did to the players, for the HUD.
+- `player_shot.cpp`: `create_player_shot` (`player_shot_create`) fires a
+  weapon, and `set_player_shot_direction` (`player_shot_set_direction`) turns
+  a linked weapon's shot. `update_player_shots` moves the player shots
+  (`player_shot_move_and_draw`), and has them hit the enemies they collide
+  with (`hit_enemy`) or set off chain reactions. It returns the shots it
+  drew, for the tick's drawing.
 - `player.cpp`: `damage_player` (`JE_playerDamage`) damages a player's shield
   and armor. It also limits the players' armor, which the C code does in
   `JE_drawArmor`, and returns the shields and armor that the C code draws in

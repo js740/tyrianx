@@ -135,14 +135,9 @@ struct EnemiesDrawn {  // by one JE_drawEnemy
   std::vector<sim::VisibleEnemy> drawn;
 };
 
-struct PlayerShotDrawn {
-  int x, y;
-  JE_word sprite_frame;  // over 60000 for special shots
-  bool shadow;
-};
 struct PlayerShotsDrawn {
   SDL_Surface *screen;
-  std::vector<PlayerShotDrawn> drawn;
+  std::vector<sim::VisiblePlayerShot> drawn;
 };
 
 struct ShipDrawn {

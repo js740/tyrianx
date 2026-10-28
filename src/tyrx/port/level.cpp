@@ -506,97 +506,10 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
-  auto& infiniteShot = state().cheats.infinite_shot;
-  auto& zinglonDuration = state().specials.zinglon_duration;
-  auto& shotMultiPos = state().players.shot_multi_pos;
-  auto& player = state().players.slots;
-  auto& enemy = state().enemies.slots;
-  auto& enemyAvail = state().enemies.status;
-  auto& playerShotData = state().player_shots.slots;
-  auto& shotAvail = state().player_shots.ttl;
   DrawRecord& r = draw_record();
 
   // Player Shot Images
-  r.player_shots = PlayerShotsDrawn{VGAScreen, {}};
-  for (int z = 0; z < MAX_PWEAPON; z++) {
-    if (shotAvail[z] == 0) {
-      continue;
-    }
-
-    bool is_special = false;
-    int tempShotX = 0, tempShotY = 0;
-    JE_byte chain;
-    JE_byte playerNum;
-    JE_word tempX2, tempY2;
-    JE_integer damage;
-
-    // The shot's blast filter, which the C code keeps in the global temp2.
-    JE_byte filter;
-
-    if (!player_shot_move(z, &is_special, &tempShotX, &tempShotY, &damage, &filter, &chain, &playerNum,
-                          &tempX2, &tempY2, r.player_shots->drawn))
-    {
-      goto draw_player_shot_loop_end;
-    }
-
-    for (int b = 0; b < 100; b++) {
-      if (enemyAvail[b] != 0) {
-        continue;
-      }
-
-      bool collided;
-
-      if (z == MAX_PWEAPON - 1) {
-        JE_byte const reach = 25 - abs(zinglonDuration - 25);
-        collided = abs(enemy[b].ex + enemy[b].mapoffset - (player[0].x + 7)) < reach;
-        filter = 9;
-        chain = 0;
-        damage = 10;
-      }
-      else if (is_special) {
-        collided = ((enemy[b].enemycycle == 0) &&
-                    (abs(enemy[b].ex + enemy[b].mapoffset - tempShotX - tempX2) < (25 + tempX2)) &&
-                    (abs(enemy[b].ey - tempShotY - 12 - tempY2) < (29 + tempY2))) ||
-                   ((enemy[b].enemycycle > 0) &&
-                    (abs(enemy[b].ex + enemy[b].mapoffset - tempShotX - tempX2) < (13 + tempX2)) &&
-                    (abs(enemy[b].ey - tempShotY - 6 - tempY2) < (15 + tempY2)));
-      }
-      else {
-        collided = ((enemy[b].enemycycle == 0) && (abs(enemy[b].ex + enemy[b].mapoffset - tempShotX) < 25) &&
-                    (abs(enemy[b].ey - tempShotY - 12) < 29)) ||
-                   ((enemy[b].enemycycle > 0) && (abs(enemy[b].ex + enemy[b].mapoffset - tempShotX) < 13) &&
-                    (abs(enemy[b].ey - tempShotY - 6) < 15));
-      }
-
-      if (!collided) {
-        continue;
-      }
-
-      if (chain > 0) {
-        shotMultiPos[SHOT_MISC] = 0;
-        port::player_shot_create(0, SHOT_MISC, tempShotX, tempShotY, player[0].mouseX, player[0].mouseY,
-                                 chain, playerNum);
-        shotAvail[z] = 0;
-        goto draw_player_shot_loop_end;
-      }
-
-      int const armorleft =
-          sim::hit_enemy(state(), b, damage, filter, z == MAX_PWEAPON - 1, tempShotX, tempShotY, playerNum);
-
-      if (infiniteShot || z == MAX_PWEAPON - 1) {
-        continue;
-      }
-
-      if (damage <= armorleft) {
-        shotAvail[z] = 0;
-        goto draw_player_shot_loop_end;
-      }
-
-      playerShotData[z].shotDmg -= armorleft;
-    }
-
-  draw_player_shot_loop_end:;
-  }
+  r.player_shots = PlayerShotsDrawn{VGAScreen, sim::update_player_shots(state())};
 }
 
 // The players: collisions, then movement and firing.
