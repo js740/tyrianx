@@ -408,8 +408,6 @@ void enemies_under_tick() {
   auto& mapXOfs = state().map.map_x_ofs;
   auto& mapX2Ofs = state().map.map_x2_ofs;
   auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
-  auto& tempMapXOfs = state().map.temp_map_x_ofs;
-  auto& tempBackMove = state().map.temp_back_move;
   auto& stopBackgroundNum = state().map.stop_background_num;
   auto& background2notTransparent = state().map.background2_not_transparent;
   auto& background3x1 = state().map.background3x1;
@@ -428,10 +426,8 @@ void enemies_under_tick() {
   // -----------------------Ground Enemy------------------------
   lastEnemyOnScreen = enemyOnScreen;
 
-  tempMapXOfs = mapXOfs;
-  tempBackMove = backMove;
-  draw_enemy_tick(50, r.ground_enemies);
-  draw_enemy_tick(100, r.ground_enemies_2);
+  draw_enemy_tick(50, mapXOfs, backMove, r.ground_enemies);
+  draw_enemy_tick(100, mapXOfs, backMove, r.ground_enemies_2);
 
   if ((enemyOnScreen == 0 || enemyOnScreen == lastEnemyOnScreen) && stopBackgroundNum == 1) {
     stopBackgroundNum = 9;
@@ -475,7 +471,7 @@ void enemies_under_tick() {
     if (tempW == 2) {
       soundQueue[3] = S_WEAPON_7;
     }
-    b = new_enemy(0, tempW, 0);
+    b = sim::new_enemy(state(), 0, tempW, 0);
   }
 
   if (processorType > 1 && smoothies[3 - 1]) {
@@ -491,9 +487,7 @@ void enemies_under_tick() {
   if (!skyEnemyOverAll) {
     lastEnemyOnScreen = enemyOnScreen;
 
-    tempMapXOfs = mapX2Ofs;
-    tempBackMove = 0;
-    draw_enemy_tick(25, r.sky_enemies_under);
+    draw_enemy_tick(25, mapX2Ofs, 0, r.sky_enemies_under);
 
     if (enemyOnScreen == lastEnemyOnScreen && stopBackgroundNum == 2) {
       stopBackgroundNum = 9;
@@ -506,9 +500,7 @@ void enemies_under_tick() {
 
   // Draw Top Enemy
   if (!topEnemyOver) {
-    tempMapXOfs = (background3x1 == 0) ? oldMapX3Ofs : mapXOfs;
-    tempBackMove = backMove3;
-    draw_enemy_tick(75, r.top_enemies_under);
+    draw_enemy_tick(75, (background3x1 == 0) ? oldMapX3Ofs : mapXOfs, backMove3, r.top_enemies_under);
   }
 }
 
@@ -744,7 +736,7 @@ void player_shots_tick() {
             if (enemyDat[tempW].value > 30000) {
               enemy_offset = 0;
             }
-            b = new_enemy(enemy_offset, tempW, 0);
+            b = sim::new_enemy(state(), enemy_offset, tempW, 0);
             if (b != 0) {
               if ((superArcadeMode != SA_NONE) && (enemy[b - 1].evalue > 30000)) {
                 superArcadePowerUp++;
@@ -858,8 +850,6 @@ void enemy_shots_tick() {
   auto& oldMapXOfs = state().map.old_map_x_ofs;
   auto& mapX2Ofs = state().map.map_x2_ofs;
   auto& oldMapX3Ofs = state().map.old_map_x3_ofs;
-  auto& tempMapXOfs = state().map.temp_map_x_ofs;
-  auto& tempBackMove = state().map.temp_back_move;
   auto& stopBackgroundNum = state().map.stop_background_num;
   auto& background3x1 = state().map.background3x1;
   auto& background3over = state().map.background3_over;
@@ -963,9 +953,7 @@ void enemy_shots_tick() {
 
   // Draw Top Enemy
   if (topEnemyOver) {
-    tempMapXOfs = (background3x1 == 0) ? oldMapX3Ofs : oldMapXOfs;
-    tempBackMove = backMove3;
-    draw_enemy_tick(75, r.top_enemies_over);
+    draw_enemy_tick(75, (background3x1 == 0) ? oldMapX3Ofs : oldMapXOfs, backMove3, r.top_enemies_over);
   }
 
   if (!skyEnemyOverAll) {
@@ -975,9 +963,7 @@ void enemy_shots_tick() {
   // Draw Sky Enemy
   lastEnemyOnScreen = enemyOnScreen;
 
-  tempMapXOfs = mapX2Ofs;
-  tempBackMove = 0;
-  draw_enemy_tick(25, r.sky_enemies_over);
+  draw_enemy_tick(25, mapX2Ofs, 0, r.sky_enemies_over);
 
   if (enemyOnScreen != lastEnemyOnScreen) {
     return;
@@ -1053,7 +1039,7 @@ void warning_tick() {
     }
     else {
       tempW = 560;
-      b = new_enemy(50, tempW, 0);
+      b = sim::new_enemy(state(), 50, tempW, 0);
       if (b > 0) {
         enemy[b - 1].enemydie = 560 + (mt_rand() % 3) + 1;
         enemy[b - 1].eyc -= backMove3;

@@ -63,10 +63,12 @@ from the C globals:
 
 ## Ports
 
-Each port here takes the state it works on explicitly. `hidden.hpp` hides the C
-globals that the `State` holds, and the random number generator's functions that
-use them, from code here and in `../port/`, so using one by mistake doesn't
-compile.
+Each port here takes the state it works on explicitly: the subsystems it works
+on, or the whole `State` for game logic that works on many (the enemies). The
+level and episode data that it reads are still in the C globals (`enemyDat`,
+`weapons`). `hidden.hpp` hides the C globals that the `State` holds, and the
+random number generator's functions that use them, from code here and in
+`../port/`, so using one by mistake doesn't compile.
 
 The ports:
 - `explosion.cpp`: `setup_explosion` (`JE_setupExplosion`) takes the explosion
@@ -77,11 +79,21 @@ The ports:
 - `superpixel.cpp`: `do_sp` (`JE_doSP`) creates superpixels, and
   `update_superpixels` moves and fades them and returns those it updated.
 - `starfield.cpp`: `update_starfield` moves the stars.
+- `enemy.cpp`: `make_enemy` (`JE_makeEnemy`) makes an enemy in a slot, and
+  `new_enemy` (`JE_newEnemy`) in the first free slot of a layer's.
+  `update_enemies` (`JE_drawEnemy`, which "actually does a whole lot more than
+  just drawing") updates a layer's enemies: each is animated, moves, fires and
+  launches enemies. It returns the enemies it drew, as they were before they
+  moved, for the tick's drawing.
 
-The level tick's ports in `../port/` work on the C globals and on the `State`,
-with the C code's names, so that they can be compared with it line by line. As
-state moves into `State`, the code that uses it moves from `../port/` to `sim/`,
-and the shadow tick checks it there as before.
+The rest of the level tick, in `../port/`, works on the `State` and the C
+globals with the C code's names, so that it can be compared with it line by
+line. Its code moves here a part at a time, and the shadow tick checks it here
+as before. On the way, it takes its state explicitly, gets C++ names, and is
+split into functions where the C code nests deeply or jumps (`goto`). It keeps
+in local variables what the C code keeps in scratch globals (`temp`, `b`,
+`tempW` and the like), when no code that runs after it reads them before
+writing them.
 
 A port in `sim/` can also be checked on its own, call by call, with `TYRX_DIFF`
 (`../check/README.md`).

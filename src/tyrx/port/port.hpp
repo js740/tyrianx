@@ -109,10 +109,9 @@ inline void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte
 }
 
 // enemy.cpp
-void draw_enemy_tick(int enemyOffset, std::optional<EnemiesDrawn>& drawn);  // JE_drawEnemy
+void draw_enemy_tick(int enemyOffset, JE_word mapXOfs, JE_word backMove,
+                     std::optional<EnemiesDrawn>& drawn);  // JE_drawEnemy, in sim/enemy.cpp
 void enemies_draw(EnemiesDrawn const& d);
-Sint16 new_enemy(int enemyOffset, Uint16 eDatI, Sint16 uniqueShapeTableI);                  // JE_newEnemy
-uint make_enemy(struct JE_SingleEnemyType *enemy, Uint16 eDatI, Sint16 uniqueShapeTableI);  // JE_makeEnemy
 
 // events.cpp
 void event_system();  // JE_eventSystem

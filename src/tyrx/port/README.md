@@ -11,9 +11,10 @@ The state moved so far is in a `sim::State` (`../sim/state.hpp`), which the code
 running the tick provides (`state()`). `../sim/hidden.hpp` hides the C globals
 that held it from code here and in `../sim/`, so using one by mistake doesn't
 compile. Code here uses it in one of three ways:
-- The explosions, the repeating explosions, the superpixels and the starfield:
-  their setup and update have moved to `../sim/`, and the few other uses here
-  go through `state()`.
+- The explosions, the repeating explosions, the superpixels and the starfield,
+  and the enemies' creation and update (`JE_makeEnemy`, `JE_newEnemy` and
+  `JE_drawEnemy`): their code has moved to `../sim/`, which code here calls with
+  `state()`.
 - `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
 - Functions here bind references with the C globals' names to it, and are
   otherwise unchanged: the game's modes, cheats and progress, the sound queue
@@ -80,7 +81,7 @@ copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
 |---|---|
 | Backgrounds 1-3 (`background.cpp`) | The scroll position each was drawn at |
 | Starfield, superpixels | Nothing: the drawing moves them back by their speed; for superpixels, which ones were active |
-| Enemies (`enemy.cpp`, `JE_drawEnemy`) | Each drawn enemy's position before it moved, frame, filter, sprite sheet and size: damage changes the frame and filter, and the slot can be reused |
+| Enemies (`enemy.cpp`, `JE_drawEnemy`'s drawing; the update is in `../sim/enemy.cpp`) | The enemies that their update returns: each drawn enemy's position before it moved, frame, filter, sprite sheet and size (damage changes the frame and filter, and the slot can be reused) |
 | Player shots (`shots.cpp`, `player_shot_move_and_draw`) | Each drawn shot's position and frame, and whether it has a shadow: a hit can free the slot for a chain-reaction shot |
 | Players (`player.cpp`, `JE_mainGamePlayerFunctions`, `JE_playerMovement`, `JE_doSpecialShot`) | The positions and ship and sidekick frames they were drawn with, and the charge |
 | Explosions (`../sim/explosion.cpp`) | The visible explosions that their update returns: which slots were drawn, and the position and frame of those that ended (a new explosion can take the slot) |

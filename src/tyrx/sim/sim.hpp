@@ -84,6 +84,30 @@ void do_sp(Superpixels& superpixels, MtState& mt, JE_word x, JE_word y, JE_word 
 // Returns the slots of those it updated, which the drawing draws.
 std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels);
 
+// tyrian2.c: JE_makeEnemy, which makes enemy one of type e_dat_i (enemyDat),
+// with the sprites of shape table unique_shape_table_i if that is over 0.
+// Returns the slot's status (Enemies::status) for the enemy.
+JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sint16 unique_shape_table_i);
+
+// tyrian2.c: JE_newEnemy, which makes an enemy (make_enemy) in the first free
+// slot of the 25 from first.  Returns the slot + 1, or 0 if none was free.
+int new_enemy(State& state, int first, JE_word e_dat_i, Sint16 unique_shape_table_i);
+
+// An enemy as it was drawn, before it moved.
+struct VisibleEnemy {
+  JE_integer x, y;
+  JE_word sprite;  // egr[enemycycle - 1]
+  JE_byte filter, size;
+  Sprite2_array *sprite2s;
+};
+
+// tyrian2.c: JE_drawEnemy, which "actually does a whole lot more than just
+// drawing": the update of the 25 enemies before slot end, on a layer that has
+// scrolled map_x_ofs sideways and moved back_move down in the tick (kept in
+// the Map, as tempMapXOfs and tempBackMove).  Each is animated, moves, fires
+// and launches enemies.  Returns those on screen, as they were drawn.
+std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_ofs, JE_word back_move);
+
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.
 void update_starfield(Starfield& starfield, int pitch);
