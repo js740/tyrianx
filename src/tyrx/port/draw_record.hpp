@@ -129,16 +129,10 @@ struct Darkened {
   JE_word neat;
 };
 
-struct EnemyDrawn {
-  JE_integer ex, ey;  // before moving
-  JE_word index;      // egr[enemycycle - 1]
-  JE_byte filter, size;
-  Sprite2_array *sprite2s;
-};
 struct EnemiesDrawn {  // by one JE_drawEnemy
   SDL_Surface *screen;
   JE_word mapXOfs;
-  std::vector<EnemyDrawn> drawn;
+  std::vector<sim::VisibleEnemy> drawn;
 };
 
 struct PlayerShotDrawn {

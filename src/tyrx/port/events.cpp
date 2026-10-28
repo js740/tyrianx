@@ -1008,7 +1008,7 @@ void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 un
 
   tempW = eventRec[eventLoc - 1].eventdat + enemyTypeOfs;
 
-  enemyAvail[b - 1] = make_enemy(&enemy[b - 1], tempW, uniqueShapeTableI);
+  enemyAvail[b - 1] = sim::make_enemy(state(), enemy[b - 1], tempW, uniqueShapeTableI);
 
   if (eventRec[eventLoc - 1].eventdat2 != -99) {
     switch (enemyOffset) {
