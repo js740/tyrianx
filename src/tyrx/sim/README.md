@@ -97,8 +97,18 @@ The ports:
   (`player_shot_move_and_draw`), and has them hit the enemies they collide
   with (`hit_enemy`) or set off chain reactions. It returns the shots it
   drew, for the tick's drawing.
-- `player.cpp`: `damage_player` (`JE_playerDamage`) damages a player's shield
-  and armor.
+- `player.cpp`: `update_players` runs the players' part of the level loop:
+  their collisions with enemies (`JE_playerCollide`), which pick items up or
+  damage both, then their movement, firing and sidekicks
+  (`JE_mainGamePlayerFunctions` and `JE_playerMovement`), and the map's
+  sideways scrolling, which follows them. It returns the players it drew, for
+  the tick's drawing. It reads the raw input from the C globals and the demo
+  file, as the C code does, in one place (`Movement::read_input`).
+  `damage_player` (`JE_playerDamage`) damages a player's shield and armor, and
+  `get_ship_info` (`JE_getShipInfo`) sets up the ships.
+- `special.cpp`: the special moves: `sf_codes` (`JE_SFCodes`) follows the
+  players' input through the ships' codes, and `do_special_shot`
+  (`JE_doSpecialShot`) sets the specials off and runs those that last.
 - `hud.cpp`: the HUD's gauges and messages (`JE_drawShield`, `JE_drawArmor`
   and so on), which the game logic logs as it changes them (`hud.hpp`), for
   the tick's drawing. Some do game logic too: `hud_armor` (`JE_drawArmor`)
