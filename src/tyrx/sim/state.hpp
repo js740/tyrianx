@@ -36,11 +36,11 @@ struct Event {
   uint16_t time;  // eventtime
   uint8_t  type;  // eventtype
   int16_t  dat;   // eventdat
-  int16_t  dat2;
-  int8_t   dat3;
-  uint8_t  dat4;
-  int8_t   dat5;
-  int8_t   dat6;
+  int16_t  dat2;  // eventdat2
+  int8_t   dat3;  // eventdat3
+  uint8_t  dat4;  // eventdat4
+  int8_t   dat5;  // eventdat5
+  int8_t   dat6;  // eventdat6
 };
 
 // An explosion's sprite, for as long as it lasts (Explosion).
@@ -103,7 +103,7 @@ struct EnemyShot {
   uint16_t sprite;      // sgr
   uint16_t frame;       // animate
   uint16_t frames;      // animax, 0 if it doesn't animate
-  uint8_t  c_fill[12];  // the C struct's padding, which the C code's hash covers
+  uint8_t  c_fill[12];  // the C struct's padding, which the C code's hash covers (fill)
 };
 
 // A player's shot (PlayerShotDataType).
@@ -159,8 +159,8 @@ struct Enemy {
   int8_t   x_speed;       // exc
   int8_t   y_speed;       // eyc
 
-  // Homing in on player 1: how fast, from 90 up, 0 if it doesn't (xaccel).
-  uint8_t x_homing;
+  // Homing in on player 1: how fast, from 90 up, 0 if it doesn't.
+  uint8_t x_homing;      // xaccel
   uint8_t y_homing;      // yaccel
   int8_t  x_homing_dir;  // set but never read (exca)
   int8_t  y_homing_dir;  // eyca
@@ -181,9 +181,9 @@ struct Enemy {
 
   // Where its speed reverses.
   int16_t x_min_bounce;  // xminbounce
-  int16_t x_max_bounce;
-  int16_t y_min_bounce;
-  int16_t y_max_bounce;
+  int16_t x_max_bounce;  // xmaxbounce
+  int16_t y_min_bounce;  // yminbounce
+  int16_t y_max_bounce;  // ymaxbounce
 
   // Animation: the frames are 1-based indexes into sprites, and a sprite of
   // 999 makes the enemy go.
@@ -225,27 +225,31 @@ struct Enemy {
   uint8_t  launch_special;  // launchspecial
 
   // The C struct's filler, which the C code's hash covers.
-  uint8_t c_fillbyte;
-  uint8_t c_fill1;
-  uint8_t c_fill[3];
+  uint8_t c_fillbyte;  // fillbyte
+  uint8_t c_fill1;     // fill1
+  uint8_t c_fill[3];   // fill
 };
 
 struct Explosions {
-  Explosion          slots[MAX_EXPLOSIONS];
-  RepeatingExplosion repeating[MAX_REPEATING_EXPLOSIONS];  // which set off explosions over ticks
-  uint16_t           move;      // how far explosions that aren't fixed move down each tick
-  int16_t            follow_x;  // how far the player moved, for explosions that follow the player
-  int16_t            follow_y;
+  Explosion slots[MAX_EXPLOSIONS];  // explosions
+  uint16_t  move;                   // how far explosions that aren't fixed move down each tick (explodeMove)
+
+  // The big explosions that set off explosions over several ticks.
+  RepeatingExplosion repeating[MAX_REPEATING_EXPLOSIONS];  // rep_explosions
+
+  // How far the player moved, for explosions that follow the player.
+  int16_t follow_x;  // explosionFollowAmountX
+  int16_t follow_y;  // explosionFollowAmountY
 };
 
 struct Superpixels {
-  Superpixel slots[MAX_SUPERPIXELS];
-  uint32_t   last;  // the slot of the last one created
+  Superpixel slots[MAX_SUPERPIXELS];  // superpixels
+  uint32_t   last;                    // the slot of the last one created (last_superpixel)
 };
 
 struct Starfield {
-  Star    stars[MAX_STARS];  // their positions are offsets into the screen
-  int32_t speed;             // how much faster than their own speed all stars move
+  Star    stars[MAX_STARS];  // their positions are offsets into the screen (starfield_stars)
+  int32_t speed;             // how much faster than their own speed all stars move (starfield_speed)
 };
 
 // The game's modes and settings.
@@ -325,11 +329,11 @@ struct Progress {
 };
 
 struct Random {
-  MtState mt;  // the random number generator that the game logic draws from
+  MtState mt;  // the random number generator that the game logic draws from (mt_global)
 };
 
 struct Sound {
-  uint8_t  queue[8];  // the samples to play at the end of the tick, one per channel
+  uint8_t  queue[8];  // the samples to play at the end of the tick, one per channel (soundQueue)
   uint8_t  level_song;
   bool     music_fade;
   uint16_t temp_volume;  // the music's volume while it fades
@@ -337,10 +341,10 @@ struct Sound {
 
 struct Display {
   // The screen filter, and its fades.
-  int8_t filter;
-  int8_t filter_new;
-  int8_t brightness;
-  int8_t brightness_chg;
+  int8_t filter;          // levelFilter
+  int8_t filter_new;      // levelFilterNew
+  int8_t brightness;      // levelBrightness
+  int8_t brightness_chg;  // levelBrightnessChg
   bool   filtration_avail;
   bool   filter_active;
   bool   filter_fade;
@@ -375,7 +379,7 @@ struct Display {
   int8_t   flash_change;
 
   // The boss bars, and the port config buttons.
-  BossBar boss_bars[2];
+  BossBar boss_bars[2];  // boss_bar
   bool    port_config_change;
   bool    port_config_done;
 };
@@ -393,9 +397,9 @@ struct Map {
   uint16_t  map_x_pos;
   uint16_t  map_x_ofs;
   uint16_t  old_map_x_ofs;
-  intptr_t  map_x_bp_pos;
-  uint8_t **bk_wrap1;
-  uint8_t **bk_wrap1_to;
+  intptr_t  map_x_bp_pos;  // mapXbpPos
+  uint8_t **bk_wrap1;      // BKwrap1
+  uint8_t **bk_wrap1_to;   // BKwrap1to
 
   // Layer 2.
   uint8_t **map_y2_pos;
@@ -407,9 +411,9 @@ struct Map {
   uint16_t  map_x2;
   uint16_t  map_x2_pos;
   uint16_t  map_x2_ofs;
-  intptr_t  map_x2_bp_pos;
-  uint8_t **bk_wrap2;
-  uint8_t **bk_wrap2_to;
+  intptr_t  map_x2_bp_pos;  // mapX2bpPos
+  uint8_t **bk_wrap2;       // BKwrap2
+  uint8_t **bk_wrap2_to;    // BKwrap2to
 
   // Layer 3.
   uint8_t **map_y3_pos;
@@ -420,9 +424,9 @@ struct Map {
   uint16_t  map_x3_pos;
   uint16_t  map_x3_ofs;
   uint16_t  old_map_x3_ofs;
-  intptr_t  map_x3_bp_pos;
-  uint8_t **bk_wrap3;
-  uint8_t **bk_wrap3_to;
+  intptr_t  map_x3_bp_pos;  // mapX3bpPos
+  uint8_t **bk_wrap3;       // BKwrap3
+  uint8_t **bk_wrap3_to;    // BKwrap3to
 
   // The layer that JE_drawEnemy last updated enemies on.
   uint16_t temp_map_x_ofs;
@@ -430,11 +434,11 @@ struct Map {
 
   // Which layers there are, how they are drawn, and whether they scroll.
   bool    background2;
-  bool    background2_not_transparent;
-  uint8_t background2_over;
+  bool    background2_not_transparent;  // background2notTransparent
+  uint8_t background2_over;             // background2over
   bool    background3x1;
   bool    background3x1b;
-  uint8_t background3_over;
+  uint8_t background3_over;  // background3over
   bool    sky_enemy_over_all;
   bool    top_enemy_over;
   bool    stop_backgrounds;
@@ -443,11 +447,11 @@ struct Map {
 
 struct Level {
   // The level's events, which some events change, and where the level is in them.
-  Event    events[EVENT_MAXIMUM];
-  uint16_t max_event;   // the number of events
-  uint16_t event_loc;   // the next one
-  uint16_t cur_loc;     // how far the level has scrolled, which events wait for
-  uint16_t return_loc;  // where a jump back goes, if return_active
+  Event    events[EVENT_MAXIMUM];  // eventRec
+  uint16_t max_event;              // the number of events
+  uint16_t event_loc;              // the next one
+  uint16_t cur_loc;                // how far the level has scrolled, which events wait for
+  uint16_t return_loc;             // where a jump back goes, if return_active
   bool     return_active;
   bool     force_events;
   bool     jump_section;
@@ -455,13 +459,13 @@ struct Level {
 
   // Random enemies.
   bool     enemies_active;
-  uint16_t enemy_types[40];
-  uint16_t enemy_types_max;
-  uint16_t enemy_frequency;
+  uint16_t enemy_types[40];  // levelEnemy
+  uint16_t enemy_types_max;  // levelEnemyMax
+  uint16_t enemy_frequency;  // levelEnemyFrequency
 
   // What the events set for the enemies.
   bool     enemy_continual_damage;
-  uint16_t super_enemy_254_jump;
+  uint16_t super_enemy_254_jump;  // superEnemy254Jump
   bool     small_enemy_adjust;
   bool     random_explosions;
 
@@ -470,13 +474,13 @@ struct Level {
   int32_t  galaga_life;
 
   // The level timer.
-  bool     timer;
-  uint16_t timer_countdown;
-  uint16_t timer_jump_to;
+  bool     timer;            // levelTimer
+  uint16_t timer_countdown;  // levelTimerCountdown
+  uint16_t timer_jump_to;    // levelTimerJumpTo
 
   // Where the map screen goes after the level.
   uint16_t map_origin;
-  uint16_t map_pnum;
+  uint16_t map_pnum;  // mapPNum
   uint8_t  map_planet[5];
   uint8_t  map_section[5];
   uint8_t  new_pl[10];
@@ -491,7 +495,7 @@ struct Ending {
   bool     really_end_level;
   uint8_t  countdown;  // levelEnd: ticks until the level ends
   int8_t   warp;       // levelEndWarp
-  uint16_t fx_wait;    // ticks until the next of the dead players' explosions
+  uint16_t fx_wait;    // ticks until the next of the dead players' explosions (levelEndFxWait)
   bool     enemy_still_exploding;
 
   // Game over.
@@ -513,7 +517,7 @@ struct Input {
 };
 
 struct Players {
-  Player slots[2];
+  Player slots[2];  // player
 
   // The weapons' shots.
   uint8_t shot_repeat[11];     // ticks until each kind of shot can fire again
@@ -524,7 +528,7 @@ struct Players {
   uint32_t last_power;   // as last drawn
   uint32_t power_add;    // gained per tick
   uint8_t  shield_wait;  // ticks until the shield recharges
-  uint8_t  shield_cost;  // the power it takes
+  uint8_t  shield_cost;  // the power it takes (shieldT)
 
   // The charge weapon.
   uint8_t charge_wait;
@@ -539,7 +543,7 @@ struct Players {
 
   // Two-player linked mode, and the sidekicks that attach to the ship.
   bool    two_player_linked;
-  float   link_gun_direction;
+  float   link_gun_direction;  // linkGunDirec
   float   option_satellite_rotate;
   int16_t option_attachment_move;
   bool    option_attachment_linked;
@@ -549,22 +553,22 @@ struct Players {
   uint16_t       ship_gr;
   uint16_t       ship_gr2;
   Sprite2_array *ship_gr_ptr;
-  Sprite2_array *ship_gr2_ptr;
+  Sprite2_array *ship_gr2_ptr;  // shipGr2ptr
 };
 
 struct Specials {
   // The special moves.
   uint8_t sf_current_code[2][21];  // the keys of each player's special moves so far
   uint8_t sf_executed[2];
-  uint8_t wait;
-  uint8_t next_wait;
+  uint8_t wait;       // specialWait
+  uint8_t next_wait;  // nextSpecialWait
 
   // The special weapon.
-  uint16_t weapon_wpn;
-  int8_t   weapon_filter;
-  int8_t   weapon_freq;
+  uint16_t weapon_wpn;     // specialWeaponWpn
+  int8_t   weapon_filter;  // specialWeaponFilter
+  int8_t   weapon_freq;    // specialWeaponFreq
   bool     link_to_player;
-  bool     spray;
+  bool     spray;  // spraySpecial
 
   // The specials that last a while.
   uint16_t flare_duration;
@@ -575,17 +579,17 @@ struct Specials {
 };
 
 struct Enemies {
-  Enemy    slots[100];
-  uint8_t  status[100];  // 1 for a free slot, 0 for an enemy, 2 for one without armor
-  uint16_t on_screen;    // how many were updated in the tick
-  uint16_t total;        // for the destruction ratio
-  uint16_t killed;
-  uint16_t offset;  // enemyOffset
+  Enemy    slots[100];   // enemy
+  uint8_t  status[100];  // 1 for a free slot, 0 for an enemy, 2 for one without armor (enemyAvail)
+  uint16_t on_screen;    // how many were updated in the tick (enemyOnScreen)
+  uint16_t total;        // for the destruction ratio (totalEnemy)
+  uint16_t killed;       // enemyKilled
+  uint16_t offset;       // enemyOffset
 };
 
 struct PlayerShots {
-  PlayerShot slots[MAX_PWEAPON + 1];
-  uint8_t    ttl[MAX_PWEAPON];  // ticks each shot has left, 0 for a free slot
+  PlayerShot slots[MAX_PWEAPON + 1];  // playerShotData
+  uint8_t    ttl[MAX_PWEAPON];        // ticks each shot has left, 0 for a free slot (shotAvail)
 
   // The last hit on an enemy (hit_enemy).
   uint8_t do_iced;
@@ -593,8 +597,8 @@ struct PlayerShots {
 };
 
 struct EnemyShots {
-  EnemyShot slots[ENEMY_SHOT_MAX];
-  bool      available[ENEMY_SHOT_MAX];  // whether each slot is free
+  EnemyShot slots[ENEMY_SHOT_MAX];      // enemyShot
+  bool      available[ENEMY_SHOT_MAX];  // whether each slot is free (enemyShotAvail)
 };
 
 // The C code's scratch global temp2, which most code writes before reading
