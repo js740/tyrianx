@@ -131,15 +131,15 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, uint8_t& player_num,
     shot.aim_delay = shot.aim_delay_max;
 
     if (enemies.status[shot.aim_at_enemy - 1] != 1) {
-      JE_SingleEnemyType const& target = enemies.slots[shot.aim_at_enemy - 1];
-      if (shot.x < target.ex) {
+      Enemy const& target = enemies.slots[shot.aim_at_enemy - 1];
+      if (shot.x < target.x) {
         shot.x_speed++;
       }
       else {
         shot.x_speed--;
       }
 
-      if (shot.y < target.ey) {
+      if (shot.y < target.y) {
         shot.y_speed++;
       }
       else {
@@ -196,29 +196,28 @@ void hit_enemies(State& state, int z, MovedShot& shot, uint8_t player_num) {
       continue;
     }
 
-    JE_SingleEnemyType const& e = enemies.slots[b];
+    Enemy const& e = enemies.slots[b];
 
     bool collided;
 
     if (zinglon) {
       uint8_t const reach = 25 - abs(state.specials.zinglon_duration - 25);
-      collided = abs(e.ex + e.mapoffset - (players[0].x + 7)) < reach;
+      collided = abs(e.x + e.map_offset - (players[0].x + 7)) < reach;
       state.scratch.temp2 = 9;
       shot.chain = 0;
       shot.damage = 10;
     }
     else if (shot.is_special) {
       uint16_t const w = shot.radius_w, h = shot.radius_h;
-      collided = ((e.enemycycle == 0) && (abs(e.ex + e.mapoffset - shot.x - w) < (25 + w)) &&
-                  (abs(e.ey - shot.y - 12 - h) < (29 + h))) ||
-                 ((e.enemycycle > 0) && (abs(e.ex + e.mapoffset - shot.x - w) < (13 + w)) &&
-                  (abs(e.ey - shot.y - 6 - h) < (15 + h)));
+      collided = ((e.frame == 0) && (abs(e.x + e.map_offset - shot.x - w) < (25 + w)) &&
+                  (abs(e.y - shot.y - 12 - h) < (29 + h))) ||
+                 ((e.frame > 0) && (abs(e.x + e.map_offset - shot.x - w) < (13 + w)) &&
+                  (abs(e.y - shot.y - 6 - h) < (15 + h)));
     }
     else {
       collided =
-          ((e.enemycycle == 0) && (abs(e.ex + e.mapoffset - shot.x) < 25) &&
-           (abs(e.ey - shot.y - 12) < 29)) ||
-          ((e.enemycycle > 0) && (abs(e.ex + e.mapoffset - shot.x) < 13) && (abs(e.ey - shot.y - 6) < 15));
+          ((e.frame == 0) && (abs(e.x + e.map_offset - shot.x) < 25) && (abs(e.y - shot.y - 12) < 29)) ||
+          ((e.frame > 0) && (abs(e.x + e.map_offset - shot.x) < 13) && (abs(e.y - shot.y - 6) < 15));
     }
 
     if (!collided) {
@@ -455,11 +454,11 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
       uint8_t  closest_enemy = 0;
       // Find Closest Enemy (the C code counts in the uint16_t globals x and y)
       for (uint16_t i = 0; i < 100; i++) {
-        if (enemies.status[i] == 1 || enemies.slots[i].scoreitem) {
+        if (enemies.status[i] == 1 || enemies.slots[i].score_item) {
           continue;
         }
 
-        uint16_t const dist = abs(enemies.slots[i].ex - shot.x) + abs(enemies.slots[i].ey - shot.y);
+        uint16_t const dist = abs(enemies.slots[i].x - shot.x) + abs(enemies.slots[i].y - shot.y);
         if (dist < best_dist) {
           best_dist = dist;
           closest_enemy = i + 1;

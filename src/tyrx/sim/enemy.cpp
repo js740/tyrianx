@@ -37,9 +37,9 @@ namespace tyrx::sim {
 
 namespace {
 
-// The enemy's random acceleration on one axis (xaccel, yaccel): if accel is
-// set, its speed changes by one toward the player's position, at random and up
-// to accel - 89 either way.
+// The enemy's homing in on player 1 on one axis (x_homing, y_homing): if
+// accel is set, its speed changes by one toward the player's position, at
+// random and up to accel - 89 either way.
 void home_in(MtState& mt, uint8_t accel, int player_pos, int16_t pos, int8_t& speed) {
   if (!accel || accel - 89u <= mt_rand_r(&mt) % 11) {
     return;
@@ -55,28 +55,29 @@ void home_in(MtState& mt, uint8_t accel, int player_pos, int16_t pos, int8_t& sp
   }
 }
 
-// The enemy's fixed acceleration on one axis (excc, eycc): every ccw_max
-// ticks, its speed changes by ccadd, and the acceleration reverses when the
-// speed reaches rev.
-void accelerate(int8_t& speed, int8_t& cc, int8_t& ccw, uint8_t ccw_max, int8_t& rev, int16_t& ccadd) {
-  if (!cc || --ccw > 0) {
+// The enemy's fixed acceleration on one axis (x_accel, y_accel): every
+// wait_max ticks, its speed changes by step, and the acceleration reverses
+// when the speed reaches reverse_speed.
+void accelerate(int8_t& speed, int8_t& accel, int8_t& wait, uint8_t wait_max, int8_t& reverse_speed,
+                int16_t& step) {
+  if (!accel || --wait > 0) {
     return;
   }
 
   auto const reverse = [&] {
-    cc = -cc;
-    rev = -rev;
-    ccadd = -ccadd;
+    accel = -accel;
+    reverse_speed = -reverse_speed;
+    step = -step;
   };
 
-  if (speed == rev) {
+  if (speed == reverse_speed) {
     reverse();
     return;
   }
 
-  speed += ccadd;
-  ccw = ccw_max;
-  if (speed == rev) {
+  speed += step;
+  wait = wait_max;
+  if (speed == reverse_speed) {
     reverse();
   }
 }
@@ -100,8 +101,7 @@ struct Layer {
 // The enemy's turret j (1 to 3), at (x, y), fires its weapon's shots.
 // Returns false if there is no free slot for one, which ends the enemy's
 // update.
-bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, int16_t x, int16_t y,
-                Layer const& layer) {
+bool fire_shots(State& state, Enemy& e, int j, uint8_t weapon_id, int16_t x, int16_t y, Layer const& layer) {
   auto& players = state.players.slots;
   auto& shots = state.enemy_shots;
 
@@ -120,15 +120,15 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, i
       state.sound.queue[channel] = weapon.sound;
     }
 
-    if (e.aniactive == 2) {
-      e.aniactive = 1;
+    if (e.animation == 2) {
+      e.animation = 1;
     }
 
-    if (++e.eshotmultipos[j - 1] > weapon.max) {
-      e.eshotmultipos[j - 1] = 1;
+    if (++e.shot_pos[j - 1] > weapon.max) {
+      e.shot_pos[j - 1] = 1;
     }
 
-    int const pos = e.eshotmultipos[j - 1] - 1;
+    int const pos = e.shot_pos[j - 1] - 1;
 
     if (j == 1) {
       state.scratch.temp2 = 4;
@@ -220,38 +220,37 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, i
 // The enemy's turret j (1 to 3), at (x, y), fires if it is due.  player_x is
 // player 1's position 25 pixels to the left.  Returns false if that ends the
 // enemy's update.
-bool fire(State& state, JE_SingleEnemyType& e, int j, int16_t x, int16_t y, int player_x,
-          Layer const& layer) {
+bool fire(State& state, Enemy& e, int j, int16_t x, int16_t y, int player_x, Layer const& layer) {
   auto&        players = state.players.slots;
   int8_t const difficulty = state.game.difficulty_level;
 
-  if (!e.freq[j - 1]) {
+  if (!e.shot_freq[j - 1]) {
     return true;
   }
 
-  uint8_t const weapon_id = e.tur[j - 1];
+  uint8_t const weapon_id = e.turrets[j - 1];
 
-  if (--e.eshotwait[j - 1] != 0 || !weapon_id) {
+  if (--e.shot_wait[j - 1] != 0 || !weapon_id) {
     return true;
   }
 
-  e.eshotwait[j - 1] = e.freq[j - 1];
+  e.shot_wait[j - 1] = e.shot_freq[j - 1];
   if (difficulty > DIFFICULTY_NORMAL) {
-    e.eshotwait[j - 1] = (e.eshotwait[j - 1] / 2) + 1;
+    e.shot_wait[j - 1] = (e.shot_wait[j - 1] / 2) + 1;
     if (difficulty > DIFFICULTY_MANIACAL) {
-      e.eshotwait[j - 1] = (e.eshotwait[j - 1] / 2) + 1;
+      e.shot_wait[j - 1] = (e.shot_wait[j - 1] / 2) + 1;
     }
   }
 
   if (state.game.galaga_mode &&
-      (e.eyc == 0 || (mt_rand_r(&state.random.mt) % 400) >= state.level.galaga_shot_freq))
+      (e.y_speed == 0 || (mt_rand_r(&state.random.mt) % 400) >= state.level.galaga_shot_freq))
   {
     return false;
   }
 
   switch (weapon_id) {
     case 252:  // Savara Boss DualMissile
-      if (e.ey > 20) {
+      if (e.y > 20) {
         uint16_t const back_move = state.map.back_move;
         setup_explosion(state.explosions.slots, x - 8 + layer.map_x_ofs, y - 20 - back_move * 8, -2, 6, false,
                         false);
@@ -305,48 +304,48 @@ bool fire(State& state, JE_SingleEnemyType& e, int j, int16_t x, int16_t y, int 
 }
 
 // The enemy, at (x, y), launches an enemy if it is due.
-void launch(State& state, JE_SingleEnemyType& e, int16_t x, int16_t y, Layer const& layer) {
+void launch(State& state, Enemy& e, int16_t x, int16_t y, Layer const& layer) {
   auto&    players = state.players.slots;
   MtState& mt = state.random.mt;
 
-  if (!e.launchfreq || --e.launchwait != 0) {
+  if (!e.launch_freq || --e.launch_wait != 0) {
     return;
   }
 
   // Enemy Launch Routine
-  e.launchwait = e.launchfreq;
+  e.launch_wait = e.launch_freq;
 
   // Type  1 : Must be inline with player
-  if (e.launchspecial != 0 && abs(e.ey - players[0].y) > 5) {
+  if (e.launch_special != 0 && abs(e.y - players[0].y) > 5) {
     return;
   }
 
-  if (e.aniactive == 2) {
-    e.aniactive = 1;
+  if (e.animation == 2) {
+    e.animation = 1;
   }
 
-  if (e.launchtype == 0) {
+  if (e.launch_type == 0) {
     return;
   }
 
-  int const b = new_enemy(state, layer.end == 50 ? 75 : layer.end - 25, e.launchtype, 0);
+  int const b = new_enemy(state, layer.end == 50 ? 75 : layer.end - 25, e.launch_type, 0);
 
   if (b <= 0) {
     return;
   }
 
   // Launch Enemy Placement
-  JE_SingleEnemyType& launched = state.enemies.slots[b - 1];
+  Enemy& launched = state.enemies.slots[b - 1];
 
-  launched.ex = x;
-  launched.ey = y + enemyDat[launched.enemytype].startyc;
+  launched.x = x;
+  launched.y = y + enemyDat[launched.type].startyc;
   if (launched.size == 0) {
-    launched.ey -= 7;
+    launched.y -= 7;
   }
 
-  if (launched.launchtype > 0 && launched.launchfreq == 0) {
-    if (launched.launchtype > 90) {
-      launched.ex += mt_rand_r(&mt) % ((launched.launchtype - 90) * 4) - (launched.launchtype - 90) * 2;
+  if (launched.launch_type > 0 && launched.launch_freq == 0) {
+    if (launched.launch_type > 90) {
+      launched.x += mt_rand_r(&mt) % ((launched.launch_type - 90) * 4) - (launched.launch_type - 90) * 2;
     }
     else {
       int16_t aim_x = players[0].x - x - layer.map_x_ofs - 4;
@@ -358,16 +357,16 @@ void launch(State& state, JE_SingleEnemyType& e, int16_t x, int16_t y, Layer con
         aim_y = 1;
       }
       int16_t const max_mag_aim = std::max(abs(aim_x), abs(aim_y));
-      launched.exc = roundf((float)aim_x / max_mag_aim * launched.launchtype);
-      launched.eyc = roundf((float)aim_y / max_mag_aim * launched.launchtype);
+      launched.x_speed = roundf((float)aim_x / max_mag_aim * launched.launch_type);
+      launched.y_speed = roundf((float)aim_y / max_mag_aim * launched.launch_type);
     }
   }
 
   unsigned long const channel = random_channel(mt);
   state.sound.queue[channel] = randomEnemyLaunchSounds[(mt_rand_r(&mt) % 3)];
 
-  if (e.launchspecial == 1 && e.linknum < 100) {
-    launched.linknum = e.linknum;
+  if (e.launch_special == 1 && e.link_num < 100) {
+    launched.link_num = e.link_num;
   }
 }
 
@@ -377,86 +376,86 @@ void launch(State& state, JE_SingleEnemyType& e, int16_t x, int16_t y, Layer con
 void update_enemy(State& state, int i, int player_x, Layer const& layer, std::vector<VisibleEnemy>& visible) {
   auto& players = state.players.slots;
 
-  JE_SingleEnemyType& e = state.enemies.slots[i];
-  MtState&            mt = state.random.mt;
+  Enemy&   e = state.enemies.slots[i];
+  MtState& mt = state.random.mt;
 
-  e.mapoffset = layer.map_x_ofs;
+  e.map_offset = layer.map_x_ofs;
 
-  home_in(mt, e.xaccel, player_x, e.ex, e.exc);
-  home_in(mt, e.yaccel, players[0].y, e.ey, e.eyc);
+  home_in(mt, e.x_homing, player_x, e.x, e.x_speed);
+  home_in(mt, e.y_homing, players[0].y, e.y, e.y_speed);
 
   auto const gone = [&] {
     // enemy[i].egr[10] &= 0x00ff; <MXD> madness?
     state.enemies.status[i] = 1;
   };
 
-  if (e.ex + layer.map_x_ofs > -29 && e.ex + layer.map_x_ofs < 300) {
-    if (e.aniactive == 1) {
-      e.enemycycle++;
+  if (e.x + layer.map_x_ofs > -29 && e.x + layer.map_x_ofs < 300) {
+    if (e.animation == 1) {
+      e.frame++;
 
-      if (e.enemycycle == e.animax) {
-        e.aniactive = e.aniwhenfire;
+      if (e.frame == e.stop_frame) {
+        e.animation = e.animation_at_stop;
       }
-      else if (e.enemycycle > e.ani) {
-        e.enemycycle = e.animin;
+      else if (e.frame > e.last_frame) {
+        e.frame = e.first_frame;
       }
     }
 
-    if (e.egr[e.enemycycle - 1] == 999) {
+    if (e.sprites[e.frame - 1] == 999) {
       return gone();
     }
 
-    visible.push_back({e.ex, e.ey, e.egr[e.enemycycle - 1], e.filter, e.size, e.sprite2s});
+    visible.push_back({e.x, e.y, e.sprites[e.frame - 1], e.filter, e.size, e.sprite_sheet});
 
     e.filter = 0;
   }
 
-  accelerate(e.exc, e.excc, e.exccw, e.exccwmax, e.exrev, e.exccadd);
-  accelerate(e.eyc, e.eycc, e.eyccw, e.eyccwmax, e.eyrev, e.eyccadd);
+  accelerate(e.x_speed, e.x_accel, e.x_accel_wait, e.x_accel_wait_max, e.x_reverse_speed, e.x_accel_step);
+  accelerate(e.y_speed, e.y_accel, e.y_accel_wait, e.y_accel_wait_max, e.y_reverse_speed, e.y_accel_step);
 
-  e.ey += e.fixedmovey;
+  e.y += e.fixed_move_y;
 
-  e.ex += e.exc;
-  if (e.ex < -80 || e.ex > 340) {
+  e.x += e.x_speed;
+  if (e.x < -80 || e.x > 340) {
     return gone();
   }
 
-  e.ey += e.eyc;
-  if (e.ey < -112 || e.ey > 190) {
+  e.y += e.y_speed;
+  if (e.y < -112 || e.y > 190) {
     return gone();
   }
 
   // X bounce
-  if (e.ex <= e.xminbounce || e.ex >= e.xmaxbounce) {
-    e.exc = -e.exc;
+  if (e.x <= e.x_min_bounce || e.x >= e.x_max_bounce) {
+    e.x_speed = -e.x_speed;
   }
 
   // Y bounce
-  if (e.ey <= e.yminbounce || e.ey >= e.ymaxbounce) {
-    e.eyc = -e.eyc;
+  if (e.y <= e.y_min_bounce || e.y >= e.y_max_bounce) {
+    e.y_speed = -e.y_speed;
   }
 
   // Evalue != 0 - score item at boundary
-  if (e.scoreitem) {
-    if (e.ex < -5) {
-      e.ex++;
+  if (e.score_item) {
+    if (e.x < -5) {
+      e.x++;
     }
-    if (e.ex > 245) {
-      e.ex--;
+    if (e.x > 245) {
+      e.x--;
     }
   }
 
-  e.ey += layer.back_move;
+  e.y += layer.back_move;
 
-  if (e.ex <= -24 || e.ex >= 296) {
+  if (e.x <= -24 || e.x >= 296) {
     return;
   }
 
-  int16_t const x = e.ex;
-  int16_t const y = e.ey;
+  int16_t const x = e.x;
+  int16_t const y = e.y;
 
   // Enemy Shots
-  if (e.edamaged == 1) {
+  if (e.damaged == 1) {
     return;
   }
 
@@ -464,7 +463,7 @@ void update_enemy(State& state, int i, int player_x, Layer const& layer, std::ve
 
   if (e.iced) {
     e.iced--;
-    if (e.enemyground != 0) {
+    if (e.ground != 0) {
       e.filter = 0x09;
     }
     return;
@@ -479,19 +478,19 @@ void update_enemy(State& state, int i, int player_x, Layer const& layer, std::ve
   launch(state, e, x, y, layer);
 }
 
-// A hit that leaves the enemy (slot b, with armorleft armor before the hit)
-// some armor: the damage, and the enemies that the damage changes, linked to
+// A hit that leaves the enemy (slot b, which had armor_before armor) some
+// armor: the damage, and the enemies that the damage changes, linked to
 // it by link.
-void damage_enemy(State& state, int b, int armorleft, int16_t damage, uint8_t filter, uint8_t link,
+void damage_enemy(State& state, int b, int armor_before, int16_t damage, uint8_t filter, uint8_t link,
                   bool zinglon, int shot_x, int shot_y) {
   auto& slots = state.enemies.slots;
   auto& status = state.enemies.status;
 
-  JE_SingleEnemyType& hit = slots[b];
+  Enemy& hit = slots[b];
 
   if (!zinglon) {
-    if (hit.armorleft != 255) {
-      hit.armorleft -= damage;
+    if (hit.armor != 255) {
+      hit.armor -= damage;
       setup_explosion(state.explosions.slots, shot_x, shot_y, 0, 0, false, false);
     }
     else {
@@ -504,7 +503,7 @@ void damage_enemy(State& state, int b, int armorleft, int16_t damage, uint8_t fi
 
   state.sound.queue[5] = S_ENEMY_HIT;
 
-  if (!((armorleft - damage <= hit.edlevel) && ((!hit.edamaged) ^ (hit.edani < 0)))) {
+  if (!((armor_before - damage <= hit.damaged_armor) && ((!hit.damaged) ^ (hit.damaged_frames < 0)))) {
     return;
   }
 
@@ -513,52 +512,52 @@ void damage_enemy(State& state, int b, int armorleft, int16_t damage, uint8_t fi
       continue;
     }
 
-    JE_SingleEnemyType& e = slots[i];
-    int const           linknum = e.linknum;
-    bool const linked = link != 255 && ((e.edlevel > 0 && linknum == link) ||
+    Enemy&     e = slots[i];
+    int const  linknum = e.link_num;
+    bool const linked = link != 255 && ((e.damaged_armor > 0 && linknum == link) ||
                                         (state.level.enemy_continual_damage && link - 100 == linknum) ||
                                         (linknum > 40 && linknum / 20 == link / 20 && linknum <= link));
     if (i != b && !linked) {
       continue;
     }
 
-    e.enemycycle = 1;
+    e.frame = 1;
 
-    e.edamaged = !e.edamaged;
+    e.damaged = !e.damaged;
 
-    if (e.edani != 0) {
-      e.ani = abs(e.edani);
-      e.aniactive = 1;
-      e.animax = 0;
-      e.animin = e.edgr;
-      e.enemycycle = e.animin - 1;
+    if (e.damaged_frames != 0) {
+      e.last_frame = abs(e.damaged_frames);
+      e.animation = 1;
+      e.stop_frame = 0;
+      e.first_frame = e.damaged_sprite;
+      e.frame = e.first_frame - 1;
     }
-    else if (e.edgr > 0) {
-      e.egr[1 - 1] = e.edgr;
-      e.ani = 1;
-      e.aniactive = 0;
-      e.animax = 0;
-      e.animin = 1;
+    else if (e.damaged_sprite > 0) {
+      e.sprites[1 - 1] = e.damaged_sprite;
+      e.last_frame = 1;
+      e.animation = 0;
+      e.stop_frame = 0;
+      e.first_frame = 1;
     }
     else {
       status[i] = 1;
       state.enemies.killed++;
     }
 
-    e.aniwhenfire = 0;
+    e.animation_at_stop = 0;
 
-    if (e.armorleft > (unsigned char)e.edlevel) {
-      e.armorleft = e.edlevel;
+    if (e.armor > (unsigned char)e.damaged_armor) {
+      e.armor = e.damaged_armor;
     }
 
-    int16_t const x = e.ex + e.mapoffset;
-    int16_t const y = e.ey;
+    int16_t const x = e.x + e.map_offset;
+    int16_t const y = e.y;
 
-    if (enemyDat[e.enemytype].esize != 1) {
+    if (enemyDat[e.type].esize != 1) {
       setup_explosion(state.explosions.slots, x, y - 6, 0, 1, false, false);
     }
     else {
-      setup_explosion_large(state.explosions, e.enemyground, e.explonum / 2, x, y);
+      setup_explosion_large(state.explosions, e.ground, e.explosion / 2, x, y);
     }
   }
 }
@@ -579,84 +578,85 @@ void destroy_enemy(State& state, int b, uint8_t link, uint8_t player_num) {
       continue;
     }
 
-    JE_SingleEnemyType& e = slots[i];
-    uint8_t const       linknum = e.linknum;
-    bool const          linked =
+    Enemy&        e = slots[i];
+    uint8_t const linknum = e.link_num;
+    bool const    linked =
         link == 254 || (link != 255 && (link == linknum || link - 100 == linknum ||
                                         (linknum > 40 && linknum / 20 == link / 20 && linknum <= link)));
     if (i != b && !linked) {
       continue;
     }
 
-    int enemy_screen_x = e.ex + e.mapoffset;
+    int enemy_screen_x = e.x + e.map_offset;
 
-    if (e.special) {
-      assert((unsigned int)e.flagnum - 1 < std::size(state.level.global_flags));
-      state.level.global_flags[e.flagnum - 1] = e.setto;
+    if (e.sets_flag) {
+      assert((unsigned int)e.flag_num - 1 < std::size(state.level.global_flags));
+      state.level.global_flags[e.flag_num - 1] = e.flag_value;
     }
 
-    if ((e.enemydie > 0) && !((game.super_arcade_mode != SA_NONE) && (enemyDat[e.enemydie].value == 30000))) {
-      uint16_t const die = e.enemydie;
+    if ((e.dies_into > 0) && !((game.super_arcade_mode != SA_NONE) && (enemyDat[e.dies_into].value == 30000)))
+    {
+      uint16_t const die = e.dies_into;
       int            first = i - (i % 25);
       if (enemyDat[die].value > 30000) {
         first = 0;
       }
       int const made = new_enemy(state, first, die, 0);
       if (made != 0) {
-        JE_SingleEnemyType& m = slots[made - 1];
-        if ((game.super_arcade_mode != SA_NONE) && (m.evalue > 30000)) {
+        Enemy& m = slots[made - 1];
+        if ((game.super_arcade_mode != SA_NONE) && (m.value > 30000)) {
           game.super_arcade_power_up++;
           if (game.super_arcade_power_up > 5) {
             game.super_arcade_power_up = 1;
           }
-          m.egr[1 - 1] = 5 + game.super_arcade_power_up * 2;
-          m.evalue = 30000 + game.super_arcade_power_up;
+          m.sprites[1 - 1] = 5 + game.super_arcade_power_up * 2;
+          m.value = 30000 + game.super_arcade_power_up;
         }
 
-        if (m.evalue != 0) {
-          m.scoreitem = true;
+        if (m.value != 0) {
+          m.score_item = true;
         }
         else {
-          m.scoreitem = false;
+          m.score_item = false;
         }
 
-        m.ex = e.ex;
-        m.ey = e.ey;
+        m.x = e.x;
+        m.y = e.y;
       }
     }
 
-    if ((e.evalue > 0) && (e.evalue < 10000)) {
-      if (e.evalue == 1) {
+    if ((e.value > 0) && (e.value < 10000)) {
+      if (e.value == 1) {
         state.progress.cube_max++;
       }
       else {
         // in galaga mode player 2 is sidekick, so give cash to player 1
-        state.players.slots[game.galaga_mode ? 0 : player_num - 1].cash += e.evalue;
+        state.players.slots[game.galaga_mode ? 0 : player_num - 1].cash += e.value;
       }
     }
 
-    if ((e.edlevel == -1) && (link == linknum)) {
-      e.edlevel = 0;
+    if ((e.damaged_armor == -1) && (link == linknum)) {
+      e.damaged_armor = 0;
       status[i] = 2;
-      e.egr[1 - 1] = e.edgr;
-      e.ani = 1;
-      e.aniactive = 0;
-      e.animax = 0;
-      e.animin = 1;
-      e.edamaged = true;
-      e.enemycycle = 1;
+      e.sprites[1 - 1] = e.damaged_sprite;
+      e.last_frame = 1;
+      e.animation = 0;
+      e.stop_frame = 0;
+      e.first_frame = 1;
+      e.damaged = true;
+      e.frame = 1;
     }
     else {
       status[i] = 1;
       state.enemies.killed++;
     }
 
-    if (enemyDat[e.enemytype].esize == 1) {
-      setup_explosion_large(state.explosions, e.enemyground, e.explonum, enemy_screen_x, e.ey);
+    if (enemyDat[e.type].esize == 1) {
+      setup_explosion_large(state.explosions, e.ground, e.explosion, enemy_screen_x, e.y);
       state.sound.queue[6] = S_EXPLOSION_9;
     }
     else {
-      setup_explosion(state.explosions.slots, enemy_screen_x, e.ey, 0, 1, false, false);
+      setup_explosion(state.explosions.slots, enemy_screen_x, e.y, 0, 1, false, false);
       state.sound.queue[6] = S_EXPLOSION_8;
     }
   }
@@ -692,7 +692,7 @@ int new_enemy(State& state, int first, uint16_t e_dat_i, int16_t unique_shape_ta
   return 0;
 }
 
-uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i) {
+uint8_t make_enemy(State& state, Enemy& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i) {
   int8_t const difficulty = state.game.difficulty_level;
   MtState&     mt = state.random.mt;
   uint8_t      avail;
@@ -705,166 +705,166 @@ uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, in
 
   uint8_t const shape_table_i = unique_shape_table_i > 0 ? unique_shape_table_i : dat.shapebank;
 
-  Sprite2_array *sprite2s = nullptr;
+  Sprite2_array *sheet = nullptr;
   if (shape_table_i == 21) {
-    sprite2s = &spriteSheet11;  // Coins&Gems
+    sheet = &spriteSheet11;  // Coins&Gems
   }
   else if (shape_table_i == 26) {
-    sprite2s = &spriteSheet10;  // Two-Player Stuff
+    sheet = &spriteSheet10;  // Two-Player Stuff
   }
   else {
     for (size_t i = 0; i < std::size(enemySpriteSheetIds); ++i) {
       if (shape_table_i == enemySpriteSheetIds[i]) {
-        sprite2s = &enemySpriteSheets[i];
+        sheet = &enemySpriteSheets[i];
       }
     }
   }
 
-  if (sprite2s != nullptr) {
-    enemy.sprite2s = sprite2s;
+  if (sheet != nullptr) {
+    enemy.sprite_sheet = sheet;
   }
   else {
     // Use shape table value from previous enemy that occupied the enemy slot. (Ex. APPROACH.)
     logWarn("Ignoring sprite from unloaded shape table %d.", shape_table_i);
   }
 
-  if (enemy.sprite2s == nullptr) {
+  if (enemy.sprite_sheet == nullptr) {
     logWarn("Enemy sprite is missing.");
   }
 
-  enemy.enemydatofs = &enemyDat[e_dat_i];
+  enemy.dat = &enemyDat[e_dat_i];
 
-  enemy.mapoffset = 0;
+  enemy.map_offset = 0;
 
   for (unsigned i = 0; i < 3; ++i) {
-    enemy.eshotmultipos[i] = 0;
+    enemy.shot_pos[i] = 0;
   }
 
-  enemy.enemyground = (dat.explosiontype & 1) == 0;
-  enemy.explonum = dat.explosiontype >> 1;
+  enemy.ground = (dat.explosiontype & 1) == 0;
+  enemy.explosion = dat.explosiontype >> 1;
 
-  enemy.launchfreq = dat.elaunchfreq;
-  enemy.launchwait = dat.elaunchfreq;
-  enemy.launchtype = dat.elaunchtype % 1000;
-  enemy.launchspecial = dat.elaunchtype / 1000;
+  enemy.launch_freq = dat.elaunchfreq;
+  enemy.launch_wait = dat.elaunchfreq;
+  enemy.launch_type = dat.elaunchtype % 1000;
+  enemy.launch_special = dat.elaunchtype / 1000;
 
-  enemy.xaccel = dat.xaccel;
-  enemy.yaccel = dat.yaccel;
+  enemy.x_homing = dat.xaccel;
+  enemy.y_homing = dat.yaccel;
 
-  enemy.xminbounce = -10000;
-  enemy.xmaxbounce = 10000;
-  enemy.yminbounce = -10000;
-  enemy.ymaxbounce = 10000;
+  enemy.x_min_bounce = -10000;
+  enemy.x_max_bounce = 10000;
+  enemy.y_min_bounce = -10000;
+  enemy.y_max_bounce = 10000;
   // Far enough away to be impossible to reach
 
   for (unsigned i = 0; i < 3; ++i) {
-    enemy.tur[i] = dat.tur[i];
+    enemy.turrets[i] = dat.tur[i];
   }
 
-  enemy.ani = dat.ani;
-  enemy.animin = 1;
+  enemy.last_frame = dat.ani;
+  enemy.first_frame = 1;
 
   switch (dat.animate) {
     case 0:
-      enemy.enemycycle = 1;
-      enemy.aniactive = 0;
-      enemy.animax = 0;
-      enemy.aniwhenfire = 0;
+      enemy.frame = 1;
+      enemy.animation = 0;
+      enemy.stop_frame = 0;
+      enemy.animation_at_stop = 0;
       break;
     case 1:
-      enemy.enemycycle = 0;
-      enemy.aniactive = 1;
-      enemy.animax = 0;
-      enemy.aniwhenfire = 0;
+      enemy.frame = 0;
+      enemy.animation = 1;
+      enemy.stop_frame = 0;
+      enemy.animation_at_stop = 0;
       break;
     case 2:
-      enemy.enemycycle = 1;
-      enemy.aniactive = 2;
-      enemy.animax = enemy.ani;
-      enemy.aniwhenfire = 2;
+      enemy.frame = 1;
+      enemy.animation = 2;
+      enemy.stop_frame = enemy.last_frame;
+      enemy.animation_at_stop = 2;
       break;
   }
 
   if (dat.startxc != 0) {
-    enemy.ex = dat.startx + (mt_rand_r(&mt) % (dat.startxc * 2)) - dat.startxc + 1;
+    enemy.x = dat.startx + (mt_rand_r(&mt) % (dat.startxc * 2)) - dat.startxc + 1;
   }
   else {
-    enemy.ex = dat.startx + 1;
+    enemy.x = dat.startx + 1;
   }
 
   if (dat.startyc != 0) {
-    enemy.ey = dat.starty + (mt_rand_r(&mt) % (dat.startyc * 2)) - dat.startyc + 1;
+    enemy.y = dat.starty + (mt_rand_r(&mt) % (dat.startyc * 2)) - dat.startyc + 1;
   }
   else {
-    enemy.ey = dat.starty + 1;
+    enemy.y = dat.starty + 1;
   }
 
-  enemy.exc = dat.xmove;
-  enemy.eyc = dat.ymove;
-  enemy.excc = dat.xcaccel;
-  enemy.eycc = dat.ycaccel;
-  enemy.exccw = abs(enemy.excc);
-  enemy.exccwmax = enemy.exccw;
-  enemy.eyccw = abs(enemy.eycc);
-  enemy.eyccwmax = enemy.eyccw;
-  enemy.exccadd = (enemy.excc > 0) ? 1 : -1;
-  enemy.eyccadd = (enemy.eycc > 0) ? 1 : -1;
-  enemy.special = false;
+  enemy.x_speed = dat.xmove;
+  enemy.y_speed = dat.ymove;
+  enemy.x_accel = dat.xcaccel;
+  enemy.y_accel = dat.ycaccel;
+  enemy.x_accel_wait = abs(enemy.x_accel);
+  enemy.x_accel_wait_max = enemy.x_accel_wait;
+  enemy.y_accel_wait = abs(enemy.y_accel);
+  enemy.y_accel_wait_max = enemy.y_accel_wait;
+  enemy.x_accel_step = (enemy.x_accel > 0) ? 1 : -1;
+  enemy.y_accel_step = (enemy.y_accel > 0) ? 1 : -1;
+  enemy.sets_flag = false;
   enemy.iced = 0;
 
   if (dat.xrev == 0) {
-    enemy.exrev = 100;
+    enemy.x_reverse_speed = 100;
   }
   else if (dat.xrev == -99) {
-    enemy.exrev = 0;
+    enemy.x_reverse_speed = 0;
   }
   else {
-    enemy.exrev = dat.xrev;
+    enemy.x_reverse_speed = dat.xrev;
   }
 
   if (dat.yrev == 0) {
-    enemy.eyrev = 100;
+    enemy.y_reverse_speed = 100;
   }
   else if (dat.yrev == -99) {
-    enemy.eyrev = 0;
+    enemy.y_reverse_speed = 0;
   }
   else {
-    enemy.eyrev = dat.yrev;
+    enemy.y_reverse_speed = dat.yrev;
   }
 
-  enemy.exca = (enemy.xaccel > 0) ? 1 : -1;
-  enemy.eyca = (enemy.yaccel > 0) ? 1 : -1;
+  enemy.x_homing_dir = (enemy.x_homing > 0) ? 1 : -1;
+  enemy.y_homing_dir = (enemy.y_homing > 0) ? 1 : -1;
 
-  enemy.enemytype = e_dat_i;
+  enemy.type = e_dat_i;
 
   for (unsigned i = 0; i < 3; ++i) {
-    if (enemy.tur[i] == 252) {
-      enemy.eshotwait[i] = 1;
+    if (enemy.turrets[i] == 252) {
+      enemy.shot_wait[i] = 1;
     }
-    else if (enemy.tur[i] > 0) {
-      enemy.eshotwait[i] = 20;
+    else if (enemy.turrets[i] > 0) {
+      enemy.shot_wait[i] = 20;
     }
     else {
-      enemy.eshotwait[i] = 255;
+      enemy.shot_wait[i] = 255;
     }
   }
   for (unsigned i = 0; i < 20; ++i) {
-    enemy.egr[i] = dat.egraphic[i];
+    enemy.sprites[i] = dat.egraphic[i];
   }
   enemy.size = dat.esize;
-  enemy.linknum = 0;
-  enemy.edamaged = dat.dani < 0;
-  enemy.enemydie = dat.eenemydie;
+  enemy.link_num = 0;
+  enemy.damaged = dat.dani < 0;
+  enemy.dies_into = dat.eenemydie;
 
-  enemy.freq[1 - 1] = dat.freq[1 - 1];
-  enemy.freq[2 - 1] = dat.freq[2 - 1];
-  enemy.freq[3 - 1] = dat.freq[3 - 1];
+  enemy.shot_freq[1 - 1] = dat.freq[1 - 1];
+  enemy.shot_freq[2 - 1] = dat.freq[2 - 1];
+  enemy.shot_freq[3 - 1] = dat.freq[3 - 1];
 
-  enemy.edani = dat.dani;
-  enemy.edgr = dat.dgr;
-  enemy.edlevel = dat.dlevel;
+  enemy.damaged_frames = dat.dani;
+  enemy.damaged_sprite = dat.dgr;
+  enemy.damaged_armor = dat.dlevel;
 
-  enemy.fixedmovey = 0;
+  enemy.fixed_move_y = 0;
 
   enemy.filter = 0x00;
 
@@ -903,10 +903,10 @@ uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, in
     if (value > 10000) {
       value = 10000;
     }
-    enemy.evalue = value;
+    enemy.value = value;
   }
   else {
-    enemy.evalue = dat.value;
+    enemy.value = dat.value;
   }
 
   int armor = 1;
@@ -955,20 +955,20 @@ uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, in
       armor = 255;
     }
 
-    enemy.armorleft = armor;
+    enemy.armor = armor;
 
     avail = 0;
-    enemy.scoreitem = false;
+    enemy.score_item = false;
   }
   else {
     avail = 2;
-    enemy.armorleft = 255;
-    if (enemy.evalue != 0) {
-      enemy.scoreitem = true;
+    enemy.armor = 255;
+    if (enemy.value != 0) {
+      enemy.score_item = true;
     }
   }
 
-  if (!enemy.scoreitem) {
+  if (!enemy.score_item) {
     state.enemies.total++;  // Destruction ratio
   }
 
@@ -981,7 +981,7 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
   auto&        slots = state.enemies.slots;
   PlayerShots& shots = state.player_shots;
 
-  JE_SingleEnemyType& hit = slots[b];
+  Enemy& hit = slots[b];
 
   shots.infinite_shot = false;
 
@@ -998,26 +998,26 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
     }
   }
 
-  int const armorleft = hit.armorleft;
+  int const armor_before = hit.armor;
 
-  uint8_t link = hit.linknum;
+  uint8_t link = hit.link_num;
   if (link == 0) {
     link = 255;
   }
 
-  if (hit.armorleft < 255) {
+  if (hit.armor < 255) {
     for (BossBar& bar : state.display.boss_bars) {
       if (link == bar.link_num) {
         bar.color = 6;
       }
     }
 
-    if (hit.enemyground) {
+    if (hit.ground) {
       hit.filter = filter;
     }
 
     for (size_t e = 0; e < std::size(slots); e++) {
-      if (!(slots[e].linknum == link && state.enemies.status[e] != 1 && slots[e].enemyground != 0)) {
+      if (!(slots[e].link_num == link && state.enemies.status[e] != 1 && slots[e].ground != 0)) {
         continue;
       }
 
@@ -1028,8 +1028,8 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
     }
   }
 
-  if (armorleft > damage) {
-    damage_enemy(state, b, armorleft, damage, filter, link, zinglon, shot_x, shot_y);
+  if (armor_before > damage) {
+    damage_enemy(state, b, armor_before, damage, filter, link, zinglon, shot_x, shot_y);
   }
   else {
     destroy_enemy(state, b, link, player_num);
@@ -1041,7 +1041,7 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
   if (shots.infinite_shot) {
     damage += 250;
   }
-  return armorleft;
+  return armor_before;
 }
 
 }  // namespace tyrx::sim

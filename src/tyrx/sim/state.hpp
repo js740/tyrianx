@@ -140,6 +140,96 @@ struct PlayerShot {
   uint8_t aim_delay_max;  // aimDelayMax
 };
 
+// An enemy (JE_SingleEnemyType).
+struct Enemy {
+  uint16_t       type;          // its enemyDat entry (enemytype)
+  void          *dat;           // &enemyDat[type], which nothing reads (enemydatofs)
+  Sprite2_array *sprite_sheet;  // sprite2s
+  uint8_t        size;          // 1 for a 2x2 enemy
+  bool           ground;        // enemyground
+  uint8_t        explosion;     // the explosions it's destroyed with (explonum)
+  int16_t        value;         // the cash it's worth, or the pickup it is (evalue)
+  bool           score_item;    // stays on screen at the sides (scoreitem)
+  uint16_t       dies_into;     // the enemy it leaves when it's destroyed (enemydie)
+
+  int16_t  x;             // ex
+  int16_t  y;             // ey
+  uint16_t map_offset;    // the map's x offset when it was last updated (mapoffset)
+  int16_t  fixed_move_y;  // fixedmovey
+  int8_t   x_speed;       // exc
+  int8_t   y_speed;       // eyc
+
+  // Homing in on player 1: how fast, from 90 up, 0 if it doesn't (xaccel).
+  uint8_t x_homing;
+  uint8_t y_homing;      // yaccel
+  int8_t  x_homing_dir;  // set but never read (exca)
+  int8_t  y_homing_dir;  // eyca
+
+  // Fixed acceleration: every accel_wait_max ticks, the speed changes by
+  // accel_step, and the acceleration reverses when the speed reaches
+  // reverse_speed.
+  int8_t  x_accel;           // excc
+  int8_t  y_accel;           // eycc
+  int8_t  x_accel_wait;      // exccw
+  int8_t  y_accel_wait;      // eyccw
+  uint8_t x_accel_wait_max;  // exccwmax
+  uint8_t y_accel_wait_max;  // eyccwmax
+  int16_t x_accel_step;      // exccadd
+  int16_t y_accel_step;      // eyccadd
+  int8_t  x_reverse_speed;   // exrev
+  int8_t  y_reverse_speed;   // eyrev
+
+  // Where its speed reverses.
+  int16_t x_min_bounce;  // xminbounce
+  int16_t x_max_bounce;
+  int16_t y_min_bounce;
+  int16_t y_max_bounce;
+
+  // Animation: the frames are 1-based indexes into sprites, and a sprite of
+  // 999 makes the enemy go.
+  uint16_t sprites[20];        // egr
+  uint8_t  frame;              // enemycycle
+  uint8_t  first_frame;        // animin
+  uint8_t  last_frame;         // ani
+  uint8_t  animation;          // 0 still, 1 animating, 2 animates when it fires (aniactive)
+  uint8_t  stop_frame;         // where animating stops, 0 for nowhere (animax)
+  uint8_t  animation_at_stop;  // aniwhenfire
+  uint8_t  filter;             // the sprite's colour filter, after a hit or while iced
+
+  uint8_t armor;     // 255 for one that can't be destroyed (armorleft)
+  uint8_t link_num;  // linked enemies are damaged together, and boss bars follow them (linknum)
+  uint8_t iced;      // ticks it stays frozen
+  // Damage: at damaged_armor, it changes to its damaged animation (frames
+  // damaged_sprite to |damaged_frames|), or to damaged_sprite, or goes.
+  bool     damaged;         // edamaged
+  int8_t   damaged_armor;   // edlevel
+  uint16_t damaged_sprite;  // edgr
+  int8_t   damaged_frames;  // edani
+
+  // A global flag that it sets when it's destroyed.
+  bool    sets_flag;   // special
+  uint8_t flag_num;    // flagnum
+  bool    flag_value;  // setto
+
+  // Its turrets: their weapons, how often they fire, ticks until they do, and
+  // which of the weapon's shot positions each fires from next.
+  uint8_t turrets[3];    // tur
+  uint8_t shot_freq[3];  // freq
+  uint8_t shot_wait[3];  // eshotwait
+  uint8_t shot_pos[3];   // eshotmultipos
+
+  // Launching enemies.
+  uint16_t launch_type;     // launchtype
+  uint8_t  launch_freq;     // launchfreq
+  uint8_t  launch_wait;     // launchwait
+  uint8_t  launch_special;  // launchspecial
+
+  // The C struct's filler, which the C code's hash covers.
+  uint8_t c_fillbyte;
+  uint8_t c_fill1;
+  uint8_t c_fill[3];
+};
+
 struct Explosions {
   Explosion          slots[MAX_EXPLOSIONS];
   RepeatingExplosion repeating[MAX_REPEATING_EXPLOSIONS];  // which set off explosions over ticks
@@ -485,12 +575,12 @@ struct Specials {
 };
 
 struct Enemies {
-  JE_SingleEnemyType slots[100];
-  uint8_t            status[100];  // 1 for a free slot, 0 for an enemy, 2 for one without armor
-  uint16_t           on_screen;    // how many were updated in the tick
-  uint16_t           total;        // for the destruction ratio
-  uint16_t           killed;
-  uint16_t           offset;  // enemyOffset
+  Enemy    slots[100];
+  uint8_t  status[100];  // 1 for a free slot, 0 for an enemy, 2 for one without armor
+  uint16_t on_screen;    // how many were updated in the tick
+  uint16_t total;        // for the destruction ratio
+  uint16_t killed;
+  uint16_t offset;  // enemyOffset
 };
 
 struct PlayerShots {

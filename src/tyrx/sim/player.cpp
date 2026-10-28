@@ -1283,16 +1283,16 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
       continue;
     }
 
-    JE_SingleEnemyType& e = enemies.slots[z];
+    Enemy& e = enemies.slots[z];
 
-    int enemy_screen_x = e.ex + e.mapoffset;
+    int enemy_screen_x = e.x + e.map_offset;
 
-    if (abs(player.x - enemy_screen_x) >= 12 || abs(player.y - e.ey) >= 14) {
+    if (abs(player.x - enemy_screen_x) >= 12 || abs(player.y - e.y) >= 14) {
       continue;
     }
 
     // Collide
-    int evalue = e.evalue;
+    int evalue = e.value;
     if (evalue > 29999) {
       // spawn dragonwing in galaga mode, otherwise just a purple ball
       if (evalue == 30000) {
@@ -1503,7 +1503,7 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
         state.display.display_time = 150;
       }
     }
-    else if (e.scoreitem) {
+    else if (e.score_item) {
       enemies.status[z] = 1;
       sound_queue[7] = S_ITEM;
       if (evalue == 1) {
@@ -1576,14 +1576,14 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
       else {
         player.cash += evalue;
       }
-      setup_explosion(state.explosions.slots, enemy_screen_x, e.ey, 0, enemyDat[e.enemytype].explosiontype,
-                      true, false);
+      setup_explosion(state.explosions.slots, enemy_screen_x, e.y, 0, enemyDat[e.type].explosiontype, true,
+                      false);
     }
     // explosiontype & 1 == 0: not ground enemy
     else if (player.invulnerable_ticks == 0 && enemies.status[z] == 0 &&
-             (enemyDat[e.enemytype].explosiontype & 1) == 0)
+             (enemyDat[e.type].explosiontype & 1) == 0)
     {
-      int armorleft = e.armorleft;
+      int armorleft = e.armor;
       if (armorleft > state.players.damage_rate) {
         armorleft = state.players.damage_rate;
       }
@@ -1591,25 +1591,25 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
       damage_player(state, record, player, armorleft);
 
       // player ship gets push-back from collision
-      if (e.armorleft > 0) {
-        player.x_velocity += (e.exc * e.armorleft) / 2;
-        player.y_velocity += (e.eyc * e.armorleft) / 2;
+      if (e.armor > 0) {
+        player.x_velocity += (e.x_speed * e.armor) / 2;
+        player.y_velocity += (e.y_speed * e.armor) / 2;
       }
 
-      int armorleft2 = e.armorleft;
+      int armorleft2 = e.armor;
       if (armorleft2 == 255) {
         armorleft2 = 30000;
       }
 
-      uint8_t link = e.linknum;
+      uint8_t link = e.link_num;
       if (link == 0) {
         link = 255;
       }
 
       if (armorleft2 > armorleft) {
         // damage enemy
-        if (e.armorleft != 255) {
-          e.armorleft -= armorleft;
+        if (e.armor != 255) {
+          e.armor -= armorleft;
         }
         sound_queue[5] = S_ENEMY_HIT;
         continue;
@@ -1623,27 +1623,26 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
           continue;
         }
 
-        JE_SingleEnemyType& killed = enemies.slots[temp2];
-        uint8_t const       linknum = killed.linknum;
+        Enemy&        killed = enemies.slots[temp2];
+        uint8_t const linknum = killed.link_num;
         bool const linked = link != 255 && (link == linknum || link - 100 == linknum ||
                                             (linknum > 40 && linknum / 20 == link / 20 && linknum <= link));
         if (temp2 != z && !linked) {
           continue;
         }
 
-        int killed_screen_x = killed.ex + killed.mapoffset;
+        int killed_screen_x = killed.x + killed.map_offset;
 
-        killed.linknum = 0;
+        killed.link_num = 0;
 
         enemies.status[temp2] = 1;
 
-        if (enemyDat[killed.enemytype].esize == 1) {
-          setup_explosion_large(state.explosions, killed.enemyground, killed.explonum, killed_screen_x,
-                                killed.ey);
+        if (enemyDat[killed.type].esize == 1) {
+          setup_explosion_large(state.explosions, killed.ground, killed.explosion, killed_screen_x, killed.y);
           sound_queue[6] = S_EXPLOSION_9;
         }
         else {
-          setup_explosion(state.explosions.slots, killed_screen_x, killed.ey, 0, 1, false, false);
+          setup_explosion(state.explosions.slots, killed_screen_x, killed.y, 0, 1, false, false);
           sound_queue[5] = S_EXPLOSION_4;
         }
       }

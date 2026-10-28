@@ -475,10 +475,10 @@ void warning(State& state, DrawRecord& record) {
     }
     else {
       if (int const b = new_enemy(state, 50, 560, 0); b > 0) {
-        JE_SingleEnemyType& e = state.enemies.slots[b - 1];
-        e.enemydie = 560 + (mt_rand_r(&mt) % 3) + 1;
-        e.eyc -= state.map.back_move3;
-        e.armorleft = 4;
+        Enemy& e = state.enemies.slots[b - 1];
+        e.dies_into = 560 + (mt_rand_r(&mt) % 3) + 1;
+        e.y_speed -= state.map.back_move3;
+        e.armor = 4;
       }
       delay = 500;
     }
@@ -777,12 +777,12 @@ void boss_bars(State& state, DrawRecord& record) {
     unsigned armor = 256;  // higher than armor max
     // find most damaged
     for (unsigned e = 0; e < std::size(enemies.slots); e++) {
-      if (enemies.status[e] == 1 || enemies.slots[e].linknum != bar.link_num) {
+      if (enemies.status[e] == 1 || enemies.slots[e].link_num != bar.link_num) {
         continue;
       }
 
-      if (enemies.slots[e].armorleft < armor) {
-        armor = enemies.slots[e].armorleft;
+      if (enemies.slots[e].armor < armor) {
+        armor = enemies.slots[e].armor;
       }
     }
     // boss dead?

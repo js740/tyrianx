@@ -40,11 +40,12 @@ the C game, moved into structures, a subsystem at a time. So far it has:
   what the last hit on an enemy left (ice, and shots that pass through).
 - `EnemyShots`: the enemy shots' slots, and which are free.
 
-The slots of the events, explosions, superpixels, stars, boss bars and shots
-are C++ structs with C++ names (`Event`, `Explosion`, `RepeatingExplosion`,
-`Superpixel`, `Star`, `BossBar`, `EnemyShot`, `PlayerShot`) in place of the C
-code's (`JE_EventRecType`, `rep_explosion_type` and so on). The enemies' and
-the players' slots still have the C structs' types.
+The slots of the events, explosions, superpixels, stars, boss bars, shots and
+enemies are C++ structs with C++ names (`Event`, `Explosion`,
+`RepeatingExplosion`, `Superpixel`, `Star`, `BossBar`, `EnemyShot`,
+`PlayerShot`, `Enemy`) in place of the C code's (`JE_EventRecType`,
+`rep_explosion_type` and so on). The players' slots still have the C struct's
+type.
 
 The C++ level tick works on a `State` that the code running it provides
 (`../port/README.md`): the shadow tick, or the C++ tick in place of the C

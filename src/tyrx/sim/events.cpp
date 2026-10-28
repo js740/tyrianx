@@ -62,49 +62,49 @@ int create_new_event_enemy(State& state, uint8_t enemy_type_ofs, uint16_t first,
     return 0;
   }
 
-  JE_SingleEnemyType& e = state.enemies.slots[b - 1];
+  Enemy& e = state.enemies.slots[b - 1];
   state.enemies.status[b - 1] = make_enemy(state, e, ev.dat + enemy_type_ofs, unique_shape_table_i);
 
   if (ev.dat2 != -99) {
     switch (first) {
       case 0:
-        e.ex = ev.dat2 - (map.map_x - 1) * 24;
-        e.ey -= map.back_move2;
+        e.x = ev.dat2 - (map.map_x - 1) * 24;
+        e.y -= map.back_move2;
         break;
       case 25:
       case 75:
-        e.ex = ev.dat2 - (map.map_x - 1) * 24 - 12;
-        e.ey -= map.back_move;
+        e.x = ev.dat2 - (map.map_x - 1) * 24 - 12;
+        e.y -= map.back_move;
         break;
       case 50:
         if (map.background3x1) {
-          e.ex = ev.dat2 - (map.map_x - 1) * 24 - 12;
+          e.x = ev.dat2 - (map.map_x - 1) * 24 - 12;
         }
         else {
-          e.ex = ev.dat2 - map.map_x3 * 24 - 24 * 2 + 6;
+          e.x = ev.dat2 - map.map_x3 * 24 - 24 * 2 + 6;
         }
-        e.ey -= map.back_move3;
+        e.y -= map.back_move3;
 
         if (map.background3x1b) {
-          e.ex -= 6;
+          e.x -= 6;
         }
         break;
     }
-    e.ey = -28;
+    e.y = -28;
     if (map.background3x1b && first == 50) {
-      e.ey += 4;
+      e.y += 4;
     }
   }
 
   if (level.small_enemy_adjust && e.size == 0) {
-    e.ex -= 10;
-    e.ey -= 7;
+    e.x -= 10;
+    e.y -= 7;
   }
 
-  e.ey += ev.dat5;
-  e.eyc += ev.dat3;
-  e.linknum = ev.dat4;
-  e.fixedmovey = ev.dat6;
+  e.y += ev.dat5;
+  e.y_speed += ev.dat3;
+  e.link_num = ev.dat4;
+  e.fixed_move_y = ev.dat6;
   return b;
 }
 
@@ -115,14 +115,14 @@ bool search_for(State& state, uint8_t link, uint8_t *out_index) {
   int found_id = -1;
 
   for (int i = 0; i < 100; i++) {
-    JE_SingleEnemyType& e = state.enemies.slots[i];
-    if (state.enemies.status[i] != 0 || e.linknum != link) {
+    Enemy& e = state.enemies.slots[i];
+    if (state.enemies.status[i] != 0 || e.link_num != link) {
       continue;
     }
 
     found_id = i;
     if (state.game.galaga_mode) {
-      e.evalue += e.evalue;
+      e.value += e.value;
     }
   }
 
@@ -296,14 +296,14 @@ void event_system(State& state, HudLog& hud) {
       ev.dat6 = 0;  // We use EVENTDAT6 for the background
       create_new_event_enemy(state, 0, first, 0);
       if (int const b = create_new_event_enemy(state, 1, first, 0); b > 0) {
-        enemy[b - 1].ex += 24;
+        enemy[b - 1].x += 24;
       }
       if (int const b = create_new_event_enemy(state, 2, first, 0); b > 0) {
-        enemy[b - 1].ey -= 28;
+        enemy[b - 1].y -= 28;
       }
       if (int const b = create_new_event_enemy(state, 3, first, 0); b > 0) {
-        enemy[b - 1].ex += 24;
-        enemy[b - 1].ey -= 28;
+        enemy[b - 1].x += 24;
+        enemy[b - 1].y -= 28;
       }
       break;
     }
@@ -332,13 +332,13 @@ void event_system(State& state, HudLog& hud) {
 
     case 17:  // Ground Bottom
       if (int const b = create_new_event_enemy(state, 0, 25, 0); b > 0) {
-        enemy[b - 1].ey = 190 + ev.dat5;
+        enemy[b - 1].y = 190 + ev.dat5;
       }
       break;
 
     case 18:  // Sky Enemy on Bottom
       if (int const b = create_new_event_enemy(state, 0, 0, 0); b > 0) {
-        enemy[b - 1].ey = 190 + ev.dat5;
+        enemy[b - 1].y = 190 + ev.dat5;
       }
       break;
 
@@ -370,28 +370,28 @@ void event_system(State& state, HudLog& hud) {
       }
 
       for (int i = group.first; i < group.end; i++) {
-        if (!group.all && enemy[i].linknum != ev.dat4) {
+        if (!group.all && enemy[i].link_num != ev.dat4) {
           continue;
         }
 
         if (ev.dat != -99) {
-          enemy[i].exc = ev.dat;
+          enemy[i].x_speed = ev.dat;
         }
 
         if (ev.dat2 != -99) {
-          enemy[i].eyc = ev.dat2;
+          enemy[i].y_speed = ev.dat2;
         }
 
         if (ev.dat6 != 0) {
-          enemy[i].fixedmovey = ev.dat6;
+          enemy[i].fixed_move_y = ev.dat6;
         }
 
         if (ev.dat6 == -99) {
-          enemy[i].fixedmovey = 0;
+          enemy[i].fixed_move_y = 0;
         }
 
         if (ev.dat5 > 0) {
-          enemy[i].enemycycle = ev.dat5;
+          enemy[i].frame = ev.dat5;
         }
       }
       break;
@@ -401,42 +401,42 @@ void event_system(State& state, HudLog& hud) {
       take_link_from_new_pl(level, ev);
 
       for (int i = 0; i < 100; i++) {
-        if (!(enemy_avail[i] != 1 && (enemy[i].linknum == ev.dat4 || ev.dat4 == 0))) {
+        if (!(enemy_avail[i] != 1 && (enemy[i].link_num == ev.dat4 || ev.dat4 == 0))) {
           continue;
         }
 
         if (ev.dat != -99) {
-          enemy[i].excc = ev.dat;
-          enemy[i].exccw = abs(ev.dat);
-          enemy[i].exccwmax = abs(ev.dat);
+          enemy[i].x_accel = ev.dat;
+          enemy[i].x_accel_wait = abs(ev.dat);
+          enemy[i].x_accel_wait_max = abs(ev.dat);
           if (ev.dat > 0) {
-            enemy[i].exccadd = 1;
+            enemy[i].x_accel_step = 1;
           }
           else {
-            enemy[i].exccadd = -1;
+            enemy[i].x_accel_step = -1;
           }
         }
 
         if (ev.dat2 != -99) {
-          enemy[i].eycc = ev.dat2;
-          enemy[i].eyccw = abs(ev.dat2);
-          enemy[i].eyccwmax = abs(ev.dat2);
+          enemy[i].y_accel = ev.dat2;
+          enemy[i].y_accel_wait = abs(ev.dat2);
+          enemy[i].y_accel_wait_max = abs(ev.dat2);
           if (ev.dat2 > 0) {
-            enemy[i].eyccadd = 1;
+            enemy[i].y_accel_step = 1;
           }
           else {
-            enemy[i].eyccadd = -1;
+            enemy[i].y_accel_step = -1;
           }
         }
 
         if (ev.dat5 > 0) {
-          enemy[i].enemycycle = ev.dat5;
+          enemy[i].frame = ev.dat5;
         }
         if (ev.dat6 > 0) {
-          enemy[i].ani = ev.dat6;
-          enemy[i].animin = ev.dat5;
-          enemy[i].animax = 0;
-          enemy[i].aniactive = 1;
+          enemy[i].last_frame = ev.dat6;
+          enemy[i].first_frame = ev.dat5;
+          enemy[i].stop_frame = 0;
+          enemy[i].animation = 1;
         }
       }
       break;
@@ -451,52 +451,52 @@ void event_system(State& state, HudLog& hud) {
 
     case 23:  // Sky Enemy on Bottom
       if (int const b = create_new_event_enemy(state, 0, 50, 0); b > 0) {
-        enemy[b - 1].ey = 180 + ev.dat5;
+        enemy[b - 1].y = 180 + ev.dat5;
       }
       break;
 
     case 24:  // Enemy Global Animate
       for (int i = 0; i < 100; i++) {
-        if (enemy[i].linknum != ev.dat4) {
+        if (enemy[i].link_num != ev.dat4) {
           continue;
         }
 
-        enemy[i].aniactive = 1;
-        enemy[i].aniwhenfire = 0;
+        enemy[i].animation = 1;
+        enemy[i].animation_at_stop = 0;
         if (ev.dat2 > 0) {
-          enemy[i].enemycycle = ev.dat2;
-          enemy[i].animin = enemy[i].enemycycle;
+          enemy[i].frame = ev.dat2;
+          enemy[i].first_frame = enemy[i].frame;
         }
         else {
-          enemy[i].enemycycle = 0;
+          enemy[i].frame = 0;
         }
 
         if (ev.dat > 0) {
-          enemy[i].ani = ev.dat;
+          enemy[i].last_frame = ev.dat;
         }
 
         if (ev.dat3 == 1) {
-          enemy[i].animax = enemy[i].ani;
+          enemy[i].stop_frame = enemy[i].last_frame;
         }
         else if (ev.dat3 == 2) {
-          enemy[i].aniactive = 2;
-          enemy[i].animax = enemy[i].ani;
-          enemy[i].aniwhenfire = 2;
+          enemy[i].animation = 2;
+          enemy[i].stop_frame = enemy[i].last_frame;
+          enemy[i].animation_at_stop = 2;
         }
       }
       break;
 
     case 25:  // Enemy Global Damage change
       for (int i = 0; i < 100; i++) {
-        if (ev.dat4 != 0 && enemy[i].linknum != ev.dat4) {
+        if (ev.dat4 != 0 && enemy[i].link_num != ev.dat4) {
           continue;
         }
 
         if (game.galaga_mode) {
-          enemy[i].armorleft = roundf(ev.dat * (game.difficulty_level / 2));
+          enemy[i].armor = roundf(ev.dat * (game.difficulty_level / 2));
         }
         else {
-          enemy[i].armorleft = ev.dat;
+          enemy[i].armor = ev.dat;
         }
       }
       break;
@@ -509,15 +509,15 @@ void event_system(State& state, HudLog& hud) {
       take_link_from_new_pl(level, ev);
 
       for (int i = 0; i < 100; i++) {
-        if (ev.dat4 != 0 && enemy[i].linknum != ev.dat4) {
+        if (ev.dat4 != 0 && enemy[i].link_num != ev.dat4) {
           continue;
         }
 
         if (ev.dat != -99) {
-          enemy[i].exrev = ev.dat;
+          enemy[i].x_reverse_speed = ev.dat;
         }
         if (ev.dat2 != -99) {
-          enemy[i].eyrev = ev.dat2;
+          enemy[i].y_reverse_speed = ev.dat2;
         }
         if (ev.dat3 != 0 && ev.dat3 < 17) {
           enemy[i].filter = ev.dat3;
@@ -547,28 +547,28 @@ void event_system(State& state, HudLog& hud) {
 
     case 31:  // Enemy Fire Override
       for (int i = 0; i < 100; i++) {
-        if (ev.dat4 != 99 && enemy[i].linknum != ev.dat4) {
+        if (ev.dat4 != 99 && enemy[i].link_num != ev.dat4) {
           continue;
         }
 
-        enemy[i].freq[1 - 1] = ev.dat;
-        enemy[i].freq[2 - 1] = ev.dat2;
-        enemy[i].freq[3 - 1] = ev.dat3;
+        enemy[i].shot_freq[1 - 1] = ev.dat;
+        enemy[i].shot_freq[2 - 1] = ev.dat2;
+        enemy[i].shot_freq[3 - 1] = ev.dat3;
         // the C code counts in temp2 (Scratch)
         uint8_t& temp2 = state.scratch.temp2;
         for (temp2 = 0; temp2 < 3; temp2++) {
-          enemy[i].eshotwait[temp2] = 1;
+          enemy[i].shot_wait[temp2] = 1;
         }
-        if (enemy[i].launchtype > 0) {
-          enemy[i].launchfreq = ev.dat5;
-          enemy[i].launchwait = 1;
+        if (enemy[i].launch_type > 0) {
+          enemy[i].launch_freq = ev.dat5;
+          enemy[i].launch_wait = 1;
         }
       }
       break;
 
     case 32:  // create enemy
       if (int const b = create_new_event_enemy(state, 0, 50, 0); b > 0) {
-        enemy[b - 1].ey = 190;
+        enemy[b - 1].y = 190;
       }
       break;
 
@@ -597,8 +597,8 @@ void event_system(State& state, HudLog& hud) {
       }
 
       for (int i = 0; i < 100; i++) {
-        if (enemy[i].linknum == ev.dat4) {
-          enemy[i].enemydie = ev.dat;
+        if (enemy[i].link_num == ev.dat4) {
+          enemy[i].dies_into = ev.dat;
         }
       }
       break;
@@ -640,8 +640,8 @@ void event_system(State& state, HudLog& hud) {
 
     case 39:  // Enemy Global Linknum Change
       for (int i = 0; i < 100; i++) {
-        if (enemy[i].linknum == ev.dat) {
-          enemy[i].linknum = ev.dat2;
+        if (enemy[i].link_num == ev.dat) {
+          enemy[i].link_num = ev.dat2;
         }
       }
       break;
@@ -691,8 +691,8 @@ void event_system(State& state, HudLog& hud) {
       }
       if (game.two_player_mode || game.one_player_action) {
         for (int i = 0; i < 100; i++) {
-          if (enemy[i].linknum == ev.dat4) {
-            enemy[i].enemydie = ev.dat;
+          if (enemy[i].link_num == ev.dat4) {
+            enemy[i].dies_into = ev.dat;
           }
         }
       }
@@ -716,8 +716,8 @@ void event_system(State& state, HudLog& hud) {
 
     case 47:  // Enemy Global AccelRev
       for (int i = 0; i < 100; i++) {
-        if (ev.dat4 == 0 || enemy[i].linknum == ev.dat4) {
-          enemy[i].armorleft = ev.dat;
+        if (ev.dat4 == 0 || enemy[i].link_num == ev.dat4) {
+          enemy[i].armor = ev.dat;
         }
       }
       break;
@@ -775,22 +775,22 @@ void event_system(State& state, HudLog& hud) {
       take_link_from_new_pl(level, ev);
 
       for (int i = 0; i < 100; i++) {
-        if (ev.dat4 != 0 && enemy[i].linknum != ev.dat4) {
+        if (ev.dat4 != 0 && enemy[i].link_num != ev.dat4) {
           continue;
         }
 
         if (ev.dat != -99) {
-          enemy[i].xaccel = ev.dat;
+          enemy[i].x_homing = ev.dat;
         }
         if (ev.dat2 != -99) {
-          enemy[i].yaccel = ev.dat2;
+          enemy[i].y_homing = ev.dat2;
         }
       }
       break;
 
     case 56:  // Ground2 Bottom
       if (int const b = create_new_event_enemy(state, 0, 75, 0); b > 0) {
-        enemy[b - 1].ey = 190;
+        enemy[b - 1].y = 190;
       }
       break;
 
@@ -800,10 +800,10 @@ void event_system(State& state, HudLog& hud) {
 
     case 60:  // Assign Special Enemy
       for (int i = 0; i < 100; i++) {
-        if (enemy[i].linknum == ev.dat4) {
-          enemy[i].special = true;
-          enemy[i].flagnum = ev.dat;
-          enemy[i].setto = (ev.dat2 == 1);
+        if (enemy[i].link_num == ev.dat4) {
+          enemy[i].sets_flag = true;
+          enemy[i].flag_num = ev.dat;
+          enemy[i].flag_value = (ev.dat2 == 1);
         }
       }
       break;
@@ -899,24 +899,24 @@ void event_system(State& state, HudLog& hud) {
 
     case 74:  // Enemy Global BounceParams
       for (int i = 0; i < 100; i++) {
-        if (ev.dat4 != 0 && enemy[i].linknum != ev.dat4) {
+        if (ev.dat4 != 0 && enemy[i].link_num != ev.dat4) {
           continue;
         }
 
         if (ev.dat5 != -99) {
-          enemy[i].xminbounce = ev.dat5;
+          enemy[i].x_min_bounce = ev.dat5;
         }
 
         if (ev.dat6 != -99) {
-          enemy[i].yminbounce = ev.dat6;
+          enemy[i].y_min_bounce = ev.dat6;
         }
 
         if (ev.dat != -99) {
-          enemy[i].xmaxbounce = ev.dat;
+          enemy[i].x_max_bounce = ev.dat;
         }
 
         if (ev.dat2 != -99) {
-          enemy[i].ymaxbounce = ev.dat2;
+          enemy[i].y_max_bounce = ev.dat2;
         }
       }
       break;
@@ -928,8 +928,8 @@ void event_system(State& state, HudLog& hud) {
       bool any = false;
 
       for (int i = 0; i < 100; i++) {
-        if (enemy_avail[i] == 0 && enemy[i].eyc == 0 && enemy[i].linknum >= ev.dat &&
-            enemy[i].linknum <= ev.dat2)
+        if (enemy_avail[i] == 0 && enemy[i].y_speed == 0 && enemy[i].link_num >= ev.dat &&
+            enemy[i].link_num <= ev.dat2)
         {
           any = true;
         }
@@ -940,7 +940,7 @@ void event_system(State& state, HudLog& hud) {
         uint8_t enemy_i;
         do {
           link = (mt_rand_r(&mt) % (ev.dat2 + 1 - ev.dat)) + ev.dat;
-        } while (!(search_for(state, link, &enemy_i) && enemy[enemy_i].eyc == 0));
+        } while (!(search_for(state, link, &enemy_i) && enemy[enemy_i].y_speed == 0));
 
         level.new_pl[ev.dat3 - 80] = link;
       }
