@@ -1707,68 +1707,12 @@ void main_game_player_functions() {
   }
 }
 
-// Port of JE_playerDamage.
+// JE_playerDamage, in sim/player.cpp, and its HUD.
 JE_byte player_damage(JE_byte temp, Player *this_player) {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& youAreCheating = state().cheats.you_are_cheating;
-  auto& soundQueue = state().sound.queue;
-  auto& tempVolume = state().sound.temp_volume;
-  auto& levelEnd = state().ending.countdown;
-  auto& levelTimer = state().level.timer;
-  int playerDamage = 0;
-  soundQueue[7] = S_SHIELD_HIT;
-
-  // Player Damage Routines
-  if (this_player->shield < temp) {
-    playerDamage = temp;
-    temp -= this_player->shield;
-    this_player->shield = 0;
-
-    if (temp > 0) {
-      // Through Shields - Now Armor
-
-      if (this_player->armor < temp) {
-        temp -= this_player->armor;
-        this_player->armor = 0;
-
-        if (this_player->is_alive && !youAreCheating) {
-          levelTimer = false;
-          this_player->is_alive = false;
-          this_player->exploding_ticks = 60;
-          levelEnd = 40;
-          tempVolume = tyrMusicVolume;
-          soundQueue[1] = S_EXPLOSION_22;
-        }
-      }
-      else {
-        this_player->armor -= temp;
-        soundQueue[7] = S_HULL_HIT;
-      }
-    }
-  }
-  else {
-    this_player->shield -= temp;
-
-    setup_explosion(this_player->x - 17, this_player->y - 12, 0, 14, false, !twoPlayerMode);
-    setup_explosion(this_player->x - 5, this_player->y - 12, 0, 15, false, !twoPlayerMode);
-    setup_explosion(this_player->x + 7, this_player->y - 12, 0, 16, false, !twoPlayerMode);
-    setup_explosion(this_player->x + 19, this_player->y - 12, 0, 17, false, !twoPlayerMode);
-
-    setup_explosion(this_player->x - 17, this_player->y + 2, 0, 18, false, !twoPlayerMode);
-    setup_explosion(this_player->x + 19, this_player->y + 2, 0, 19, false, !twoPlayerMode);
-
-    setup_explosion(this_player->x - 17, this_player->y + 16, 0, 20, false, !twoPlayerMode);
-    setup_explosion(this_player->x - 5, this_player->y + 16, 0, 21, false, !twoPlayerMode);
-    setup_explosion(this_player->x + 7, this_player->y + 16, 0, 22, false, !twoPlayerMode);
-  }
-
-  wipe_shield_armor_bars_tick();
-  VGAScreen = VGAScreenSeg;  // side-effect of game_screen
-  draw_shield_tick();
-  draw_armor_tick();
+  sim::PlayerDamage const d = sim::damage_player(state(), *this_player, temp);
+  player_damage_hud(d);
   VGAScreen = game_screen;  // side-effect of game_screen
-
-  return playerDamage;
+  return d.through;
 }
 
 // Port of JE_playerCollide.

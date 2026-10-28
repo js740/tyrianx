@@ -123,13 +123,14 @@ void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset,
 bool search_for(JE_byte PLType, JE_byte *out_index);    // JE_searchFor
 
 // hud.cpp
-void draw_shield_tick();                       // JE_drawShield
-void draw_armor_tick();                        // JE_drawArmor
-void wipe_shield_armor_bars_tick();            // JE_wipeShieldArmorBars
-void draw_port_config_buttons_tick();          // JE_drawPortConfigButtons
-void draw_text_window_tick(char const *text);  // JE_drawTextWindow
-void draw_options_tick();                      // JE_drawOptions
-void draw_option_level_tick();                 // JE_drawOptionLevel
+void draw_shield_tick();                             // JE_drawShield
+void draw_armor_tick();                              // JE_drawArmor
+void wipe_shield_armor_bars_tick();                  // JE_wipeShieldArmorBars
+void player_damage_hud(sim::PlayerDamage const& d);  // JE_playerDamage's
+void draw_port_config_buttons_tick();                // JE_drawPortConfigButtons
+void draw_text_window_tick(char const *text);        // JE_drawTextWindow
+void draw_options_tick();                            // JE_drawOptions
+void draw_option_level_tick();                       // JE_drawOptionLevel
 void message_bar_erased_tick();
 void weapon_power_tick(int x, int y, uint item_power);
 void power_bar_tick(JE_byte temp, uint lastPower);
@@ -147,7 +148,7 @@ void main_keyboard_input();  // JE_mainKeyboardInput
 void main_game_player_functions();  // JE_mainGamePlayerFunctions
 void player_draw(PlayerDrawn const& d);
 void player_collide(Player *this_player, JE_byte playerNum_);  // JE_playerCollide
-JE_byte player_damage(JE_byte temp, Player *this_player);      // JE_playerDamage
+JE_byte player_damage(JE_byte temp, Player *this_player);      // JE_playerDamage, in sim/player.cpp
 void sf_codes(JE_byte playerNum_, JE_integer PX_, JE_integer PY_, JE_integer mouseX_,
               JE_integer mouseY_);                // JE_SFCodes
 JE_word s_gr(JE_word ship, Sprite2_array **ptr);  // JE_SGr

@@ -88,6 +88,13 @@ The ports:
   player shot does to the enemy it hits: it damages or destroys it, with the
   enemies linked to it.
 - `events.cpp`: `event_jump` (`JE_eventJump`) jumps to a position in the level.
+- `enemy_shot.cpp`: `update_enemy_shots` moves the enemy shots and ends those
+  that time out, leave the screen or hit a player. It returns the shots it
+  drew, and the damage it did to the players, for the HUD.
+- `player.cpp`: `damage_player` (`JE_playerDamage`) damages a player's shield
+  and armor. It also limits the players' armor, which the C code does in
+  `JE_drawArmor`, and returns the shields and armor that the C code draws in
+  the HUD.
 
 The rest of the level tick, in `../port/`, works on the `State` and the C
 globals with the C code's names, so that it can be compared with it line by

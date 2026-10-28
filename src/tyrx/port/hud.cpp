@@ -96,6 +96,17 @@ void wipe_shield_armor_bars_tick() {
   log(hud::WipeShieldArmor{!twoPlayerMode || galagaMode, player[0].shield, player[0].armor});
 }
 
+// JE_playerDamage's HUD: JE_wipeShieldArmorBars, JE_drawShield and
+// JE_drawArmor, with the shields and armor that the damage left.
+void player_damage_hud(sim::PlayerDamage const& d) {
+  auto& twoPlayerMode = state().game.two_player_mode;
+  auto& galagaMode = state().game.galaga_mode;
+  auto& player = state().players.slots;
+  log(hud::WipeShieldArmor{!twoPlayerMode || galagaMode, d.shield[0], d.armor_before_limit});
+  log(hud::Shield{twoPlayerMode && !galagaMode, d.shield, player[0].shield_max});
+  log(hud::Armor{twoPlayerMode && !galagaMode, d.armor});
+}
+
 // JE_drawPortConfigButtons (rear weapon pattern indicator)
 void draw_port_config_buttons_tick() {
   auto& twoPlayerMode = state().game.two_player_mode;
