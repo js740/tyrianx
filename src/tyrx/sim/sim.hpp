@@ -28,9 +28,11 @@
 #pragma once
 
 #include "../gold/api.hpp"
+#include "draw_record.hpp"
 #include "hidden.hpp"
 #include "hud.hpp"
 #include "state.hpp"
+#include "visible.hpp"
 
 #include <array>
 #include <bitset>
@@ -60,20 +62,6 @@ void setup_explosion_large(Explosions& explosions, bool enemy_ground, JE_byte ex
 bool update_repeating_explosions(Explosions& explosions, MtState& mt, JE_integer back_move,
                                  std::span<JE_byte, 8> sound_queue);
 
-// The explosions visible in a tick, for its drawing: the slots of those still
-// on screen after the update moved them, and the last position and frame of
-// those whose time ran out, as a new explosion may take their slots later in
-// the tick.
-struct EndedExplosion {
-  int slot;
-  JE_integer x, y;
-  JE_word sprite;
-};
-struct VisibleExplosions {
-  std::bitset<MAX_EXPLOSIONS> slots;
-  std::vector<EndedExplosion> ended;
-};
-
 // tyrian2.c: the explosions' update in JE_main's level loop ("Draw
 // Explosions"), which moves them and ends those whose time ran out or that
 // left the screen.
@@ -95,14 +83,6 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
 // tyrian2.c: JE_newEnemy, which makes an enemy (make_enemy) in the first free
 // slot of the 25 from first.  Returns the slot + 1, or 0 if none was free.
 int new_enemy(State& state, int first, JE_word e_dat_i, Sint16 unique_shape_table_i);
-
-// An enemy as it was drawn, before it moved.
-struct VisibleEnemy {
-  JE_integer x, y;
-  JE_word sprite;  // egr[enemycycle - 1]
-  JE_byte filter, size;
-  Sprite2_array *sprite2s;
-};
 
 // tyrian2.c: JE_drawEnemy, which "actually does a whole lot more than just
 // drawing": the update of the 25 enemies before slot end, on a layer that has
@@ -142,61 +122,11 @@ void hud_option_level(State const& state, HudLog& hud);  // JE_drawOptionLevel
 void hud_charge_level(State const& state, HudLog& hud, JE_byte color);
 void hud_sidekick_ammo(HudLog& hud, int y, int ammo_max, int ammo, bool discharged);
 
-// A player as JE_playerMovement drew it.  Each part says whether the C code
-// drew it on game_screen, as the HUD's drawing had left VGAScreen there
-// (HudLog::game_screen).
-struct VisiblePlayer {
-  JE_word ship_gr;
-  Sprite2_array *ship_gr_ptr;
-  struct Trail {  // at the end of a level
-    bool game_screen;
-    int x;
-    std::vector<int> trail_y;
-  };
-  std::optional<Trail> trail;
-  struct InsertCoin {  // in demos
-    bool game_screen;
-  };
-  std::optional<InsertCoin> insert_coin;
-  struct Ship {
-    bool game_screen;
-    int x, y;
-    int sprite;
-    JE_word map_x2_ofs;
-    bool background2, super_wild, invulnerable;
-  };
-  std::optional<Ship> ship;
-  struct SpecialIcon {
-    bool game_screen;
-    bool ready;
-  };
-  std::optional<SpecialIcon> special_icon;
-  struct Zinglon {
-    bool game_screen;
-    int x;
-    JE_byte width;
-  };
-  std::optional<Zinglon> zinglon;
-  struct Charge {
-    bool game_screen;
-    int x, y;
-    int sprite;
-  };
-  std::optional<Charge> charge;
-  struct Sidekick {
-    bool game_screen;
-    int x, y;
-    uint sprite;
-    uint style;
-  };
-  std::array<std::optional<Sidekick>, 2> sidekicks;
-};
-
 // tyrian2.c: the players' part of JE_main's level loop: their collisions
 // (JE_playerCollide), then their movement, firing, specials and sidekicks
 // (JE_mainGamePlayerFunctions and JE_playerMovement, in mainint.c), and the
 // map's sideways scrolling, which follows them.  Returns the players drawn.
-std::vector<VisiblePlayer> update_players(State& state, HudLog& hud);
+std::vector<VisiblePlayer> update_players(State& state, DrawRecord& record);
 
 // varz.c: JE_getShipInfo, which sets up the players' ships: their sprites,
 // armor, hit areas and generator.
@@ -208,7 +138,7 @@ JE_word port_configs(State const& state);
 // varz.c: JE_doSpecialShot, the specials of player player_num, whose armor
 // and shield pay for them: those set off by the special-move codes or the
 // fire button, and the flares and the Zinglon while they last.
-void do_special_shot(State& state, HudLog& hud, JE_byte player_num, uint& armor, uint& shield,
+void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint& armor, uint& shield,
                      VisiblePlayer& visible);
 
 // mainint.c: JE_SFCodes, which follows player player_num's input (the
@@ -219,21 +149,17 @@ void sf_codes(State& state, JE_byte player_num, JE_integer px, JE_integer py, JE
 
 // varz.c: JE_playerDamage, which damages the player's shield, and its armor
 // if the damage gets through, and draws them in the HUD (which limits both
-// players' armor to 28).  Returns the damage if it got through the shield.
-JE_byte damage_player(State& state, HudLog& hud, Player& player, JE_byte damage);
+// players' armor to 28).  The C code draws them with VGAScreen set to the
+// HUD's surface, and leaves it at game_screen after (its "side-effect of
+// game_screen"), where the rest of the tick then draws.  Returns the damage if
+// it got through the shield.
+JE_byte damage_player(State& state, DrawRecord& record, Player& player, JE_byte damage);
 
 // tyrian2.c: the enemy shots' update in JE_main's level loop ("Draw Enemy
 // Shots"), which moves them and ends those that time out, leave the screen or
 // hit a player.  Returns those drawn, which stay in their slots for the rest
 // of the tick.
-std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, HudLog& hud);
-
-// A player shot as it was drawn.
-struct VisiblePlayerShot {
-  int x, y;
-  JE_word sprite_frame;  // over 60000 for special shots
-  bool shadow;
-};
+std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record);
 
 // tyrian2.c: the player shots' update in JE_main's level loop ("Player Shot
 // Images"): each moves (player_shot_move_and_draw, in shots.c), then hits

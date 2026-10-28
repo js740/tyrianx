@@ -45,7 +45,7 @@ void track(JE_byte limit, JE_integer pos, int player_pos, JE_integer& speed) {
 
 }  // namespace
 
-std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, HudLog& hud) {
+std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record) {
   auto& players = state.players.slots;
   auto& shots = state.enemy_shots;
   std::bitset<ENEMY_SHOT_MAX> visible;
@@ -86,7 +86,7 @@ std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, HudLog& hud) {
       setup_explosion(state.explosions.slots, shot.sx, shot.sy, 0, 0, false, false);
 
       if (player.invulnerable_ticks == 0) {
-        JE_byte const through = damage_player(state, hud, player, shot.sdmg);
+        JE_byte const through = damage_player(state, record, player, shot.sdmg);
         if (through > 0) {
           player.x_velocity += (shot.sxm * through) / 2;
           player.y_velocity += (shot.sym * through) / 2;

@@ -240,7 +240,7 @@ void boss_bar_tick() {
     boss_bar[1].link_num = 0;
   }
 
-  BossBarsDrawn drawn{VGAScreen, bars, {}};
+  BossBarsDrawn drawn{draw_record().screen, bars, {}};
   for (unsigned b = 0; b < bars; b++) {
     unsigned const x = (bars == 2) ? ((b == 0) ? 125 : 185)
                                    : ((levelTimer) ? 250 : 155);  // level timer and boss bar would overlap
@@ -255,8 +255,8 @@ void boss_bar_tick() {
 void boss_bar_draw(BossBarsDrawn const& d) {
   for (unsigned b = 0; b < d.bars; b++) {
     BossBarsDrawn::Bar const& bar = d.bar[b];
-    bar_x(d.screen, bar.x - 25, 7, bar.x + 25, 12, 115);
-    bar_x(d.screen, bar.x - (bar.armor / 10), 7, bar.x + (bar.armor + 5) / 10, 12, 118 + bar.color);
+    bar_x(surface(d.screen), bar.x - 25, 7, bar.x + 25, 12, 115);
+    bar_x(surface(d.screen), bar.x - (bar.armor / 10), 7, bar.x + (bar.armor + 5) / 10, 12, 118 + bar.color);
   }
 }
 

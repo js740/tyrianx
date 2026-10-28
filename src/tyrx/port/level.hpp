@@ -78,6 +78,8 @@ inline void drawing_begins() { runner_target()->drawing_begins(); }
 inline void present() { runner_target()->present(); }
 inline void poll_events() { runner_target()->poll_events(); }
 inline void in_game_help_ahead() { runner_target()->in_game_help_ahead(); }
-inline void c_loop(void (*loop)()) { runner_target()->c_loop(loop); }
+// Runs the C loop on the C globals, with VGAScreen where the draw record has
+// it, and takes back where the loop leaves it.
+void c_loop(void (*loop)());
 
 }  // namespace tyrx::port

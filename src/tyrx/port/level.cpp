@@ -66,8 +66,18 @@ LevelPass simulate(bool& frame);
 }  // namespace
 
 void draw_so_far() {
-  draw_tick(draw_record());
-  draw_record() = DrawRecord{};
+  DrawRecord& r = draw_record();
+  draw_tick(r);
+  Surface const screen = r.screen;
+  r = DrawRecord{};
+  r.screen = screen;
+}
+
+void c_loop(void (*loop)()) {
+  DrawRecord& r = draw_record();
+  VGAScreen = surface(r.screen);
+  runner_target()->c_loop(loop);
+  r.screen = surface_name(VGAScreen);
 }
 
 LevelLocals& level_locals() {
@@ -78,6 +88,7 @@ LevelLocals& level_locals() {
 LevelPass level_pass() {
   bool frame = false;
   LevelPass const next = simulate(frame);
+  VGAScreen = surface(draw_record().screen);
   if (next != LevelPass::unsupported) {
     drawing_begins();
     draw_tick(draw_record());
@@ -180,13 +191,14 @@ void hud_tick() {
   auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   unsigned *const old_weapon_bar = level_locals().old_weapon_bar;
+  DrawRecord& r = draw_record();
 
   if (endLevel) {
     return;
   }
 
   // draw HUD
-  VGAScreen = VGAScreenSeg;  // side-effect of game_screen
+  r.screen = Surface::vga_screen_seg;  // side-effect of game_screen
 
   // -----------------------Message Bar------------------------
   if (textErase > 0 && --textErase == 0) {
@@ -318,7 +330,7 @@ void backgrounds_under_tick() {
   // SMOOTHIES!
   check_smoothies();
   if (anySmoothies) {
-    VGAScreen = VGAScreen2;  // this makes things complicated, but we do it anyway :(
+    r.screen = Surface::vga_screen2;  // this makes things complicated, but we do it anyway :(
   }
 
   // --- BACKGROUNDS ---
@@ -334,10 +346,10 @@ void backgrounds_under_tick() {
 
   // Draw background
   if (astralDuration == 0) {
-    background_1_tick(VGAScreen, false);
+    background_1_tick(r.screen, false);
   }
   else {
-    background_1_tick(VGAScreen, true);  // JE_clr256
+    background_1_tick(r.screen, true);  // JE_clr256
   }
 
   // Set Movement of background 1
@@ -356,40 +368,40 @@ void backgrounds_under_tick() {
   }
 
   if (starActive || astralDuration > 0) {
-    sim::update_starfield(state().starfield, VGAScreen->pitch);
-    r.starfield = VGAScreen;
+    sim::update_starfield(state().starfield, surface(r.screen)->pitch);
+    r.starfield = r.screen;
   }
 
   if (processorType > 1 && smoothies[5 - 1]) {
-    r.iced_blur_1 = Copy{game_screen, VGAScreen};
-    VGAScreen = game_screen;
+    r.iced_blur_1 = Copy{Surface::game_screen, r.screen};
+    r.screen = Surface::game_screen;
   }
 
   // -----------------------BACKGROUNDS------------------------
   // -----------------------BACKGROUND 2------------------------
   if (background2over == 3) {
-    background_2_tick(VGAScreen, false, r.background_2_under);
+    background_2_tick(r.screen, false, r.background_2_under);
     background2 = true;
   }
 
   if (background2over == 0) {
     if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
       if (wild && !background2notTransparent) {
-        background_2_tick(VGAScreen, true, r.background_2_under);
+        background_2_tick(r.screen, true, r.background_2_under);
       }
       else {
-        background_2_tick(VGAScreen, false, r.background_2_under);
+        background_2_tick(r.screen, false, r.background_2_under);
       }
     }
   }
 
   if (smoothies[0] && processorType > 2 && smoothie_data[0] == 0) {
-    r.lava_1 = Copy{game_screen, VGAScreen};
-    VGAScreen = game_screen;
+    r.lava_1 = Copy{Surface::game_screen, r.screen};
+    r.screen = Surface::game_screen;
   }
   if (smoothies[2 - 1] && processorType > 2) {
-    r.water = Copy{game_screen, VGAScreen};
-    VGAScreen = game_screen;
+    r.water = Copy{Surface::game_screen, r.screen};
+    r.screen = Surface::game_screen;
   }
 }
 
@@ -434,13 +446,13 @@ void enemies_under_tick() {
   }
 
   if (smoothies[0] && processorType > 2 && smoothie_data[0] > 0) {
-    r.lava_2 = Copy{game_screen, VGAScreen};
-    VGAScreen = game_screen;
+    r.lava_2 = Copy{Surface::game_screen, r.screen};
+    r.screen = Surface::game_screen;
   }
 
   if (superWild) {
     neat += 3;
-    r.darken_1 = Darkened{VGAScreen, neat};
+    r.darken_1 = Darkened{r.screen, neat};
   }
 
   // -----------------------BACKGROUNDS------------------------
@@ -448,21 +460,21 @@ void enemies_under_tick() {
   if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
     if (background2over == 1) {
       if (wild && !background2notTransparent) {
-        background_2_tick(VGAScreen, true, r.background_2_over_1);
+        background_2_tick(r.screen, true, r.background_2_over_1);
       }
       else {
-        background_2_tick(VGAScreen, false, r.background_2_over_1);
+        background_2_tick(r.screen, false, r.background_2_over_1);
       }
     }
   }
 
   if (superWild) {
     neat++;
-    r.darken_2 = Darkened{VGAScreen, neat};
+    r.darken_2 = Darkened{r.screen, neat};
   }
 
   if (background3over == 2) {
-    background_3_tick(VGAScreen, r.background_3_over_2);
+    background_3_tick(r.screen, r.background_3_over_2);
   }
 
   // New Enemy
@@ -475,12 +487,12 @@ void enemies_under_tick() {
   }
 
   if (processorType > 1 && smoothies[3 - 1]) {
-    r.iced_blur_2 = Copy{game_screen, VGAScreen};
-    VGAScreen = game_screen;
+    r.iced_blur_2 = Copy{Surface::game_screen, r.screen};
+    r.screen = Surface::game_screen;
   }
   if (processorType > 1 && smoothies[4 - 1]) {
-    r.blur = Copy{game_screen, VGAScreen};
-    VGAScreen = game_screen;
+    r.blur = Copy{Surface::game_screen, r.screen};
+    r.screen = Surface::game_screen;
   }
 
   // Draw Sky Enemy
@@ -495,7 +507,7 @@ void enemies_under_tick() {
   }
 
   if (background3over == 0) {
-    background_3_tick(VGAScreen, r.background_3_over_0);
+    background_3_tick(r.screen, r.background_3_over_0);
   }
 
   // Draw Top Enemy
@@ -509,16 +521,13 @@ void player_shots_tick() {
   DrawRecord& r = draw_record();
 
   // Player Shot Images
-  r.player_shots = PlayerShotsDrawn{VGAScreen, sim::update_player_shots(state())};
+  r.player_shots = PlayerShotsDrawn{r.screen, sim::update_player_shots(state())};
 }
 
 // The players: collisions, then movement and firing.
 void players_tick() {
-  SDL_Surface *const screen = VGAScreen;
-  for (sim::VisiblePlayer& p : sim::update_players(state(), draw_record().hud)) {
-    draw_record().players.push_back({screen, std::move(p)});
-  }
-  apply_hud_screen();
+  DrawRecord& r = draw_record();
+  r.players = sim::update_players(state(), r);
 }
 
 // The enemy shots, and background 3 and the enemies over them.
@@ -540,13 +549,12 @@ void enemy_shots_tick() {
   // MAIN DRAWING IS STOPPED STARTING HERE
   if (!endLevel) {
     // Draw Enemy Shots
-    SDL_Surface *const screen = VGAScreen;
-    r.enemy_shots = EnemyShotsDrawn{screen, sim::update_enemy_shots(state(), r.hud)};
-    apply_hud_screen();
+    Surface const screen = r.screen;
+    r.enemy_shots = EnemyShotsDrawn{screen, sim::update_enemy_shots(state(), r)};
   }
 
   if (background3over == 1) {
-    background_3_tick(VGAScreen, r.background_3_over_1);
+    background_3_tick(r.screen, r.background_3_over_1);
   }
 
   // Draw Top Enemy
@@ -586,7 +594,7 @@ void explosions_tick() {
       sim::update_repeating_explosions(state().explosions, state().random.mt, backMove2, soundQueue);
 
   // ---------------------------- Draw Explosions ----------------------------
-  r.explosions = ExplosionsDrawn{VGAScreen, sim::update_explosions(state().explosions)};
+  r.explosions = ExplosionsDrawn{r.screen, sim::update_explosions(state().explosions)};
 
   if (!portConfigChange) {
     portConfigDone = true;
@@ -618,10 +626,10 @@ void warning_tick() {
   if (!(smoothies[2 - 1] && processorType < 4) && !(smoothies[1 - 1] && processorType == 3)) {
     if (background2over == 2) {
       if (wild && !background2notTransparent) {
-        background_2_tick(VGAScreen, true, r.background_2_over_2);
+        background_2_tick(r.screen, true, r.background_2_over_2);
       }
       else {
-        background_2_tick(VGAScreen, false, r.background_2_over_2);
+        background_2_tick(r.screen, false, r.background_2_over_2);
       }
     }
   }
@@ -671,7 +679,7 @@ void warning_tick() {
       else if (warningCol < 113) {
         warningColChange = -warningColChange;
       }
-      r.warning = VGAScreen;
+      r.warning = r.screen;
     }
   }
 
@@ -749,7 +757,7 @@ void texts_tick() {
       tempStr[i] = '0' + smoothies[i];
     }
     tempStr[9] = '\0';
-    r.debug = DebugDrawn{VGAScreen, {}};
+    r.debug = DebugDrawn{r.screen, {}};
     sprintf(buffer, "SM = %s", tempStr);
     r.debug->text[0] = buffer;
 
@@ -769,7 +777,7 @@ void texts_tick() {
 
   if (displayTime > 0) {
     displayTime--;
-    r.message = MessageDrawn{VGAScreen, flash};
+    r.message = MessageDrawn{r.screen, flash};
     flash += flashChange;
     if (flash > 4 || flash == 0) {
       flashChange = -flashChange;
@@ -804,7 +812,7 @@ void texts_tick() {
     soundQueue[7] = S_WARNING;
   }
 
-  r.level_timer = VGAScreen;
+  r.level_timer = r.screen;
 }
 
 // Game over, and the input for stopping demos, pausing, the menu and cheats.
@@ -839,7 +847,7 @@ bool game_over_and_input_tick() {
         reallyEndLevel = true;
       }
       else {
-        r.game_over = VGAScreen;  // game over
+        r.game_over = r.screen;  // game over
       }
 
       if (firstGameOver) {
@@ -956,7 +964,7 @@ LevelPass simulate(bool& frame) {
   hud_tick();
 
   // use game_screen for all the generic drawing functions
-  VGAScreen = game_screen;
+  r.screen = Surface::game_screen;
 
   // ---------------------------EVENTS-------------------------
   sim::update_events(state(), r.hud);
@@ -990,7 +998,7 @@ LevelPass simulate(bool& frame) {
   // Network games aren't supported (level_pass returns early).
 
   // Test
-  r.superpixels = SuperpixelsDrawn{VGAScreen, sim::update_superpixels(state().superpixels)};
+  r.superpixels = SuperpixelsDrawn{r.screen, sim::update_superpixels(state().superpixels)};
 
   // Filtration
   if (filterActive) {
@@ -999,7 +1007,7 @@ LevelPass simulate(bool& frame) {
 
   boss_bar_tick();
 
-  r.in_game_displays = VGAScreen;
+  r.in_game_displays = r.screen;
 
   // The C code makes these changes after JE_starShowVGA; they read no input
   // and draw nothing, so they can come before the frame.
@@ -1042,7 +1050,7 @@ LevelPass simulate(bool& frame) {
     }
   }
 
-  VGAScreen = VGAScreenSeg;  // side-effect of game_screen
+  r.screen = Surface::vga_screen_seg;  // side-effect of game_screen
 
   r.show = !playerEndLevel && !skipStarShowVGA;  // JE_starShowVGA copies the playing area to the screen
   frame = true;

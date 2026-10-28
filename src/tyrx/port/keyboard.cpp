@@ -140,12 +140,12 @@ void main_keyboard_input() {
           editShip1 = true;
         }
 
-        SDL_Surface *temp_surface = VGAScreen;
-        VGAScreen = VGAScreenSeg;
+        Surface const temp_surface = draw_record().screen;
+        draw_record().screen = Surface::vga_screen_seg;
         wipe_shield_armor_bars_tick();
         draw_armor_tick();
         draw_shield_tick();
-        VGAScreen = temp_surface;
+        draw_record().screen = temp_surface;
         draw_options_tick();
 
         keysactive[x] = false;
@@ -185,12 +185,12 @@ void main_keyboard_input() {
           editShip2 = true;
         }
 
-        SDL_Surface *temp_surface = VGAScreen;
-        VGAScreen = VGAScreenSeg;
+        Surface const temp_surface = draw_record().screen;
+        draw_record().screen = Surface::vga_screen_seg;
         wipe_shield_armor_bars_tick();
         draw_armor_tick();
         draw_shield_tick();
-        VGAScreen = temp_surface;
+        draw_record().screen = temp_surface;
         draw_options_tick();
 
         keysactive[x] = false;

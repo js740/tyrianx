@@ -65,22 +65,28 @@ C++ tick does the same (`level_locals`).
 
 Each part of the tick that is ported to C++ is split in two. Its simulation
 (`X_tick`) runs where the C code runs it, and keeps what its drawing will need
-in the tick's draw record (`draw_record.hpp`). Its drawing (`X_draw`) runs after
-the whole simulation: `draw_tick` (`draw_tick.cpp`) draws the tick from the game
-state at the end of the tick and from the record, in the C code's order. The
-`draw::` functions (`draw.hpp`) add the same calls as the C primitives record to
-a draw list (`../render/draw_list.hpp`), which the code running the tick
-provides: the shadow tick (`../check/shadow.cpp`) gives each pass a list of its
-own, and the C++ tick in place of the C code's draws its list as the pass goes.
+in the tick's draw record (`../sim/draw_record.hpp`). Its drawing (`X_draw`)
+runs after the whole simulation: `draw_tick` (`draw_tick.cpp`) draws the tick
+from the game state at the end of the tick and from the record, in the C code's
+order. The `draw::` functions (`draw.hpp`) add the same calls as the C
+primitives record to a draw list (`../render/draw_list.hpp`), which the code
+running the tick provides: the shadow tick (`../check/shadow.cpp`) gives each
+pass a list of its own, and the C++ tick in place of the C code's draws its list
+as the pass goes.
 
 The record holds only what the state at the end of the tick no longer shows:
-which parts were drawn, on which surface, and values that the simulation went
-on to change after the C code drew them. Each part of the playing area is
-drawn at most once a tick, at a fixed point in the C code's order, so the
-record has a place for each. The HUD is different: the C code draws its
-gauges and messages as they change, wherever that happens in the tick, and
-they overlap, so the record logs them in order. The HUD's surface is only
-copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
+which parts were drawn, on which surface, and values that the simulation went on
+to change after the C code drew them. It names the surfaces (`sim::Surface`:
+`VGAScreenSeg`, `game_screen` and `VGAScreen2`), and keeps the one that the C
+code's `VGAScreen` points at, which the simulation changes where the C code
+changes `VGAScreen`; the drawing draws on the surfaces it names
+(`draw_record.hpp`). The real `VGAScreen` is set from it for the C loops, which
+save and restore it, and at the end of the pass. Each part of the playing area
+is drawn at most once a tick, at a fixed point in the C code's order, so the
+record has a place for each. The HUD is different: the C code draws its gauges
+and messages as they change, wherever that happens in the tick, and they
+overlap, so the record logs them in order. The HUD's surface is only copied onto
+at the end of the tick, so `draw_tick` draws the logged HUD first.
 
 | Part | Record |
 |---|---|
@@ -88,7 +94,7 @@ copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
 | Starfield, superpixels | Nothing: the drawing moves them back by their speed; for superpixels, which ones were active |
 | Enemies (`enemy.cpp`, `JE_drawEnemy`'s drawing; the update is in `../sim/enemy.cpp`) | The enemies that their update returns: each drawn enemy's position before it moved, frame, filter, sprite sheet and size (damage changes the frame and filter, and the slot can be reused) |
 | Player shots (`shots.cpp`, `player_shot_move_and_draw`'s drawing; the update is in `../sim/player_shot.cpp`) | Each drawn shot's position and frame, and whether it has a shadow: a hit can free the slot for a chain-reaction shot |
-| Players (`player.cpp`, `JE_playerMovement`'s and `JE_doSpecialShot`'s drawing; the update is in `../sim/player.cpp` and `../sim/special.cpp`) | The players that their update returns: the positions and ship and sidekick frames they were drawn with, and the charge, each with whether the HUD's drawing had left `VGAScreen` at `game_screen` |
+| Players (`player.cpp`, `JE_playerMovement`'s and `JE_doSpecialShot`'s drawing; the update is in `../sim/player.cpp` and `../sim/special.cpp`) | The players that their update returns: the positions and ship and sidekick frames they were drawn with, and the charge, each with its surface |
 | Explosions (`../sim/explosion.cpp`) | The visible explosions that their update returns: which slots were drawn, and the position and frame of those that ended (a new explosion can take the slot) |
 | Enemy shots (their update is in `../sim/enemy_shot.cpp`) | Which slots their update drew (drawn shots stay in their slots for the rest of the tick) |
 | Boss bars | The bars' positions, armor and colours |

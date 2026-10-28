@@ -76,12 +76,12 @@ inline bool all_players_alive() {
 }
 
 // background.cpp
-void background_1_tick(SDL_Surface *screen, bool clr);  // draw_background_1, or JE_clr256
+void background_1_tick(Surface screen, bool clr);  // draw_background_1, or JE_clr256
 void background_1_draw(Background1Drawn const& d);
-void background_2_tick(SDL_Surface *screen, bool blend,
+void background_2_tick(Surface screen, bool blend,
                        std::optional<Background2Drawn>& drawn);  // draw_background_2, _blend
 void background_2_draw(Background2Drawn const& d);
-void background_3_tick(SDL_Surface *screen, std::optional<Background3Drawn>& drawn);  // draw_background_3
+void background_3_tick(Surface screen, std::optional<Background3Drawn>& drawn);  // draw_background_3
 void background_3_draw(Background3Drawn const& d);
 void starfield_draw(SDL_Surface *screen);
 void check_smoothies();  // JE_checkSmoothies
@@ -107,15 +107,6 @@ inline void setup_explosion_large(JE_boolean enemyGround, JE_byte exploNum, JE_i
 inline void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color) {
   sim::do_sp(state().superpixels, state().random.mt, x, y, num, explowidth, color);
   temp = num;
-}
-
-// The HUD's "side-effect of game_screen" (sim::HudLog::game_screen), which
-// code here applies after calling code in sim/ that can draw the shields and
-// armor.
-inline void apply_hud_screen() {
-  if (std::exchange(draw_record().hud.game_screen, false)) {
-    VGAScreen = game_screen;
-  }
 }
 
 // JE_eventJump, in sim/events.cpp
@@ -144,7 +135,7 @@ void in_game_displays_draw(SDL_Surface *screen);  // JE_inGameDisplays
 void main_keyboard_input();  // JE_mainKeyboardInput
 
 // player.cpp; the players' update is in sim/player.cpp
-void player_draw(PlayerDrawn const& d);
+void player_draw(sim::VisiblePlayer const& p);
 
 // shots.cpp
 void player_shots_draw(PlayerShotsDrawn const& d);
