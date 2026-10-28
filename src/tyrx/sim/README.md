@@ -1,7 +1,8 @@
-# sim: the C++ game's state, and game logic that owns its state
+# sim: the C++ game's state, and the game logic
 
-`sim/` is where the game's state goes as it moves out of the C globals into
-structures, and the game logic that works on it.
+`sim/` has the C++ game's state, moved out of the C globals into structures,
+and the game logic that works on it: the level tick's simulation
+(`level_tick`), which records the tick's drawing for `../port/` to draw.
 
 ## The game state
 
@@ -71,6 +72,24 @@ random number generator's functions that use them, from code here and in
 `../port/`, so using one by mistake doesn't compile.
 
 The ports:
+- `level.cpp`: `level_tick` runs one tick of the level loop (from the
+  `level_loop` label in `JE_main` to the jump back to it), in the C code's
+  order, without its frame: the HUD's gauges, the events, the backgrounds and
+  smoothies, the enemies, the player shots, the players, the enemy shots, the
+  explosions, the warning, the sound routine, the texts, game over and the
+  level's input, the superpixels, the filter and the boss bars, and the end of
+  the level. It records the tick's drawing in the draw record, and asks the
+  code running it (`Host`) for the C code's loops with their own drawing (the
+  pause screen, the in-game menu and help). Besides the `State`, it changes
+  the C code's sound and music, plays the sound queue, and reads the input for
+  stopping demos, pausing, the menu and the key commands from the C globals.
+- `background.cpp`: the map's backgrounds (`background_1` to `background_3`),
+  which `draw_background_2` and `draw_background_3` scroll as they draw, and
+  `check_smoothies` (`JE_checkSmoothies`).
+- `keyboard.cpp`: `main_keyboard_input` (`JE_mainKeyboardInput`), the key
+  commands: edited ships, help, cheats, debug and screen settings, which read
+  the keys from the C globals, and set some of the C code's settings (the debug
+  display, the frame speed and the gamma).
 - `explosion.cpp`: `setup_explosion` (`JE_setupExplosion`) takes the explosion
   slots it fills in, and `setup_explosion_large` (`JE_setupExplosionLarge`) the
   `Explosions`. In the level loop, `update_repeating_explosions` sets off the
@@ -128,20 +147,20 @@ The ports:
   The record names the surfaces (`Surface`), and keeps the one that the C
   code's `VGAScreen` points at.
 
-The rest of the level tick, in `../port/`, works on the `State` and the C
-globals with the C code's names, so that it can be compared with it line by
-line. Its code moves here a part at a time, and the shadow tick checks it here
-as before. On the way, it takes its state explicitly, gets C++ names, and is
-split into functions where the C code nests deeply or jumps (`goto`). It keeps
-in local variables what the C code keeps in scratch globals (`temp`, `b`,
-`tempW` and the like), when no code that runs after it reads them before
-writing them.
+The code here was ported from the C code line by line, first in `../port/`
+with the C code's names, and then restructured here, checked by the shadow
+tick at each step: it takes its state explicitly, has C++ names, and is split
+into functions where the C code nests deeply or jumps (`goto`). It keeps in
+local variables what the C code keeps in scratch globals (`temp`, `b`, `tempW`
+and the like), as no code that runs after it reads them before writing them,
+except for `temp2`, which carries a value between functions and ticks, and is
+in the `State` (`Scratch`).
 
 A port in `sim/` can also be checked on its own, call by call, with `TYRX_DIFF`
 (`../check/README.md`).
 
 Ports that need random numbers call the reentrant C generator (`mt_rand_r` etc.)
 on an `MtState` they are given; there is no C++ copy of it. The level tick gives
-them the `State`'s, and `../port/`'s code draws from it too. A port must draw
+them the `State`'s. A port must draw
 the same values in the same order as the C function. Including the `MtState` in
 the compared state checks that.

@@ -74,9 +74,4 @@ void enemies_draw(EnemiesDrawn const& d) {
   }
 }
 
-void draw_enemy_tick(int enemyOffset, JE_word mapXOfs, JE_word backMove, std::optional<EnemiesDrawn>& drawn) {
-  drawn = EnemiesDrawn{draw_record().screen, mapXOfs,
-                       sim::update_enemies(state(), enemyOffset, mapXOfs, backMove)};
-}
-
 }  // namespace tyrx::port

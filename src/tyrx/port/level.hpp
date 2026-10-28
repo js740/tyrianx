@@ -31,11 +31,12 @@
 
 #pragma once
 
+#include "../sim/sim.hpp"
+
 namespace tyrx::port {
 
-// How a pass ended: like the C code, back to level_loop for the next tick, or
-// to start_level to end the level; or not at all, for network games.
-enum class LevelPass { level_loop, start_level, unsupported };
+// How a pass ended (../sim/sim.hpp).
+using sim::LevelPass;
 
 LevelPass level_pass();
 
@@ -44,10 +45,9 @@ LevelPass level_pass();
 // when it has drawn the playing area up to there, and they draw on top of it.
 void draw_so_far();
 
-// State the C code keeps in JE_main's local variables, which outlive a pass.
-struct LevelLocals {
-  unsigned old_weapon_bar[2] = {0, 0};  // weapon power bars are only redrawn when they change
-};
+// State the C code keeps in JE_main's local variables, which outlive a pass
+// (../sim/sim.hpp).
+using sim::LevelLocals;
 
 LevelLocals& level_locals();
 

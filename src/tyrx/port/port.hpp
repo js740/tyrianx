@@ -57,95 +57,28 @@ inline sim::State& state() { return *state_target(); }
 // The C globals that sim::State holds are hidden here (../sim/hidden.hpp).
 using namespace hidden;
 
-// The random number generator's state is in the State too.  These draw from
-// it, in place of the C functions, which draw from mt_global.
-inline unsigned long mt_rand() { return mt_rand_r(&state().random.mt); }
-inline float mt_rand_1() { return mt_rand_1_r(&state().random.mt); }
-inline float mt_rand_lt1() { return mt_rand_lt1_r(&state().random.mt); }
-
-// player.h's, which read the C global player.
-inline bool all_players_dead() {
-  auto& player = state().players.slots;
-  auto& twoPlayerMode = state().game.two_player_mode;
-  return (!player[0].is_alive && (!twoPlayerMode || !player[1].is_alive));
-}
-inline bool all_players_alive() {
-  auto& player = state().players.slots;
-  auto& twoPlayerMode = state().game.two_player_mode;
-  return (player[0].is_alive && (!twoPlayerMode || player[1].is_alive));
-}
-
 // background.cpp
-void background_1_tick(Surface screen, bool clr);  // draw_background_1, or JE_clr256
-void background_1_draw(Background1Drawn const& d);
-void background_2_tick(Surface screen, bool blend,
-                       std::optional<Background2Drawn>& drawn);  // draw_background_2, _blend
-void background_2_draw(Background2Drawn const& d);
-void background_3_tick(Surface screen, std::optional<Background3Drawn>& drawn);  // draw_background_3
-void background_3_draw(Background3Drawn const& d);
+void background_1_draw(Background1Drawn const& d);  // draw_background_1, or JE_clr256
+void background_2_draw(Background2Drawn const& d);  // draw_background_2, or _blend
+void background_3_draw(Background3Drawn const& d);  // draw_background_3
 void starfield_draw(SDL_Surface *screen);
-void check_smoothies();  // JE_checkSmoothies
 
 // effects.cpp
 void superpixels_draw(SuperpixelsDrawn const& d);
-void filter_screen_tick();  // JE_filterScreen(levelFilter, levelBrightness)
 void filter_screen_draw(FilterDrawn const& d);
 
-// JE_setupExplosion, in sim/explosion.cpp
-inline void setup_explosion(JE_integer x, JE_integer y, JE_integer deltaY, JE_integer type,
-                            bool fixedPosition, bool followPlayer) {
-  sim::setup_explosion(state().explosions.slots, x, y, deltaY, type, fixedPosition, followPlayer);
-}
-
-// JE_setupExplosionLarge, in sim/explosion.cpp
-inline void setup_explosion_large(JE_boolean enemyGround, JE_byte exploNum, JE_integer x, JE_integer y) {
-  sim::setup_explosion_large(state().explosions, enemyGround, exploNum, x, y);
-}
-
-// JE_doSP, in sim/superpixel.cpp.  It counts in the global temp, which it
-// leaves at num.
-inline void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color) {
-  sim::do_sp(state().superpixels, state().random.mt, x, y, num, explowidth, color);
-  temp = num;
-}
-
-// JE_eventJump, in sim/events.cpp
-inline void event_jump(JE_word jump) { sim::event_jump(state().level, jump); }
-
 // enemy.cpp
-void draw_enemy_tick(int enemyOffset, JE_word mapXOfs, JE_word backMove,
-                     std::optional<EnemiesDrawn>& drawn);  // JE_drawEnemy, in sim/enemy.cpp
 void enemies_draw(EnemiesDrawn const& d);
 
-// hud.cpp; the HUD's log is in ../sim/hud.cpp
-void draw_shield_tick();                       // JE_drawShield
-void draw_armor_tick();                        // JE_drawArmor
-void wipe_shield_armor_bars_tick();            // JE_wipeShieldArmorBars
-void draw_text_window_tick(char const *text);  // JE_drawTextWindow
-void draw_options_tick();                      // JE_drawOptions
-void message_bar_erased_tick();
-void weapon_power_tick(int x, int y, uint item_power);
-void power_bar_tick(JE_byte temp, uint lastPower);
+// hud.cpp
 void hud_draw(hud::Draw const& draw);
-void boss_bar_tick();  // draw_boss_bar
 void boss_bar_draw(BossBarsDrawn const& d);
 void in_game_displays_draw(SDL_Surface *screen);  // JE_inGameDisplays
 
-// keyboard.cpp
-void main_keyboard_input();  // JE_mainKeyboardInput
-
-// player.cpp; the players' update is in sim/player.cpp
+// player.cpp
 void player_draw(sim::VisiblePlayer const& p);
 
 // shots.cpp
 void player_shots_draw(PlayerShotsDrawn const& d);
-// shots.c's, in sim/player_shot.cpp, called as port::, as for player.c
-inline JE_integer player_shot_create(JE_word portNum, uint bay_i, JE_word PX, JE_word PY, JE_word mouseX,
-                                     JE_word mouseY, JE_word wpNum, JE_byte playerNum) {
-  return sim::create_player_shot(state(), portNum, bay_i, PX, PY, mouseX, mouseY, wpNum, playerNum);
-}
-inline void player_shot_set_direction(JE_integer shot_id, uint weapon_id, JE_real direction) {
-  sim::set_player_shot_direction(state().player_shots.slots[shot_id], weapon_id, direction);
-}
 
 }  // namespace tyrx::port

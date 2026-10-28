@@ -61,24 +61,7 @@ void dbar3(SDL_Surface *surface, JE_integer x, JE_integer y, JE_integer num, JE_
   }
 }
 
-void log(hud::Draw draw) { draw_record().hud.draws.push_back(std::move(draw)); }
-
 }  // namespace
-
-// The HUD's gauges and messages that the level tick, events and key commands
-// still in port/ draw, in ../sim/hud.cpp.
-void draw_shield_tick() { sim::hud_shield(state(), draw_record().hud); }
-void draw_armor_tick() { sim::hud_armor(state(), draw_record().hud); }
-void wipe_shield_armor_bars_tick() { sim::hud_wipe_shield_armor(state(), draw_record().hud); }
-void draw_text_window_tick(char const *text) { sim::hud_text_window(state(), draw_record().hud, text); }
-void draw_options_tick() { sim::hud_options(state(), draw_record().hud); }
-
-// The parts of the HUD that the level tick draws.
-void message_bar_erased_tick() { log(hud::MessageBarErased{}); }
-
-void weapon_power_tick(int x, int y, uint item_power) { log(hud::WeaponPower{x, y, item_power}); }
-
-void power_bar_tick(JE_byte temp, uint lastPower) { log(hud::PowerBar{temp, lastPower}); }
 
 void hud_draw(hud::Draw const& draw) {
   SDL_Surface *const screen = VGAScreenSeg;
@@ -199,57 +182,6 @@ void hud_draw(hud::Draw const& draw) {
     }
   };
   std::visit(Visitor{screen}, draw);
-}
-
-// The bars follow the most damaged enemy of their link group, and flash after
-// a hit; the drawing gets where they are and how they look.
-void boss_bar_tick() {
-  auto& boss_bar = state().display.boss_bars;
-  auto& levelTimer = state().level.timer;
-  auto& enemy = state().enemies.slots;
-  auto& enemyAvail = state().enemies.status;
-  for (unsigned b = 0; b < COUNTOF(boss_bar); b++) {
-    if (boss_bar[b].link_num == 0) {
-      continue;
-    }
-    unsigned armor = 256;  // higher than armor max
-    // find most damaged
-    for (unsigned e = 0; e < COUNTOF(enemy); e++) {
-      if (enemyAvail[e] == 1 || enemy[e].linknum != boss_bar[b].link_num) {
-        continue;
-      }
-
-      if (enemy[e].armorleft < armor) {
-        armor = enemy[e].armorleft;
-      }
-    }
-    // boss dead?
-    if (armor > 255 || armor == 0) {
-      boss_bar[b].link_num = 0;
-    }
-    else {
-      boss_bar[b].armor = (armor == 255) ? 254 : armor;  // 255 would make the bar too long
-    }
-  }
-
-  unsigned const bars = (boss_bar[0].link_num != 0 ? 1 : 0) + (boss_bar[1].link_num != 0 ? 1 : 0);
-
-  // if only one bar left, make it the first one
-  if (bars == 1 && boss_bar[0].link_num == 0) {
-    std::memcpy(&boss_bar[0], &boss_bar[1], sizeof(boss_bar_t));
-    boss_bar[1].link_num = 0;
-  }
-
-  BossBarsDrawn drawn{draw_record().screen, bars, {}};
-  for (unsigned b = 0; b < bars; b++) {
-    unsigned const x = (bars == 2) ? ((b == 0) ? 125 : 185)
-                                   : ((levelTimer) ? 250 : 155);  // level timer and boss bar would overlap
-    drawn.bar[b] = {x, boss_bar[b].armor, boss_bar[b].color};
-    if (boss_bar[b].color > 0) {
-      boss_bar[b].color--;
-    }
-  }
-  draw_record().boss_bars = drawn;
 }
 
 void boss_bar_draw(BossBarsDrawn const& d) {

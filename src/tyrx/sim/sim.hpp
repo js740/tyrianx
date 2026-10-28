@@ -101,6 +101,51 @@ std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_of
 int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zinglon, int shot_x, int shot_y,
               JE_byte player_num);
 
+// How a level tick ended: like the C code, back to level_loop for the next
+// tick, or to start_level to end the level; or not at all, for network games,
+// which aren't supported.
+enum class LevelPass { level_loop, start_level, unsupported };
+
+// State the C code keeps in JE_main's local variables, which outlive a tick.
+struct LevelLocals {
+  unsigned old_weapon_bar[2] = {0, 0};  // weapon power bars are only redrawn when they change
+};
+
+// What the level tick needs from the code running it: the C code's loops
+// with their own drawing and input (the pause screen, the in-game menu and
+// help), which work on the C globals and run in the middle of the tick, a
+// notice just before the key commands open the help, and the surfaces' pitch,
+// which the stars' positions depend on.
+struct Host {
+  virtual void in_game_help_ahead() = 0;
+  virtual void c_loop(void (*loop)()) = 0;
+  virtual int pitch(Surface surface) = 0;
+
+ protected:
+  ~Host() = default;
+};
+
+// level.cpp, tyrian2.c: one tick of JE_main's level loop, from the level_loop
+// label to the jump back to it, which records the tick's drawing in record
+// (which starts empty).  Sets frame if the tick ends with a frame
+// (JE_starShowVGA): it doesn't when the in-game menu or help opened.
+LevelPass level_tick(State& state, LevelLocals& locals, DrawRecord& record, Host& host, bool& frame);
+
+// background.cpp, backgrnd.c: the map's backgrounds in the level loop.
+// background_1 records layer 1 (or JE_clr256 if clr), which the level loop
+// scrolls; background_2 and background_3 record their layers and scroll them,
+// as draw_background_2 and draw_background_3 do.  background_2 is blended if
+// blend.
+void background_1(State const& state, DrawRecord& record, bool clr);
+void background_2(State& state, DrawRecord& record, bool blend, std::optional<Background2Drawn>& drawn);
+void background_3(State& state, DrawRecord& record, std::optional<Background3Drawn>& drawn);
+
+// tyrian2.c: JE_checkSmoothies, whether any smoothies need VGAScreen2.
+void check_smoothies(State& state);
+
+// keyboard.cpp, mainint.c: JE_mainKeyboardInput, the key commands.
+void main_keyboard_input(State& state, DrawRecord& record, Host& host);
+
 // tyrian2.c: the events' part of JE_main's level loop: runs the events that
 // the level has reached (JE_eventSystem).
 void update_events(State& state, HudLog& hud);
