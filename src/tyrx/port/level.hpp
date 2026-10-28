@@ -21,9 +21,10 @@
 // The game's level loop in C++.  level_pass runs one pass of it: one level
 // tick, from the level_loop label in JE_main (tyrian2.c) to the jump back to
 // it, on the C++ game's state (sim::State) and the C code's other globals.  The
-// tick's simulation is complete before anything is drawn: it keeps a record
-// for the drawing (draw_record.hpp), from which draw_tick then draws the tick,
-// and then the frame is presented and events are polled.  It is checked
+// tick's simulation (sim::level_tick) is complete before anything is drawn: it
+// keeps a record for the drawing (../sim/draw_record.hpp), from which
+// render::draw_tick then draws the tick, and then the frame is presented and
+// events are polled.  It is checked
 // against the C code by running it in the shadow of each C tick
 // (check/shadow.hpp), and runs in place of the C code's with TYRX_CXX_TICK
 // (../cxx_tick.hpp).

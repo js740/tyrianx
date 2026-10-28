@@ -24,9 +24,9 @@
 // shadow.
 
 #include "draw.hpp"
-#include "port.hpp"
+#include "tick.hpp"
 
-namespace tyrx::port {
+namespace tyrx::render {
 
 void player_shots_draw(PlayerShotsDrawn const& d) {
   SDL_Surface *const screen = surface(d.screen);
@@ -51,4 +51,4 @@ void player_shots_draw(PlayerShotsDrawn const& d) {
   }
 }
 
-}  // namespace tyrx::port
+}  // namespace tyrx::render

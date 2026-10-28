@@ -21,18 +21,18 @@
 // (JE_filterScreen in backgrnd.c).
 
 #include "draw.hpp"
-#include "port.hpp"
+#include "tick.hpp"
 
 #include <algorithm>
 
-namespace tyrx::port {
+namespace tyrx::render {
 
 // Superpixels move and fade as they are drawn.  The drawing gets the
 // superpixels as they were before (as the C code records them), rebuilt from
 // the ones that were active.
-void superpixels_draw(SuperpixelsDrawn const& d) {
+void superpixels_draw(sim::State const& state, SuperpixelsDrawn const& d) {
   superpixel_type before[MAX_SUPERPIXELS];
-  std::ranges::copy(state().superpixels.slots, before);
+  std::ranges::copy(state.superpixels.slots, before);
   for (int i = 0; i < MAX_SUPERPIXELS; ++i) {
     if (d.active[i]) {
       before[i].x -= before[i].delta_x;
@@ -43,10 +43,10 @@ void superpixels_draw(SuperpixelsDrawn const& d) {
   draw::JE_drawSP(surface(d.screen), before);
 }
 
-void filter_screen_draw(FilterDrawn const& d) {
-  auto& filtrationAvail = state().display.filtration_avail;
-  auto& explosionTransparent = state().display.explosion_transparent;
+void filter_screen_draw(sim::State const& state, FilterDrawn const& d) {
+  auto const& filtrationAvail = state.display.filtration_avail;
+  auto const& explosionTransparent = state.display.explosion_transparent;
   draw::JE_filterScreen(surface(d.screen), d.col, d.brightness, filtrationAvail, explosionTransparent);
 }
 
-}  // namespace tyrx::port
+}  // namespace tyrx::render

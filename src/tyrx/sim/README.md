@@ -2,7 +2,7 @@
 
 `sim/` has the C++ game's state, moved out of the C globals into structures,
 and the game logic that works on it: the level tick's simulation
-(`level_tick`), which records the tick's drawing for `../port/` to draw.
+(`level_tick`), which records the tick's drawing for `../render/tick/` to draw.
 
 ## The game state
 

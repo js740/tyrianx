@@ -22,7 +22,7 @@
 
 #include "draw.hpp"
 
-namespace tyrx::port::draw {
+namespace tyrx::render::draw {
 
 namespace {
 
@@ -126,4 +126,4 @@ void JE_textShade(SDL_Surface *screen, int x, int y, char const *s, unsigned col
   }
 }
 
-}  // namespace tyrx::port::draw
+}  // namespace tyrx::render::draw

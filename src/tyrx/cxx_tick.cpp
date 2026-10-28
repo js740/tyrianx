@@ -21,10 +21,10 @@
 
 #include "gold/api.hpp"
 #include "gold/sim_state.hpp"
-#include "port/draw.hpp"
 #include "port/level.hpp"
 #include "port/port.hpp"
 #include "render/draw_list.hpp"
+#include "render/tick/draw.hpp"
 #include "rewind.hpp"
 #include "runtime.hpp"
 
@@ -66,12 +66,12 @@ class CxxTick final : public port::Runner {
 
     gold::scramble_sim_state_globals();
     port::state_target() = &state_;
-    port::draw::target() = &list_;
+    render::draw::target() = &list_;
     port::runner_target() = this;
     port::LevelPass const pass = port::level_pass();
     flush();
     port::runner_target() = nullptr;
-    port::draw::target() = nullptr;
+    render::draw::target() = nullptr;
     port::state_target() = nullptr;
     gold::write_sim_state(state_);
 

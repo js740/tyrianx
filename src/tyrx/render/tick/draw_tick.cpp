@@ -22,24 +22,18 @@
 // and the draw record (draw_record.hpp).
 
 #include "draw.hpp"
-#include "draw_record.hpp"
-#include "port.hpp"
+#include "tick.hpp"
 
 #include <cstdio>
 
-namespace tyrx::port {
-
-DrawRecord& draw_record() {
-  static DrawRecord record;
-  return record;
-}
+namespace tyrx::render {
 
 namespace {
 
 // The shots drawn stay as they are, and in their slots, for the rest of the
 // tick.
-void enemy_shots_draw(EnemyShotsDrawn const& d) {
-  auto const& enemyShot = state().enemy_shots.slots;
+void enemy_shots_draw(sim::State const& state, EnemyShotsDrawn const& d) {
+  auto const& enemyShot = state.enemy_shots.slots;
   for (int z = 0; z < ENEMY_SHOT_MAX; z++) {
     if (!d.drawn[z]) {
       continue;
@@ -58,15 +52,15 @@ void enemy_shots_draw(EnemyShotsDrawn const& d) {
 
 // Explosions that ended may have had their slots taken, so those are drawn
 // from the record.
-void explosions_draw(ExplosionsDrawn const& d) {
-  auto& explosionTransparent = state().display.explosion_transparent;
+void explosions_draw(sim::State const& state, ExplosionsDrawn const& d) {
+  auto const& explosionTransparent = state.display.explosion_transparent;
   auto e = d.visible.ended.begin();
   for (int j = 0; j < MAX_EXPLOSIONS; j++) {
     if (!d.visible.slots[j]) {
       continue;
     }
 
-    Explosion const& explosion = state().explosions.slots[j];
+    Explosion const& explosion = state.explosions.slots[j];
     JE_integer x = explosion.x, y = explosion.y;
     JE_word sprite = explosion.sprite;
     if (e != d.visible.ended.end() && e->slot == j) {
@@ -103,13 +97,13 @@ void draw_if(std::optional<T> const& drawn, Draw draw) {
 
 }  // namespace
 
-void draw_tick(DrawRecord const& r) {
-  auto& processorType = state().game.processor_type;
-  auto& smoothie_data = state().display.smoothie_data;
-  auto& warningCol = state().display.warning_col;
-  auto& starShowVGASpecialCode = state().display.star_show_vga_special_code;
-  auto& levelTimerCountdown = state().level.timer_countdown;
-  auto& player = state().players.slots;
+void draw_tick(sim::State const& state, DrawRecord const& r) {
+  auto const& processorType = state.game.processor_type;
+  auto const& smoothie_data = state.display.smoothie_data;
+  auto const& warningCol = state.display.warning_col;
+  auto const& starShowVGASpecialCode = state.display.star_show_vga_special_code;
+  auto const& levelTimerCountdown = state.level.timer_countdown;
+  auto const& player = state.players.slots;
   // The HUD, on its own surface, whose drawing commutes with the playing
   // area's until the playing area is copied onto it at the end.
   for (hud::Draw const& d : r.hud.draws) {
@@ -119,7 +113,7 @@ void draw_tick(DrawRecord const& r) {
   // --- BACKGROUNDS ---
   draw_if(r.background_1, background_1_draw);
   if (r.starfield) {
-    starfield_draw(surface(*r.starfield));
+    starfield_draw(state, surface(*r.starfield));
   }
   copy_draw(r.iced_blur_1, draw::iced_blur_filter);
   draw_if(r.background_2_under, background_2_draw);
@@ -151,13 +145,17 @@ void draw_tick(DrawRecord const& r) {
   }
 
   // Draw Enemy Shots
-  draw_if(r.enemy_shots, enemy_shots_draw);
+  if (r.enemy_shots) {
+    enemy_shots_draw(state, *r.enemy_shots);
+  }
   draw_if(r.background_3_over_1, background_3_draw);
   draw_if(r.top_enemies_over, enemies_draw);
   draw_if(r.sky_enemies_over, enemies_draw);
 
   // ---------------------------- Draw Explosions ----------------------------
-  draw_if(r.explosions, explosions_draw);
+  if (r.explosions) {
+    explosions_draw(state, *r.explosions);
+  }
   draw_if(r.background_2_over_2, background_2_draw);
 
   // -------------------------Warning---------------------------
@@ -199,15 +197,19 @@ void draw_tick(DrawRecord const& r) {
   }
 
   // Test
-  draw_if(r.superpixels, superpixels_draw);
+  if (r.superpixels) {
+    superpixels_draw(state, *r.superpixels);
+  }
 
   // Filtration
-  draw_if(r.filter, filter_screen_draw);
+  if (r.filter) {
+    filter_screen_draw(state, *r.filter);
+  }
 
   draw_if(r.boss_bars, boss_bar_draw);
 
   if (r.in_game_displays) {
-    in_game_displays_draw(surface(*r.in_game_displays));
+    in_game_displays_draw(state, surface(*r.in_game_displays));
   }
 
   if (!r.show) {
@@ -226,4 +228,4 @@ void draw_tick(DrawRecord const& r) {
   }
 }
 
-}  // namespace tyrx::port
+}  // namespace tyrx::render

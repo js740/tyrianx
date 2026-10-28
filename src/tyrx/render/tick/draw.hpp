@@ -27,9 +27,9 @@
 
 #pragma once
 
-#include "../render/draw_list.hpp"
+#include "../draw_list.hpp"
 
-namespace tyrx::port::draw {
+namespace tyrx::render::draw {
 
 using render::DrawCall;
 using render::DrawList;
@@ -225,4 +225,4 @@ void JE_outTextAndDarken(SDL_Surface *screen, int x, int y, char const *s, unsig
 void JE_textShade(SDL_Surface *screen, int x, int y, char const *s, unsigned colorbank, int brightness,
                   unsigned shadetype);
 
-}  // namespace tyrx::port::draw
+}  // namespace tyrx::render::draw
