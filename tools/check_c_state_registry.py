@@ -27,7 +27,9 @@ as X macros by state class.  UNTRACKED (src/tyrx/gold/untracked.txt) lists
 the symbols it neither hashes nor snapshots, by object.  Using `nm` on each C
 object file, this fails if a data/bss symbol is classified by neither, if a
 registered symbol is static, missing or defined more than once, if an entry
-is duplicated, or if a registry list is not sorted.
+is duplicated, if an untracked symbol is no longer in the C sources (the .c
+and .h files next to the objects' sources, obj/X.o being built from
+src/X.c), or if a registry list is not sorted.
 
 --by-object prints the classification of every listed symbol, by object.
 
@@ -129,6 +131,21 @@ def object_symbols(nm, path):
     return syms
 
 
+def c_sources_text(objects):
+    """The text of the C sources (.c and .h) next to the objects' sources."""
+    dirs = set()
+    for p in objects:
+        parts = os.path.normpath(p).split(os.sep)
+        dirs.add(os.path.join(*(["src"] + parts[1:-1])) if parts[0] == "obj" else os.path.dirname(p))
+    text = []
+    for d in sorted(dirs):
+        for name in sorted(os.listdir(d)):
+            if name.endswith((".c", ".h")):
+                with open(os.path.join(d, name), errors="replace") as f:
+                    text.append(f.read())
+    return "\n".join(text)
+
+
 def main():
     args = sys.argv[1:]
     by_object = "--by-object" in args
@@ -175,8 +192,14 @@ def main():
             elif not is_registered and not listed and obj not in defaults:
                 errors.append(f"unclassified symbol {obj}.{sym} ('{kind}')")
 
-    # Untracked entries whose symbol is missing are not errors: the optimizer
-    # drops statics that are never read.
+    # Untracked entries whose symbol is missing from its object are not errors
+    # as long as the C sources still have it: the optimizer drops statics that
+    # are never read.  Those whose symbol the sources no longer mention are
+    # stale.
+    source_text = c_sources_text(objects)
+    for obj, sym in sorted(entries):
+        if obj in symbols and sym not in symbols[obj] and not re.search(rf"\b{re.escape(sym)}\b", source_text):
+            errors.append(f"{untracked}: {obj} {sym} is not in the C sources any more")
 
     if by_object:
         for obj, syms in sorted(symbols.items()):
