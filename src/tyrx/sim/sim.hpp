@@ -28,6 +28,7 @@
 #pragma once
 
 #include "../gold/api.hpp"
+#include "hidden.hpp"
 #include "state.hpp"
 
 #include <bitset>
@@ -35,6 +36,9 @@
 #include <vector>
 
 namespace tyrx::sim {
+
+// The C globals that the State holds are hidden here (hidden.hpp).
+using namespace hidden;
 
 // Random numbers: ports draw from an MtState with the reentrant C functions
 // (mt_rand_r etc. in mtrand.h) rather than a C++ copy of the generator.
