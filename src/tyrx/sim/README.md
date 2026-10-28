@@ -87,7 +87,12 @@ The ports:
   moved, for the tick's drawing. `hit_enemy` (from the level loop) is what a
   player shot does to the enemy it hits: it damages or destroys it, with the
   enemies linked to it.
-- `events.cpp`: `event_jump` (`JE_eventJump`) jumps to a position in the level.
+- `events.cpp`: `update_events` runs the level's events that the level has
+  reached (`JE_eventSystem`), and `event_jump` (`JE_eventJump`) jumps to a
+  position in the level. Besides the `State`, the events change the C code's
+  level data and resources, as the C code does: events 49 to 52 set the armor
+  and graphic of enemy type 0 (`enemyDat[0]`) for the enemy they create, event
+  5 loads the enemies' sprite sheets, and event 35 starts a song.
 - `enemy_shot.cpp`: `update_enemy_shots` moves the enemy shots and ends those
   that time out, leave the screen or hit a player. It returns the shots it
   drew.
