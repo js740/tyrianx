@@ -36,8 +36,9 @@ namespace tyrx::render {
 // An 8-bit (palettized) image, such as the pixels of an SDL_Surface.
 struct Canvas {
   uint8_t *pixels;
-  int      pitch;
-  int      w, h;
+  int32_t  pitch;
+  int32_t  w;
+  int32_t  h;
 };
 
 // The C drawing code expects all surfaces to be 320 pixels wide, and some of it

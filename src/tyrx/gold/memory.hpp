@@ -41,7 +41,8 @@ class CMemory {
   void restore() const;
 
  private:
-  std::vector<unsigned char> data_, bss_;
+  std::vector<unsigned char> data_;
+  std::vector<unsigned char> bss_;
 };
 
 }  // namespace tyrx::gold

@@ -41,42 +41,48 @@ struct TextWindow {          // JE_drawTextWindow
 };
 struct Shield {  // JE_drawShield
   bool     two;  // two-player HUD
-  unsigned shield[2];
-  unsigned shield_max;
+  uint32_t shield[2];
+  uint32_t shield_max;
 };
 struct Armor {  // JE_drawArmor
   bool     two;
-  unsigned armor[2];
+  uint32_t armor[2];
 };
 struct WipeShieldArmor {  // JE_wipeShieldArmorBars
   bool     one;           // one-player HUD
-  unsigned shield, armor;
+  uint32_t shield;
+  uint32_t armor;
 };
 struct WeaponPower {
-  int      x, y;
-  unsigned item_power;
+  int32_t  x;
+  int32_t  y;
+  uint32_t item_power;
 };
 struct PowerBar {
   uint8_t  temp;       // power / 10
-  unsigned lastPower;  // before
+  uint32_t lastPower;  // before
 };
 struct PortConfig {  // JE_drawPortConfigButtons
-  unsigned weapon_mode;
+  uint32_t weapon_mode;
 };
 struct Sidekick {  // JE_drawOptions, for one sidekick
-  int     y;
+  int32_t y;
   uint8_t icongr;
-  int     ammo_max, ammo;
+  int32_t ammo_max;
+  int32_t ammo;
 };
 struct OptionLevel {  // JE_drawOptionLevel
   uint8_t sidekick_level;
 };
 struct ChargeLevel {
-  uint8_t chargeLevel, color;
+  uint8_t chargeLevel;
+  uint8_t color;
 };
 struct SidekickAmmo {
-  int  y, ammo_max, ammo;
-  bool discharged;  // after firing; otherwise after a refill
+  int32_t y;
+  int32_t ammo_max;
+  int32_t ammo;
+  bool    discharged;  // after firing; otherwise after a refill
 };
 
 using Draw = std::variant<MessageBarErased, TextWindow, Shield, Armor, WipeShieldArmor, WeaponPower, PowerBar,

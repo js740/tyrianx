@@ -44,8 +44,9 @@ enum class Surface : uint8_t {
 // those whose time ran out, as a new explosion may take their slots later in
 // the tick.
 struct EndedExplosion {
-  int      slot;
-  int16_t  x, y;
+  int32_t  slot;
+  int16_t  x;
+  int16_t  y;
   uint16_t sprite;
 };
 struct VisibleExplosions {
@@ -55,15 +56,18 @@ struct VisibleExplosions {
 
 // An enemy as it was drawn, before it moved.
 struct VisibleEnemy {
-  int16_t        x, y;
+  int16_t        x;
+  int16_t        y;
   uint16_t       sprite;  // egr[enemycycle - 1]
-  uint8_t        filter, size;
+  uint8_t        filter;
+  uint8_t        size;
   Sprite2_array *sprite2s;
 };
 
 // A player shot as it was drawn.
 struct VisiblePlayerShot {
-  int      x, y;
+  int32_t  x;
+  int32_t  y;
   uint16_t sprite_frame;  // over 60000 for special shots
   bool     shadow;
 };
@@ -76,7 +80,7 @@ struct VisiblePlayer {
   struct Trail {  // at the end of a level
     Surface screen;
 
-    int x;
+    int32_t x;
 
     std::vector<int> trail_y;
   };
@@ -87,10 +91,13 @@ struct VisiblePlayer {
   std::optional<InsertCoin> insert_coin;
   struct Ship {
     Surface  screen;
-    int      x, y;
-    int      sprite;
+    int32_t  x;
+    int32_t  y;
+    int32_t  sprite;
     uint16_t map_x2_ofs;
-    bool     background2, super_wild, invulnerable;
+    bool     background2;
+    bool     super_wild;
+    bool     invulnerable;
   };
   std::optional<Ship> ship;
   struct SpecialIcon {
@@ -100,21 +107,23 @@ struct VisiblePlayer {
   std::optional<SpecialIcon> special_icon;
   struct Zinglon {
     Surface screen;
-    int     x;
+    int32_t x;
     uint8_t width;
   };
   std::optional<Zinglon> zinglon;
   struct Charge {
     Surface screen;
-    int     x, y;
-    int     sprite;
+    int32_t x;
+    int32_t y;
+    int32_t sprite;
   };
   std::optional<Charge> charge;
   struct Sidekick {
     Surface  screen;
-    int      x, y;
-    unsigned sprite;
-    unsigned style;
+    int32_t  x;
+    int32_t  y;
+    uint32_t sprite;
+    uint32_t style;
   };
   std::optional<Sidekick> sidekicks[2];
 };
