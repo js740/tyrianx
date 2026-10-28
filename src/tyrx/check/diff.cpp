@@ -33,8 +33,8 @@ namespace tyrx::check {
 namespace {
 
 struct SliceStats {
-  std::uint64_t calls = 0;
-  std::uint64_t mismatches = 0;
+  uint64_t calls = 0;
+  uint64_t mismatches = 0;
 };
 
 struct DiffState {
@@ -43,7 +43,7 @@ struct DiffState {
     return v && *v && *v != '0';
   }();
   std::map<std::string, SliceStats, std::less<>> slices;
-  std::uint64_t mismatches = 0;
+  uint64_t mismatches = 0;
 
   ~DiffState() {
     if (!enabled) {
@@ -61,19 +61,19 @@ DiffState& diff_state() {
   return s;
 }
 
-constexpr std::uint64_t kMaxReported = 10;
+constexpr uint64_t kMaxReported = 10;
 
 }  // namespace
 
 bool diff_enabled() { return diff_state().enabled; }
 
-std::uint64_t diff_mismatches() { return diff_state().mismatches; }
+uint64_t diff_mismatches() { return diff_state().mismatches; }
 
 namespace detail {
 
 std::string dump_to_string(void (*dump)(gold::Dumper&, void const *), void const *value) {
   char *buf = nullptr;
-  std::size_t size = 0;
+  size_t size = 0;
   std::FILE *f = open_memstream(&buf, &size);
   {
     gold::Dumper d(f);
@@ -142,10 +142,10 @@ struct SuperpixelsState {
 // Wrapped C functions
 //------------------------------------------------------------------------------
 
-extern "C" void __real_JE_setupExplosion(JE_integer x, JE_integer y, JE_integer deltaY, JE_integer type,
+extern "C" void __real_JE_setupExplosion(int16_t x, int16_t y, int16_t deltaY, int16_t type,
                                          bool fixedPosition, bool followPlayer);
 
-extern "C" void __wrap_JE_setupExplosion(JE_integer x, JE_integer y, JE_integer deltaY, JE_integer type,
+extern "C" void __wrap_JE_setupExplosion(int16_t x, int16_t y, int16_t deltaY, int16_t type,
                                          bool fixedPosition, bool followPlayer) {
   if (!tyrx::check::diff_enabled()) {
     return __real_JE_setupExplosion(x, y, deltaY, type, fixedPosition, followPlayer);
@@ -162,11 +162,9 @@ extern "C" void __wrap_JE_setupExplosion(JE_integer x, JE_integer y, JE_integer 
   tyrx::check::diff_check("JE_setupExplosion", c, cxx);
 }
 
-extern "C" void __real_JE_setupExplosionLarge(JE_boolean enemyGround, JE_byte exploNum, JE_integer x,
-                                              JE_integer y);
+extern "C" void __real_JE_setupExplosionLarge(bool enemyGround, uint8_t exploNum, int16_t x, int16_t y);
 
-extern "C" void __wrap_JE_setupExplosionLarge(JE_boolean enemyGround, JE_byte exploNum, JE_integer x,
-                                              JE_integer y) {
+extern "C" void __wrap_JE_setupExplosionLarge(bool enemyGround, uint8_t exploNum, int16_t x, int16_t y) {
   if (!tyrx::check::diff_enabled()) {
     return __real_JE_setupExplosionLarge(enemyGround, exploNum, x, y);
   }
@@ -186,9 +184,9 @@ extern "C" void __wrap_JE_setupExplosionLarge(JE_boolean enemyGround, JE_byte ex
   tyrx::check::diff_check("JE_setupExplosionLarge", c, cxx);
 }
 
-extern "C" void __real_JE_doSP(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color);
+extern "C" void __real_JE_doSP(uint16_t x, uint16_t y, uint16_t num, uint8_t explowidth, uint8_t color);
 
-extern "C" void __wrap_JE_doSP(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte color) {
+extern "C" void __wrap_JE_doSP(uint16_t x, uint16_t y, uint16_t num, uint8_t explowidth, uint8_t color) {
   if (!tyrx::check::diff_enabled()) {
     return __real_JE_doSP(x, y, num, explowidth, color);
   }

@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 namespace tyrx {
 
@@ -33,6 +33,6 @@ char const *env(char const *name);
 long env_long(char const *name, long fallback);
 
 // The number of level ticks run so far, i.e. the index of the next one.
-std::uint64_t current_tick();
+uint64_t current_tick();
 
 }  // namespace tyrx

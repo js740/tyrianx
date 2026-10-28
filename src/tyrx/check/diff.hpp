@@ -30,7 +30,7 @@
 
 #include "../gold/state.hpp"
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 #include <string_view>
 
@@ -39,7 +39,7 @@ namespace tyrx::check {
 bool diff_enabled();
 
 // Number of mismatches found so far (all slices).
-std::uint64_t diff_mismatches();
+uint64_t diff_mismatches();
 
 namespace detail {
 std::string dump_to_string(void (*dump)(gold::Dumper&, void const *), void const *value);

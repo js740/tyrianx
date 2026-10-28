@@ -22,8 +22,8 @@
 
 #include "render.hpp"
 
+#include <stddef.h>
 #include <algorithm>
-#include <cstddef>
 #include <cstring>
 
 namespace tyrx::render {
@@ -32,21 +32,21 @@ namespace {
 
 // Sets the pixel at offset i, which the C code doesn't check against the start
 // of the canvas.
-void set(Canvas dst, std::ptrdiff_t i, Uint8 c) {
-  if (i >= 0 && i < (std::ptrdiff_t)dst.pitch * dst.h) {
+void set(Canvas dst, ptrdiff_t i, uint8_t c) {
+  if (i >= 0 && i < (ptrdiff_t)dst.pitch * dst.h) {
     dst.pixels[i] = c;
   }
 }
 
 }  // namespace
 
-void pix(Canvas dst, int x, int y, JE_byte c) {
+void pix(Canvas dst, int x, int y, uint8_t c) {
   if (x < dst.pitch && y < dst.h) {
-    set(dst, (std::ptrdiff_t)y * dst.pitch + x, c);
+    set(dst, (ptrdiff_t)y * dst.pitch + x, c);
   }
 }
 
-void pix3(Canvas dst, int x, int y, JE_byte c) {
+void pix3(Canvas dst, int x, int y, uint8_t c) {
   pix(dst, x, y, c);
   pix(dst, x - 1, y, c);
   pix(dst, x + 1, y, c);
@@ -69,7 +69,7 @@ void rectangle(Canvas dst, int a, int b, int c, int d, int e) {
 }
 
 // SDL_FillRect, clipped to the canvas.
-void fill_rectangle_wh(Canvas dst, int x, int y, unsigned w, unsigned h, Uint8 color) {
+void fill_rectangle_wh(Canvas dst, int x, int y, unsigned w, unsigned h, uint8_t color) {
   int const x1 = std::max(x, 0), y1 = std::max(y, 0);
   int const x2 = std::min<long long>((long long)x + (int)w, dst.w),
             y2 = std::min<long long>((long long)y + (int)h, dst.h);
@@ -80,7 +80,7 @@ void fill_rectangle_wh(Canvas dst, int x, int y, unsigned w, unsigned h, Uint8 c
   }
 }
 
-void fill_rectangle_xy(Canvas dst, int x, int y, int x2, int y2, Uint8 color) {
+void fill_rectangle_xy(Canvas dst, int x, int y, int x2, int y2, uint8_t color) {
   fill_rectangle_wh(dst, x, y, x2 - x + 1, y2 - y + 1, color);
 }
 
@@ -91,7 +91,7 @@ void bar_shade(Canvas dst, int a, int b, int c, int d) {
   int const width = c - a + 1;
   for (int i = b * dst.pitch + a; i <= d * dst.pitch + a; i += dst.pitch) {
     for (int j = 0; j < width; ++j) {
-      Uint8& p = dst.pixels[i + j];
+      uint8_t& p = dst.pixels[i + j];
       p = ((p & 0x0F) >> 1) | (p & 0xF0);
     }
   }
@@ -104,9 +104,9 @@ void bar_bright(Canvas dst, int a, int b, int c, int d) {
   int const width = c - a + 1;
   for (int i = b * dst.pitch + a; i <= d * dst.pitch + a; i += dst.pitch) {
     for (int j = 0; j < width; ++j) {
-      Uint8& p = dst.pixels[i + j];
-      JE_byte const ah = p & 0xF0;
-      JE_byte al = (p & 0x0F) + 2;
+      uint8_t& p = dst.pixels[i + j];
+      uint8_t const ah = p & 0xF0;
+      uint8_t al = (p & 0x0F) + 2;
       if (al > 0x0F) {
         al = 0x0F;
       }
@@ -115,7 +115,7 @@ void bar_bright(Canvas dst, int a, int b, int c, int d) {
   }
 }
 
-void draw_segmented_gauge(Canvas dst, int x, int y, Uint8 color, unsigned segment_width,
+void draw_segmented_gauge(Canvas dst, int x, int y, uint8_t color, unsigned segment_width,
                           unsigned segment_height, unsigned segment_value, unsigned value) {
   unsigned const segments = value / segment_value, partial_segment = value % segment_value;
   for (unsigned i = 0; i < segments; ++i) {

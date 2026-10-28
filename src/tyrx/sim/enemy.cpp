@@ -40,7 +40,7 @@ namespace {
 // The enemy's random acceleration on one axis (xaccel, yaccel): if accel is
 // set, its speed changes by one toward the player's position, at random and up
 // to accel - 89 either way.
-void home_in(MtState& mt, JE_byte accel, int player_pos, JE_integer pos, JE_shortint& speed) {
+void home_in(MtState& mt, uint8_t accel, int player_pos, int16_t pos, int8_t& speed) {
   if (!accel || accel - 89u <= mt_rand_r(&mt) % 11) {
     return;
   }
@@ -58,8 +58,7 @@ void home_in(MtState& mt, JE_byte accel, int player_pos, JE_integer pos, JE_shor
 // The enemy's fixed acceleration on one axis (excc, eycc): every ccw_max
 // ticks, its speed changes by ccadd, and the acceleration reverses when the
 // speed reaches rev.
-void accelerate(JE_shortint& speed, JE_shortint& cc, JE_shortint& ccw, JE_byte ccw_max, JE_shortint& rev,
-                JE_integer& ccadd) {
+void accelerate(int8_t& speed, int8_t& cc, int8_t& ccw, uint8_t ccw_max, int8_t& rev, int16_t& ccadd) {
   if (!cc || --ccw > 0) {
     return;
   }
@@ -93,15 +92,15 @@ unsigned long random_channel(MtState& mt) {
 
 // What the enemies' update knows of the layer it updates.
 struct Layer {
-  int end;            // the enemies are the 25 before this slot
-  JE_word map_x_ofs;  // how far the layer has scrolled sideways
-  JE_word back_move;  // how far it moved down in the tick
+  int end;             // the enemies are the 25 before this slot
+  uint16_t map_x_ofs;  // how far the layer has scrolled sideways
+  uint16_t back_move;  // how far it moved down in the tick
 };
 
 // The enemy's turret j (1 to 3), at (x, y), fires its weapon's shots.
 // Returns false if there is no free slot for one, which ends the enemy's
 // update.
-bool fire_shots(State& state, JE_SingleEnemyType& e, int j, JE_byte weapon_id, JE_integer x, JE_integer y,
+bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, int16_t x, int16_t y,
                 Layer const& layer) {
   auto& players = state.players.slots;
   auto& shots = state.enemy_shots;
@@ -173,7 +172,7 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, JE_byte weapon_id, J
       continue;
     }
 
-    JE_byte aim = weapon.aim;
+    uint8_t aim = weapon.aim;
 
     // DIF
     if (state.game.difficulty_level > DIFFICULTY_NORMAL) {
@@ -202,15 +201,15 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, JE_byte weapon_id, J
       }
     }
 
-    JE_integer aim_x = target_x - x - layer.map_x_ofs - 4;
+    int16_t aim_x = target_x - x - layer.map_x_ofs - 4;
     if (aim_x == 0) {
       aim_x = 1;
     }
-    JE_integer aim_y = target_y - y;
+    int16_t aim_y = target_y - y;
     if (aim_y == 0) {
       aim_y = 1;
     }
-    JE_integer const max_mag_aim = std::max(abs(aim_x), abs(aim_y));
+    int16_t const max_mag_aim = std::max(abs(aim_x), abs(aim_y));
     shot.sxm = roundf((float)aim_x / max_mag_aim * aim);
     shot.sym = roundf((float)aim_y / max_mag_aim * aim);
   }
@@ -220,16 +219,16 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, JE_byte weapon_id, J
 // The enemy's turret j (1 to 3), at (x, y), fires if it is due.  player_x is
 // player 1's position 25 pixels to the left.  Returns false if that ends the
 // enemy's update.
-bool fire(State& state, JE_SingleEnemyType& e, int j, JE_integer x, JE_integer y, int player_x,
+bool fire(State& state, JE_SingleEnemyType& e, int j, int16_t x, int16_t y, int player_x,
           Layer const& layer) {
   auto& players = state.players.slots;
-  JE_shortint const difficulty = state.game.difficulty_level;
+  int8_t const difficulty = state.game.difficulty_level;
 
   if (!e.freq[j - 1]) {
     return true;
   }
 
-  JE_byte const weapon_id = e.tur[j - 1];
+  uint8_t const weapon_id = e.tur[j - 1];
 
   if (--e.eshotwait[j - 1] != 0 || !weapon_id) {
     return true;
@@ -252,7 +251,7 @@ bool fire(State& state, JE_SingleEnemyType& e, int j, JE_integer x, JE_integer y
   switch (weapon_id) {
     case 252:  // Savara Boss DualMissile
       if (e.ey > 20) {
-        JE_word const back_move = state.map.back_move;
+        uint16_t const back_move = state.map.back_move;
         setup_explosion(state.explosions.slots, x - 8 + layer.map_x_ofs, y - 20 - back_move * 8, -2, 6, false,
                         false);
         setup_explosion(state.explosions.slots, x + 4 + layer.map_x_ofs, y - 20 - back_move * 8, -2, 6, false,
@@ -260,7 +259,7 @@ bool fire(State& state, JE_SingleEnemyType& e, int j, JE_integer x, JE_integer y
       }
       break;
     case 251: {  // Suck-O-Magnet
-      JE_integer const attraction = 4 - (abs(player_x - x) + abs(players[0].y - y)) / 100;
+      int16_t const attraction = 4 - (abs(player_x - x) + abs(players[0].y - y)) / 100;
       if (attraction > 0) {
         players[0].x_velocity += (player_x > x) ? -attraction : attraction;
       }
@@ -291,7 +290,7 @@ bool fire(State& state, JE_SingleEnemyType& e, int j, JE_integer x, JE_integer y
         e.filter = 0x70;
       }
       else {
-        JE_integer const repulsion = 4 - (abs(player_x - x) + abs(players[0].y - y)) / 20;
+        int16_t const repulsion = 4 - (abs(player_x - x) + abs(players[0].y - y)) / 20;
         if (repulsion > 0) {
           players[0].x_velocity += (player_x > x) ? repulsion : -repulsion;
         }
@@ -305,7 +304,7 @@ bool fire(State& state, JE_SingleEnemyType& e, int j, JE_integer x, JE_integer y
 }
 
 // The enemy, at (x, y), launches an enemy if it is due.
-void launch(State& state, JE_SingleEnemyType& e, JE_integer x, JE_integer y, Layer const& layer) {
+void launch(State& state, JE_SingleEnemyType& e, int16_t x, int16_t y, Layer const& layer) {
   auto& players = state.players.slots;
   MtState& mt = state.random.mt;
 
@@ -349,15 +348,15 @@ void launch(State& state, JE_SingleEnemyType& e, JE_integer x, JE_integer y, Lay
       launched.ex += mt_rand_r(&mt) % ((launched.launchtype - 90) * 4) - (launched.launchtype - 90) * 2;
     }
     else {
-      JE_integer aim_x = players[0].x - x - layer.map_x_ofs - 4;
+      int16_t aim_x = players[0].x - x - layer.map_x_ofs - 4;
       if (aim_x == 0) {
         aim_x = 1;
       }
-      JE_integer aim_y = players[0].y - y;
+      int16_t aim_y = players[0].y - y;
       if (aim_y == 0) {
         aim_y = 1;
       }
-      JE_integer const max_mag_aim = std::max(abs(aim_x), abs(aim_y));
+      int16_t const max_mag_aim = std::max(abs(aim_x), abs(aim_y));
       launched.exc = roundf((float)aim_x / max_mag_aim * launched.launchtype);
       launched.eyc = roundf((float)aim_y / max_mag_aim * launched.launchtype);
     }
@@ -451,8 +450,8 @@ void update_enemy(State& state, int i, int player_x, Layer const& layer, std::ve
     return;
   }
 
-  JE_integer const x = e.ex;
-  JE_integer const y = e.ey;
+  int16_t const x = e.ex;
+  int16_t const y = e.ey;
 
   // Enemy Shots
   if (e.edamaged == 1) {
@@ -481,7 +480,7 @@ void update_enemy(State& state, int i, int player_x, Layer const& layer, std::ve
 // A hit that leaves the enemy (slot b, with armorleft armor before the hit)
 // some armor: the damage, and the enemies that the damage changes, linked to
 // it by link.
-void damage_enemy(State& state, int b, int armorleft, JE_integer damage, JE_byte filter, JE_byte link,
+void damage_enemy(State& state, int b, int armorleft, int16_t damage, uint8_t filter, uint8_t link,
                   bool zinglon, int shot_x, int shot_y) {
   auto& slots = state.enemies.slots;
   auto& status = state.enemies.status;
@@ -493,10 +492,10 @@ void damage_enemy(State& state, int b, int armorleft, JE_integer damage, JE_byte
       setup_explosion(state.explosions.slots, shot_x, shot_y, 0, 0, false, false);
     }
     else {
-      JE_word const num = damage / 2 + 3;
+      uint16_t const num = damage / 2 + 3;
       do_sp(state.superpixels, state.random.mt, shot_x + 6, shot_y + 6, num, damage / 4 + 2, filter);
       // JE_doSP counts in the global temp, which holds the link here
-      link = static_cast<JE_byte>(num);
+      link = static_cast<uint8_t>(num);
     }
   }
 
@@ -549,8 +548,8 @@ void damage_enemy(State& state, int b, int armorleft, JE_integer damage, JE_byte
       e.armorleft = e.edlevel;
     }
 
-    JE_integer const x = e.ex + e.mapoffset;
-    JE_integer const y = e.ey;
+    int16_t const x = e.ex + e.mapoffset;
+    int16_t const y = e.ey;
 
     if (enemyDat[e.enemytype].esize != 1) {
       setup_explosion(state.explosions.slots, x, y - 6, 0, 1, false, false);
@@ -563,7 +562,7 @@ void damage_enemy(State& state, int b, int armorleft, JE_integer damage, JE_byte
 
 // A hit that takes all the enemy's (slot b's) armor: the enemies destroyed
 // with it, linked to it by link, and what they leave.
-void destroy_enemy(State& state, int b, JE_byte link, JE_byte player_num) {
+void destroy_enemy(State& state, int b, uint8_t link, uint8_t player_num) {
   auto& slots = state.enemies.slots;
   auto& status = state.enemies.status;
   Game& game = state.game;
@@ -578,7 +577,7 @@ void destroy_enemy(State& state, int b, JE_byte link, JE_byte player_num) {
     }
 
     JE_SingleEnemyType& e = slots[i];
-    JE_byte const linknum = e.linknum;
+    uint8_t const linknum = e.linknum;
     bool const linked =
         link == 254 || (link != 255 && (link == linknum || link - 100 == linknum ||
                                         (linknum > 40 && linknum / 20 == link / 20 && linknum <= link)));
@@ -594,7 +593,7 @@ void destroy_enemy(State& state, int b, JE_byte link, JE_byte player_num) {
     }
 
     if ((e.enemydie > 0) && !((game.super_arcade_mode != SA_NONE) && (enemyDat[e.enemydie].value == 30000))) {
-      JE_word const die = e.enemydie;
+      uint16_t const die = e.enemydie;
       int first = i - (i % 25);
       if (enemyDat[die].value > 30000) {
         first = 0;
@@ -662,7 +661,7 @@ void destroy_enemy(State& state, int b, JE_byte link, JE_byte player_num) {
 
 }  // namespace
 
-std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_ofs, JE_word back_move) {
+std::vector<VisibleEnemy> update_enemies(State& state, int end, uint16_t map_x_ofs, uint16_t back_move) {
   state.map.temp_map_x_ofs = map_x_ofs;
   state.map.temp_back_move = back_move;
 
@@ -679,7 +678,7 @@ std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_of
   return visible;
 }
 
-int new_enemy(State& state, int first, JE_word e_dat_i, Sint16 unique_shape_table_i) {
+int new_enemy(State& state, int first, uint16_t e_dat_i, int16_t unique_shape_table_i) {
   for (int i = first; i < first + 25; ++i) {
     if (state.enemies.status[i] == 1) {
       state.enemies.status[i] = make_enemy(state, state.enemies.slots[i], e_dat_i, unique_shape_table_i);
@@ -690,10 +689,10 @@ int new_enemy(State& state, int first, JE_word e_dat_i, Sint16 unique_shape_tabl
   return 0;
 }
 
-JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sint16 unique_shape_table_i) {
-  JE_shortint const difficulty = state.game.difficulty_level;
+uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i) {
+  int8_t const difficulty = state.game.difficulty_level;
   MtState& mt = state.random.mt;
-  JE_byte avail;
+  uint8_t avail;
 
   if (state.game.super_arcade_mode != SA_NONE && e_dat_i == 534) {
     e_dat_i = 533;
@@ -701,7 +700,7 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
 
   auto const& dat = enemyDat[e_dat_i];
 
-  JE_byte const shape_table_i = unique_shape_table_i > 0 ? unique_shape_table_i : dat.shapebank;
+  uint8_t const shape_table_i = unique_shape_table_i > 0 ? unique_shape_table_i : dat.shapebank;
 
   Sprite2_array *sprite2s = nullptr;
   if (shape_table_i == 21) {
@@ -734,7 +733,7 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
 
   enemy.mapoffset = 0;
 
-  for (uint i = 0; i < 3; ++i) {
+  for (unsigned i = 0; i < 3; ++i) {
     enemy.eshotmultipos[i] = 0;
   }
 
@@ -755,7 +754,7 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
   enemy.ymaxbounce = 10000;
   // Far enough away to be impossible to reach
 
-  for (uint i = 0; i < 3; ++i) {
+  for (unsigned i = 0; i < 3; ++i) {
     enemy.tur[i] = dat.tur[i];
   }
 
@@ -835,7 +834,7 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
 
   enemy.enemytype = e_dat_i;
 
-  for (uint i = 0; i < 3; ++i) {
+  for (unsigned i = 0; i < 3; ++i) {
     if (enemy.tur[i] == 252) {
       enemy.eshotwait[i] = 1;
     }
@@ -846,7 +845,7 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
       enemy.eshotwait[i] = 255;
     }
   }
-  for (uint i = 0; i < 20; ++i) {
+  for (unsigned i = 0; i < 20; ++i) {
     enemy.egr[i] = dat.egraphic[i];
   }
   enemy.size = dat.esize;
@@ -974,8 +973,8 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
   return avail;
 }
 
-int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zinglon, int shot_x, int shot_y,
-              JE_byte player_num) {
+int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglon, int shot_x, int shot_y,
+              uint8_t player_num) {
   auto& slots = state.enemies.slots;
   Cheats& cheats = state.cheats;
   JE_SingleEnemyType& hit = slots[b];
@@ -997,7 +996,7 @@ int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zin
 
   int const armorleft = hit.armorleft;
 
-  JE_byte link = hit.linknum;
+  uint8_t link = hit.linknum;
   if (link == 0) {
     link = 255;
   }

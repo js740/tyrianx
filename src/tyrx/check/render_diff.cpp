@@ -35,15 +35,15 @@ namespace tyrx::check {
 namespace {
 
 struct SliceStats {
-  std::uint64_t calls = 0;
-  std::uint64_t mismatches = 0;
-  std::uint64_t pixels = 0;  // differing pixels over all mismatching calls
+  uint64_t calls = 0;
+  uint64_t mismatches = 0;
+  uint64_t pixels = 0;  // differing pixels over all mismatching calls
 };
 
 struct RenderDiffState {
   bool enabled = env("TYRX_RENDER_DIFF") != nullptr;
   std::map<std::string, SliceStats, std::less<>> slices;
-  std::uint64_t mismatches = 0;
+  uint64_t mismatches = 0;
 
   ~RenderDiffState() {
     if (!enabled) {
@@ -62,7 +62,7 @@ RenderDiffState& render_diff_state() {
   return s;
 }
 
-constexpr std::uint64_t kMaxReported = 10;
+constexpr uint64_t kMaxReported = 10;
 
 // A copy of a surface's pixels for a C++ port to draw on.
 class SurfaceCopy {
@@ -71,14 +71,14 @@ class SurfaceCopy {
       : w_(s->w),
         h_(s->h),
         pitch_(s->pitch),
-        pixels_(static_cast<Uint8 const *>(s->pixels),
-                static_cast<Uint8 const *>(s->pixels) + s->pitch * s->h) {}
+        pixels_(static_cast<uint8_t const *>(s->pixels),
+                static_cast<uint8_t const *>(s->pixels) + s->pitch * s->h) {}
 
   render::Canvas canvas() { return {pixels_.data(), pitch_, w_, h_}; }
 
  private:
   int w_, h_, pitch_;
-  std::vector<Uint8> pixels_;
+  std::vector<uint8_t> pixels_;
 };
 
 // Compares what the C function drew on `c` with what the port drew on `cxx`.
@@ -91,11 +91,11 @@ void render_diff_check(std::string_view slice, SDL_Surface const *c, render::Can
   SliceStats& stats = it->second;
   ++stats.calls;
 
-  std::uint64_t differing = 0;
+  uint64_t differing = 0;
   int first_x = 0, first_y = 0;
   for (int y = 0; y < c->h; ++y) {
-    Uint8 const *cr = static_cast<Uint8 const *>(c->pixels) + y * c->pitch;
-    Uint8 const *xr = cxx.pixels + y * cxx.pitch;
+    uint8_t const *cr = static_cast<uint8_t const *>(c->pixels) + y * c->pitch;
+    uint8_t const *xr = cxx.pixels + y * cxx.pitch;
     for (int x = 0; x < c->w; ++x) {
       if (cr[x] != xr[x] && differing++ == 0) {
         first_x = x;
@@ -112,8 +112,8 @@ void render_diff_check(std::string_view slice, SDL_Surface const *c, render::Can
     return;
   }
 
-  Uint8 const c_pixel = static_cast<Uint8 const *>(c->pixels)[first_y * c->pitch + first_x];
-  Uint8 const cxx_pixel = cxx.pixels[first_y * cxx.pitch + first_x];
+  uint8_t const c_pixel = static_cast<uint8_t const *>(c->pixels)[first_y * c->pitch + first_x];
+  uint8_t const cxx_pixel = cxx.pixels[first_y * cxx.pitch + first_x];
   std::fprintf(stderr,
                "tyrx render diff: MISMATCH in %.*s (call %llu): %llu pixels differ, first at (%d, %d): C %u, "
                "C++ %u\n",
@@ -125,7 +125,7 @@ void render_diff_check(std::string_view slice, SDL_Surface const *c, render::Can
 
 bool render_diff_enabled() { return render_diff_state().enabled; }
 
-std::uint64_t render_diff_mismatches() { return render_diff_state().mismatches; }
+uint64_t render_diff_mismatches() { return render_diff_state().mismatches; }
 
 }  // namespace tyrx::check
 

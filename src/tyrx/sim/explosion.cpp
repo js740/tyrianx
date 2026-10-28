@@ -30,8 +30,8 @@ namespace tyrx::sim {
 namespace {
 
 struct ExplosionData {
-  JE_word sprite;
-  JE_byte ttl;
+  uint16_t sprite;
+  uint8_t ttl;
 };
 
 // Indexed directly by explosion type (types are effectively 0-based here,
@@ -53,8 +53,8 @@ constexpr std::array<ExplosionData, 53> kExplosionData = {{
 
 }  // namespace
 
-void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, JE_integer x, JE_integer y,
-                     JE_integer delta_y, JE_integer type, bool fixed_position, bool follow_player) {
+void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, int16_t x, int16_t y, int16_t delta_y,
+                     int16_t type, bool fixed_position, bool follow_player) {
   if (y <= -16 || y >= 190) {
     return;
   }
@@ -82,8 +82,8 @@ void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, JE_integer
   }
 }
 
-void setup_explosion_large(Explosions& explosions, bool enemy_ground, JE_byte explo_num, JE_integer x,
-                           JE_integer y) {
+void setup_explosion_large(Explosions& explosions, bool enemy_ground, uint8_t explo_num, int16_t x,
+                           int16_t y) {
   if (y < 0) {
     return;
   }
@@ -124,8 +124,8 @@ void setup_explosion_large(Explosions& explosions, bool enemy_ground, JE_byte ex
   }
 }
 
-bool update_repeating_explosions(Explosions& explosions, MtState& mt, JE_integer back_move,
-                                 std::span<JE_byte, 8> sound_queue) {
+bool update_repeating_explosions(Explosions& explosions, MtState& mt, int16_t back_move,
+                                 std::span<uint8_t, 8> sound_queue) {
   bool still_exploding = false;
   for (rep_explosion_type& r : explosions.repeating) {
     if (r.ttl == 0) {
@@ -140,8 +140,8 @@ bool update_repeating_explosions(Explosions& explosions, MtState& mt, JE_integer
     }
 
     r.y += back_move + 1;
-    JE_integer x = r.x + (mt_rand_r(&mt) % 24) - 12;
-    JE_integer y = r.y + (mt_rand_r(&mt) % 27) - 24;
+    int16_t x = r.x + (mt_rand_r(&mt) % 24) - 12;
+    int16_t y = r.y + (mt_rand_r(&mt) % 27) - 24;
 
     if (r.big) {
       setup_explosion_large(explosions, false, 2, x, y);

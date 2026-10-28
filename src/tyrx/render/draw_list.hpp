@@ -33,9 +33,9 @@
 #include "../gold/api.hpp"
 #include "render.hpp"
 
+#include <stddef.h>
+#include <stdint.h>
 #include <array>
-#include <cstddef>
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -60,13 +60,13 @@ namespace tyrx::render {
   X(JE_drawSP) X(JE_clr256)
 // clang-format on
 
-enum class DrawOp : std::uint8_t {
+enum class DrawOp : uint8_t {
 #define TYRX_DRAW_OP_ENUM(name) name,
   TYRX_DRAW_OPS(TYRX_DRAW_OP_ENUM)
 #undef TYRX_DRAW_OP_ENUM
 };
 
-inline constexpr std::size_t kDrawOps = 0
+inline constexpr size_t kDrawOps = 0
 #define TYRX_DRAW_OP_COUNT(name) +1
     TYRX_DRAW_OPS(TYRX_DRAW_OP_COUNT)
 #undef TYRX_DRAW_OP_COUNT
@@ -81,17 +81,17 @@ struct DrawCall {
   SDL_Surface *src = nullptr;  // copies and filters
   Sprite2_array sheet = {};    // sprite2 primitives
   void const *map = nullptr;   // background map position (into megaData1-3)
-  std::array<std::intptr_t, 8> args = {};
-  std::uint32_t blob = 0, blob_size = 0;  // extra inputs, in DrawList::blob
+  std::array<intptr_t, 8> args = {};
+  uint32_t blob = 0, blob_size = 0;  // extra inputs, in DrawList::blob
 };
 
 struct DrawList {
-  std::uint64_t tick = 0;
+  uint64_t tick = 0;
   std::vector<DrawCall> calls;
   std::vector<unsigned char> blob;
 
   // Adds a call, copying its extra inputs into the list.
-  void append(DrawCall const& call, void const *blob = nullptr, std::size_t blob_size = 0);
+  void append(DrawCall const& call, void const *blob = nullptr, size_t blob_size = 0);
 };
 
 // The name of one of the game's screen surfaces, or "?".

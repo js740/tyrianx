@@ -28,7 +28,7 @@ using tyrx::check::draw::draw_call;
 using tyrx::render::DrawCall;
 using tyrx::render::DrawOp;
 
-using Args = std::array<std::intptr_t, 8>;
+using Args = std::array<intptr_t, 8>;
 
 extern "C" {
 
@@ -36,9 +36,9 @@ extern "C" {
 
 void __real_blit_sprite(SDL_Surface *, int, int, unsigned int, unsigned int);
 void __real_blit_sprite_blend(SDL_Surface *, int, int, unsigned int, unsigned int);
-void __real_blit_sprite_hv_unsafe(SDL_Surface *, int, int, unsigned int, unsigned int, Uint8, Sint8);
-void __real_blit_sprite_hv(SDL_Surface *, int, int, unsigned int, unsigned int, Uint8, Sint8);
-void __real_blit_sprite_hv_blend(SDL_Surface *, int, int, unsigned int, unsigned int, Uint8, Sint8);
+void __real_blit_sprite_hv_unsafe(SDL_Surface *, int, int, unsigned int, unsigned int, uint8_t, int8_t);
+void __real_blit_sprite_hv(SDL_Surface *, int, int, unsigned int, unsigned int, uint8_t, int8_t);
+void __real_blit_sprite_hv_blend(SDL_Surface *, int, int, unsigned int, unsigned int, uint8_t, int8_t);
 void __real_blit_sprite_dark(SDL_Surface *, int, int, unsigned int, unsigned int, bool);
 
 void __wrap_blit_sprite(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index) {
@@ -52,19 +52,19 @@ void __wrap_blit_sprite_blend(SDL_Surface *s, int x, int y, unsigned int table, 
 }
 
 void __wrap_blit_sprite_hv_unsafe(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index,
-                                  Uint8 hue, Sint8 value) {
+                                  uint8_t hue, int8_t value) {
   draw_call({.op = DrawOp::blit_sprite_hv_unsafe, .dst = s, .args = Args{x, y, table, index, hue, value}},
             [&] { __real_blit_sprite_hv_unsafe(s, x, y, table, index, hue, value); });
 }
 
-void __wrap_blit_sprite_hv(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index, Uint8 hue,
-                           Sint8 value) {
+void __wrap_blit_sprite_hv(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index, uint8_t hue,
+                           int8_t value) {
   draw_call({.op = DrawOp::blit_sprite_hv, .dst = s, .args = Args{x, y, table, index, hue, value}},
             [&] { __real_blit_sprite_hv(s, x, y, table, index, hue, value); });
 }
 
 void __wrap_blit_sprite_hv_blend(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index,
-                                 Uint8 hue, Sint8 value) {
+                                 uint8_t hue, int8_t value) {
   draw_call({.op = DrawOp::blit_sprite_hv_blend, .dst = s, .args = Args{x, y, table, index, hue, value}},
             [&] { __real_blit_sprite_hv_blend(s, x, y, table, index, hue, value); });
 }
@@ -81,11 +81,12 @@ void __wrap_blit_sprite_dark(SDL_Surface *s, int x, int y, unsigned int table, u
     draw_call({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = Args{x, y, index}},      \
               [&] { __real_##name(s, x, y, sheet, index); });                                 \
   }
-#define TYRX_WRAP_SPRITE2_FILTER(name)                                                                      \
-  void __real_##name(SDL_Surface *, int, int, Sprite2_array, unsigned int, Uint8);                          \
-  void __wrap_##name(SDL_Surface *s, int x, int y, Sprite2_array sheet, unsigned int index, Uint8 filter) { \
-    draw_call({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = Args{x, y, index, filter}},            \
-              [&] { __real_##name(s, x, y, sheet, index, filter); });                                       \
+#define TYRX_WRAP_SPRITE2_FILTER(name)                                                           \
+  void __real_##name(SDL_Surface *, int, int, Sprite2_array, unsigned int, uint8_t);             \
+  void __wrap_##name(SDL_Surface *s, int x, int y, Sprite2_array sheet, unsigned int index,      \
+                     uint8_t filter) {                                                           \
+    draw_call({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = Args{x, y, index, filter}}, \
+              [&] { __real_##name(s, x, y, sheet, index, filter); });                            \
   }
 
 TYRX_WRAP_SPRITE2(blit_sprite2)
@@ -106,19 +107,19 @@ TYRX_WRAP_SPRITE2_FILTER(blit_sprite2x2_filter_clip)
 
 // vga256d.c
 
-void __real_JE_pix(SDL_Surface *, int, int, JE_byte);
-void __real_JE_pix3(SDL_Surface *, int, int, JE_byte);
+void __real_JE_pix(SDL_Surface *, int, int, uint8_t);
+void __real_JE_pix3(SDL_Surface *, int, int, uint8_t);
 void __real_JE_rectangle(SDL_Surface *, int, int, int, int, int);
-void __real_fill_rectangle_xy(SDL_Surface *, int, int, int, int, Uint8);
+void __real_fill_rectangle_xy(SDL_Surface *, int, int, int, int, uint8_t);
 void __real_JE_barShade(SDL_Surface *, int, int, int, int);
 void __real_JE_barBright(SDL_Surface *, int, int, int, int);
-void __real_draw_segmented_gauge(SDL_Surface *, int, int, Uint8, uint, uint, uint, uint);
+void __real_draw_segmented_gauge(SDL_Surface *, int, int, uint8_t, unsigned, unsigned, unsigned, unsigned);
 
-void __wrap_JE_pix(SDL_Surface *s, int x, int y, JE_byte c) {
+void __wrap_JE_pix(SDL_Surface *s, int x, int y, uint8_t c) {
   draw_call({.op = DrawOp::JE_pix, .dst = s, .args = Args{x, y, c}}, [&] { __real_JE_pix(s, x, y, c); });
 }
 
-void __wrap_JE_pix3(SDL_Surface *s, int x, int y, JE_byte c) {
+void __wrap_JE_pix3(SDL_Surface *s, int x, int y, uint8_t c) {
   draw_call({.op = DrawOp::JE_pix3, .dst = s, .args = Args{x, y, c}}, [&] { __real_JE_pix3(s, x, y, c); });
 }
 
@@ -127,7 +128,7 @@ void __wrap_JE_rectangle(SDL_Surface *s, int a, int b, int c, int d, int e) {
             [&] { __real_JE_rectangle(s, a, b, c, d, e); });
 }
 
-void __wrap_fill_rectangle_xy(SDL_Surface *s, int x, int y, int x2, int y2, Uint8 color) {
+void __wrap_fill_rectangle_xy(SDL_Surface *s, int x, int y, int x2, int y2, uint8_t color) {
   draw_call({.op = DrawOp::fill_rectangle_xy, .dst = s, .args = Args{x, y, x2, y2, color}},
             [&] { __real_fill_rectangle_xy(s, x, y, x2, y2, color); });
 }
@@ -142,8 +143,8 @@ void __wrap_JE_barBright(SDL_Surface *s, int a, int b, int c, int d) {
             [&] { __real_JE_barBright(s, a, b, c, d); });
 }
 
-void __wrap_draw_segmented_gauge(SDL_Surface *s, int x, int y, Uint8 color, uint segment_width,
-                                 uint segment_height, uint segment_value, uint value) {
+void __wrap_draw_segmented_gauge(SDL_Surface *s, int x, int y, uint8_t color, unsigned segment_width,
+                                 unsigned segment_height, unsigned segment_value, unsigned value) {
   draw_call({.op = DrawOp::draw_segmented_gauge,
              .dst = s,
              .args = Args{x, y, color, segment_width, segment_height, segment_value, value}},
@@ -156,22 +157,22 @@ void __wrap_draw_segmented_gauge(SDL_Surface *s, int x, int y, Uint8 color, uint
 // backgrnd.c.  The background draws record the scroll state they draw from:
 // the map row, the column offset, the x position and the y position.
 
-void __real_JE_darkenBackground(JE_word);
+void __real_JE_darkenBackground(uint16_t);
 void __real_draw_background_1(SDL_Surface *);
 void __real_draw_background_2(SDL_Surface *);
 void __real_draw_background_2_blend(SDL_Surface *);
 void __real_draw_background_3(SDL_Surface *);
-void __real_JE_filterScreen(JE_shortint, JE_shortint);
+void __real_JE_filterScreen(int8_t, int8_t);
 void __real_lava_filter(SDL_Surface *, SDL_Surface *);
 void __real_water_filter(SDL_Surface *, SDL_Surface *);
 void __real_iced_blur_filter(SDL_Surface *, SDL_Surface *);
 void __real_blur_filter(SDL_Surface *, SDL_Surface *);
-void __real_showHeadlight(SDL_Surface *, SDL_Surface *, Sint16, Sint16);
+void __real_showHeadlight(SDL_Surface *, SDL_Surface *, int16_t, int16_t);
 void __real_showFlipped(SDL_Surface *, SDL_Surface *);
 void __real_showNormal(SDL_Surface *, SDL_Surface *);
 void __real_update_and_draw_starfield(SDL_Surface *, int);
 
-void __wrap_JE_darkenBackground(JE_word neat) {
+void __wrap_JE_darkenBackground(uint16_t neat) {
   draw_call({.op = DrawOp::JE_darkenBackground, .dst = VGAScreen, .args = Args{neat}},
             [&] { __real_JE_darkenBackground(neat); });
 }
@@ -206,7 +207,7 @@ void __wrap_draw_background_3(SDL_Surface *s) {
 
 // Besides filtering, JE_filterScreen advances the level's brightness fade.
 // Whether it filters also depends on two settings, which are recorded.
-void __wrap_JE_filterScreen(JE_shortint col, JE_shortint brightness) {
+void __wrap_JE_filterScreen(int8_t col, int8_t brightness) {
   draw_call({.op = DrawOp::JE_filterScreen,
              .dst = VGAScreen,
              .args = Args{col, brightness, filtrationAvail, explosionTransparent}},
@@ -231,7 +232,7 @@ void __wrap_water_filter(SDL_Surface *dst, SDL_Surface *src) {
             [&] { __real_water_filter(dst, src); });
 }
 
-void __wrap_showHeadlight(SDL_Surface *dst, SDL_Surface *src, Sint16 player_x, Sint16 player_y) {
+void __wrap_showHeadlight(SDL_Surface *dst, SDL_Surface *src, int16_t player_x, int16_t player_y) {
   draw_call({.op = DrawOp::showHeadlight, .dst = dst, .src = src, .args = Args{player_x, player_y}},
             [&] { __real_showHeadlight(dst, src, player_x, player_y); });
 }
@@ -283,10 +284,10 @@ class Restore {
 // The background scroll state that the background draws change after (or, for
 // background 3, before) drawing.
 struct BackgroundScroll {
-  Restore<JE_word> back_move2{backMove2}, back_pos2{backPos2}, back_pos3{backPos3}, map_y2{mapY2},
+  Restore<uint16_t> back_move2{backMove2}, back_pos2{backPos2}, back_pos3{backPos3}, map_y2{mapY2},
       map_y3{mapY3};
-  Restore<JE_byte> map2_y_delay{map2YDelay};
-  Restore<JE_byte **> map_y2_pos{mapY2Pos}, map_y3_pos{mapY3Pos};
+  Restore<uint8_t> map2_y_delay{map2YDelay};
+  Restore<uint8_t **> map_y2_pos{mapY2Pos}, map_y3_pos{mapY3Pos};
 };
 
 }  // namespace
@@ -362,10 +363,10 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       __real_JE_darkenBackground(a[0]);
       break;
     case DrawOp::draw_background_1: {
-      Restore<JE_byte **> map_y_pos{mapYPos};
+      Restore<uint8_t **> map_y_pos{mapYPos};
       Restore<intptr_t> map_x_bp_pos{mapXbpPos};
-      Restore<JE_word> map_x_pos{mapXPos}, back_pos{backPos};
-      mapYPos = static_cast<JE_byte **>(const_cast<void *>(c.map));
+      Restore<uint16_t> map_x_pos{mapXPos}, back_pos{backPos};
+      mapYPos = static_cast<uint8_t **>(const_cast<void *>(c.map));
       mapXbpPos = a[0];
       mapXPos = a[1];
       backPos = a[2];
@@ -375,9 +376,9 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
     case DrawOp::draw_background_2: {
       BackgroundScroll scroll;
       Restore<intptr_t> map_x2_bp_pos{mapX2bpPos}, map_x_bp_pos{mapXbpPos};
-      Restore<JE_word> map_x2_pos{mapX2Pos}, map_x_pos{mapXPos};
-      Restore<JE_boolean> background_2{background2}, water{smoothies[1]};
-      mapY2Pos = static_cast<JE_byte **>(const_cast<void *>(c.map));
+      Restore<uint16_t> map_x2_pos{mapX2Pos}, map_x_pos{mapXPos};
+      Restore<bool> background_2{background2}, water{smoothies[1]};
+      mapY2Pos = static_cast<uint8_t **>(const_cast<void *>(c.map));
       mapX2bpPos = a[0];
       mapX2Pos = a[1];
       backPos2 = a[2];
@@ -391,8 +392,8 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
     case DrawOp::draw_background_2_blend: {
       BackgroundScroll scroll;
       Restore<intptr_t> map_x2_bp_pos{mapX2bpPos};
-      Restore<JE_word> map_x2_pos{mapX2Pos};
-      mapY2Pos = static_cast<JE_byte **>(const_cast<void *>(c.map));
+      Restore<uint16_t> map_x2_pos{mapX2Pos};
+      mapY2Pos = static_cast<uint8_t **>(const_cast<void *>(c.map));
       mapX2bpPos = a[0];
       mapX2Pos = a[1];
       backPos2 = a[2];
@@ -402,8 +403,8 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
     case DrawOp::draw_background_3: {
       BackgroundScroll scroll;
       Restore<intptr_t> map_x3_bp_pos{mapX3bpPos};
-      Restore<JE_word> map_x3_pos{mapX3Pos}, back_move3{backMove3};
-      mapY3Pos = static_cast<JE_byte **>(const_cast<void *>(c.map));
+      Restore<uint16_t> map_x3_pos{mapX3Pos}, back_move3{backMove3};
+      mapY3Pos = static_cast<uint8_t **>(const_cast<void *>(c.map));
       mapX3bpPos = a[0];
       mapX3Pos = a[1];
       backPos3 = a[2];
@@ -412,10 +413,10 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       break;
     }
     case DrawOp::JE_filterScreen: {
-      Restore<JE_boolean> filter_fade{filterFade}, filter_fade_start{filterFadeStart};
-      Restore<JE_boolean> filtration_avail{filtrationAvail}, explosion_transparent{explosionTransparent};
-      Restore<JE_shortint> level_brightness{levelBrightness}, level_brightness_chg{levelBrightnessChg};
-      Restore<JE_shortint> level_filter{levelFilter};
+      Restore<bool> filter_fade{filterFade}, filter_fade_start{filterFadeStart};
+      Restore<bool> filtration_avail{filtrationAvail}, explosion_transparent{explosionTransparent};
+      Restore<int8_t> level_brightness{levelBrightness}, level_brightness_chg{levelBrightnessChg};
+      Restore<int8_t> level_filter{levelFilter};
       filtrationAvail = a[2];
       explosionTransparent = a[3];
       VGAScreen = dst;
@@ -426,7 +427,7 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       __real_lava_filter(dst, src);
       break;
     case DrawOp::water_filter: {
-      Restore<JE_byte> hue{smoothie_data[1]};
+      Restore<uint8_t> hue{smoothie_data[1]};
       smoothie_data[1] = a[0];
       __real_water_filter(dst, src);
       break;

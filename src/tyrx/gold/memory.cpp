@@ -32,7 +32,7 @@ namespace {
 
 struct Range {
   unsigned char *begin, *end;
-  bool contains(void const *p, std::size_t size) const {
+  bool contains(void const *p, size_t size) const {
     auto const *b = static_cast<unsigned char const *>(p);
     return b >= begin && b + size <= end;
   }

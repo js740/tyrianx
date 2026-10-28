@@ -44,7 +44,7 @@
 namespace tyrx::check {
 
 // Called as the virtual clock advances from `from` to `to` milliseconds.
-void input_driver_advance(Uint32 from, Uint32 to);
+void input_driver_advance(uint32_t from, uint32_t to);
 
 // Called at the top of each level tick.
 void input_driver_level_tick();

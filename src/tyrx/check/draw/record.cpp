@@ -34,23 +34,23 @@ namespace {
 
 using render::surface_name;
 
-constexpr std::size_t kOps = render::kDrawOps;
+constexpr size_t kOps = render::kDrawOps;
 
 // Watches the 8-bit surfaces for pixel changes made outside recorded calls.
 class PixelAudit {
  public:
   // Reports pixels that changed since the last sync.
-  void check(char const *where, std::uint64_t tick) {
+  void check(char const *where, uint64_t tick) {
     for (Watched& w : watched_) {
       SDL_Surface const *s = *w.surface;
-      if (s == nullptr || w.copy.size() != (std::size_t)s->pitch * s->h) {
+      if (s == nullptr || w.copy.size() != (size_t)s->pitch * s->h) {
         continue;
       }
-      Uint8 const *p = static_cast<Uint8 const *>(s->pixels);
+      uint8_t const *p = static_cast<uint8_t const *>(s->pixels);
       if (std::memcmp(p, w.copy.data(), w.copy.size()) == 0) {
         continue;
       }
-      std::uint64_t differing = 0;
+      uint64_t differing = 0;
       for (int y = 0; y < s->h; ++y) {
         for (int x = 0; x < s->w; ++x) {
           differing += p[y * s->pitch + x] != w.copy[y * s->pitch + x];
@@ -85,22 +85,22 @@ class PixelAudit {
         w.copy.clear();
         continue;
       }
-      Uint8 const *p = static_cast<Uint8 const *>(s->pixels);
-      w.copy.assign(p, p + (std::size_t)s->pitch * s->h);
+      uint8_t const *p = static_cast<uint8_t const *>(s->pixels);
+      w.copy.assign(p, p + (size_t)s->pitch * s->h);
     }
   }
 
-  std::uint64_t unrecorded_writes() const { return unrecorded_writes_; }
-  std::uint64_t unrecorded_ticks() const { return unrecorded_ticks_; }
+  uint64_t unrecorded_writes() const { return unrecorded_writes_; }
+  uint64_t unrecorded_ticks() const { return unrecorded_ticks_; }
 
  private:
   struct Watched {
     SDL_Surface *const *surface;
-    std::vector<Uint8> copy;
+    std::vector<uint8_t> copy;
   };
   Watched watched_[3] = {{&game_screen, {}}, {&VGAScreen2, {}}, {&VGAScreenSeg, {}}};
-  std::uint64_t unrecorded_writes_ = 0, unrecorded_ticks_ = 0;
-  std::uint64_t last_reported_tick_ = UINT64_MAX;
+  uint64_t unrecorded_writes_ = 0, unrecorded_ticks_ = 0;
+  uint64_t last_reported_tick_ = UINT64_MAX;
 };
 
 // Copies of the watched surfaces at the start of a tick, on which the tick's
@@ -137,8 +137,8 @@ class ReplayCheck {
       for (int y = 0; y < real->h; ++y) {
         std::memcpy(row(scratch_[i], y), row(real, y), real->w);
       }
-      Uint8 const *p = static_cast<Uint8 const *>(real->pixels);
-      cxx_[i].assign(p, p + (std::size_t)real->pitch * real->h);
+      uint8_t const *p = static_cast<uint8_t const *>(real->pixels);
+      cxx_[i].assign(p, p + (size_t)real->pitch * real->h);
       start_[i] = cxx_[i];
     }
   }
@@ -184,7 +184,7 @@ class ReplayCheck {
         std::memcpy(row(scratch_[i], y), start_[i].data() + y * real->pitch, real->w);
       }
     }
-    for (std::size_t n = 0; n < list.calls.size(); ++n) {
+    for (size_t n = 0; n < list.calls.size(); ++n) {
       DrawCall const& c = list.calls[n];
       SDL_Surface *dst = map(c.dst), *src = map(c.src);
       if ((c.dst != nullptr && dst == nullptr) || (c.src != nullptr && src == nullptr)) {
@@ -209,17 +209,17 @@ class ReplayCheck {
     }
   }
 
-  std::uint64_t ticks() const { return ticks_; }
+  uint64_t ticks() const { return ticks_; }
   // Ticks whose replay with the C primitives (0) or the C++ ports (1) differed.
-  std::uint64_t mismatched_ticks(int i) const { return mismatched_ticks_[i]; }
-  std::uint64_t unreplayable() const { return unreplayable_; }
+  uint64_t mismatched_ticks(int i) const { return mismatched_ticks_[i]; }
+  uint64_t unreplayable() const { return unreplayable_; }
 
  private:
   static constexpr SDL_Surface *const *kReal[3] = {&game_screen, &VGAScreen2, &VGAScreenSeg};
 
-  static Uint8 *row(SDL_Surface *s, int y) { return static_cast<Uint8 *>(s->pixels) + y * s->pitch; }
-  static Uint8 const *row(SDL_Surface const *s, int y) {
-    return static_cast<Uint8 const *>(s->pixels) + y * s->pitch;
+  static uint8_t *row(SDL_Surface *s, int y) { return static_cast<uint8_t *>(s->pixels) + y * s->pitch; }
+  static uint8_t const *row(SDL_Surface const *s, int y) {
+    return static_cast<uint8_t const *>(s->pixels) + y * s->pitch;
   }
 
   SDL_Surface *map(SDL_Surface const *real) const {
@@ -242,11 +242,11 @@ class ReplayCheck {
 
   // Compares a surface with a replay of it, whose rows `replayed` returns.
   template <typename Rows>
-  bool compare(std::uint64_t tick, char const *by, SDL_Surface const *real, Rows replayed) {
-    std::uint64_t differing = 0;
+  bool compare(uint64_t tick, char const *by, SDL_Surface const *real, Rows replayed) {
+    uint64_t differing = 0;
     int first_x = 0, first_y = 0;
     for (int y = 0; y < real->h; ++y) {
-      Uint8 const *r = row(real, y), *s = replayed(y);
+      uint8_t const *r = row(real, y), *s = replayed(y);
       for (int x = 0; x < real->w; ++x) {
         if (r[x] != s[x] && differing++ == 0) {
           first_x = x;
@@ -264,9 +264,9 @@ class ReplayCheck {
   }
 
   SDL_Surface *scratch_[3] = {};
-  std::vector<Uint8> cxx_[3];    // the C++ replay
-  std::vector<Uint8> start_[3];  // the surfaces at the start of the tick
-  std::uint64_t ticks_ = 0, mismatched_ticks_[2] = {}, unreplayable_ = 0, reported_ = 0;
+  std::vector<uint8_t> cxx_[3];    // the C++ replay
+  std::vector<uint8_t> start_[3];  // the surfaces at the start of the tick
+  uint64_t ticks_ = 0, mismatched_ticks_[2] = {}, unreplayable_ = 0, reported_ = 0;
 };
 
 class Recorder {
@@ -296,7 +296,7 @@ class Recorder {
                  " nested calls not recorded)\n",
                  ticks_, calls_, nested_);
     std::string line = "tyrx drawlist:";
-    for (std::size_t op = 0; op < kOps; ++op) {
+    for (size_t op = 0; op < kOps; ++op) {
       if (op_calls_[op] != 0) {
         line += ' ';
         line += render::op_name(static_cast<DrawOp>(op));
@@ -320,7 +320,7 @@ class Recorder {
 
   bool enabled() const { return enabled_; }
 
-  std::uint64_t check_failures() const {
+  uint64_t check_failures() const {
     return audit_.unrecorded_writes() + replay_.mismatched_ticks(0) + replay_.mismatched_ticks(1);
   }
 
@@ -343,7 +343,7 @@ class Recorder {
     in_level_ = false;
   }
 
-  bool begin(DrawCall const& call, void const *blob, std::size_t blob_size) {
+  bool begin(DrawCall const& call, void const *blob, size_t blob_size) {
     if (DrawList *shadow_list = render::draw::target()) {
       if (depth_ > 0) {
         return false;
@@ -366,7 +366,7 @@ class Recorder {
       audit_.check(where, list_.tick);
     }
     list_.append(call, blob, blob_size);
-    ++op_calls_[static_cast<std::size_t>(call.op)];
+    ++op_calls_[static_cast<size_t>(call.op)];
     ++calls_;
     depth_ = 1;
     return true;
@@ -411,12 +411,12 @@ class Recorder {
   bool in_level_ = false;
   bool in_tick_ = false;
   int depth_ = 0;
-  std::uint64_t tick_ = 0;
+  uint64_t tick_ = 0;
   DrawList list_;
   PixelAudit audit_;
   ReplayCheck replay_;
-  std::uint64_t ticks_ = 0, calls_ = 0, nested_ = 0;
-  std::uint64_t op_calls_[kOps] = {};
+  uint64_t ticks_ = 0, calls_ = 0, nested_ = 0;
+  uint64_t op_calls_[kOps] = {};
 };
 
 Recorder& recorder() {
@@ -430,7 +430,7 @@ bool drawlist_enabled() { return recorder().enabled(); }
 
 DrawList const& drawlist_current() { return recorder().current(); }
 
-std::uint64_t drawlist_check_failures() { return recorder().check_failures(); }
+uint64_t drawlist_check_failures() { return recorder().check_failures(); }
 
 void drawlist_level_tick() {
   if (Recorder& r = recorder(); r.enabled()) {
@@ -446,7 +446,7 @@ void drawlist_level_ended() {
 
 namespace detail {
 
-bool drawlist_begin(DrawCall const& call, void const *blob, std::size_t blob_size) {
+bool drawlist_begin(DrawCall const& call, void const *blob, size_t blob_size) {
   return recorder().begin(call, blob, blob_size);
 }
 

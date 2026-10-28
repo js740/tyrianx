@@ -89,13 +89,13 @@ std::vector<StateBlock const *> const& blocks_by_address() {
     for (auto const& b : state_blocks()) {
       v.push_back(&b);
     }
-    std::ranges::sort(v, {}, [](StateBlock const *b) { return reinterpret_cast<std::uintptr_t>(b->addr); });
+    std::ranges::sort(v, {}, [](StateBlock const *b) { return reinterpret_cast<uintptr_t>(b->addr); });
     return v;
   }();
   return blocks;
 }
 
-std::uint64_t unresolved_count = 0;
+uint64_t unresolved_count = 0;
 
 }  // namespace
 
@@ -136,15 +136,15 @@ PointerRef describe_pointer(void const *p) {
   if (p == nullptr) {
     return {};
   }
-  auto const addr = reinterpret_cast<std::uintptr_t>(p);
+  auto const addr = reinterpret_cast<uintptr_t>(p);
   auto const& blocks = blocks_by_address();
   // The last block starting at or before addr; blocks never overlap, so it is
   // the only one that can contain addr.
   auto it = std::ranges::upper_bound(
-      blocks, addr, {}, [](StateBlock const *b) { return reinterpret_cast<std::uintptr_t>(b->addr); });
+      blocks, addr, {}, [](StateBlock const *b) { return reinterpret_cast<uintptr_t>(b->addr); });
   if (it != blocks.begin()) {
     StateBlock const *b = *--it;
-    std::uintptr_t const offset = addr - reinterpret_cast<std::uintptr_t>(b->addr);
+    uintptr_t const offset = addr - reinterpret_cast<uintptr_t>(b->addr);
     if (offset < b->size) {
       return {PointerRef::Kind::block, b->name, offset};
     }
@@ -152,11 +152,11 @@ PointerRef describe_pointer(void const *p) {
   return {PointerRef::Kind::unresolved};
 }
 
-std::uint64_t unresolved_pointers() { return unresolved_count; }
+uint64_t unresolved_pointers() { return unresolved_count; }
 
 void Hasher::pointer(void const *p) {
   PointerRef const ref = describe_pointer(p);
-  u64(static_cast<std::uint64_t>(ref.kind));
+  u64(static_cast<uint64_t>(ref.kind));
   if (ref.kind == PointerRef::Kind::block) {
     string(ref.block);
     u64(ref.offset);
@@ -209,7 +209,7 @@ std::span<StateBlock const *const> hashed_blocks() {
   return blocks;
 }
 
-void register_heap_block(std::string_view name, StateClass cls, void *addr, std::size_t size) {
+void register_heap_block(std::string_view name, StateClass cls, void *addr, size_t size) {
   assert(!is_hashed(cls));
   heap_blocks().push_back({name, cls, addr, size});
 }
@@ -225,7 +225,7 @@ void dump_state(std::FILE *out) {
 
 Snapshot Snapshot::capture(bool (*include)(StateClass), Snapshot const *previous) {
   Snapshot s;
-  std::size_t i = 0;  // index into previous->copies_
+  size_t i = 0;  // index into previous->copies_
   auto const copy = [&](StateBlock const& b) {
     if (!include(b.cls)) {
       return;
@@ -254,8 +254,8 @@ void Snapshot::restore() const {
   }
 }
 
-std::vector<std::uint64_t> block_hashes() {
-  std::vector<std::uint64_t> hashes;
+std::vector<uint64_t> block_hashes() {
+  std::vector<uint64_t> hashes;
   for (StateBlock const *b : hashed_blocks()) {
     Hasher h;
     b->hash(h, b->addr);

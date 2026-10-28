@@ -82,7 +82,7 @@ struct Runtime {
   long exit_after_demos = -1;
   long exit_after_ticks = -1;
 
-  std::uint64_t tick = 0;
+  uint64_t tick = 0;
   unsigned level_count = 0;
   long demo_count = 0;
 
@@ -92,7 +92,7 @@ struct Runtime {
   }
 
   ~Runtime() {
-    if (std::uint64_t const n = gold::unresolved_pointers()) {
+    if (uint64_t const n = gold::unresolved_pointers()) {
       std::fprintf(stderr,
                    "tyrx: %" PRIu64 " pointers in hashed state did not point into a registered block\n", n);
     }
@@ -125,7 +125,7 @@ struct Runtime {
     input_record_tick();
     check::input_driver_level_tick();
 
-    std::vector<std::uint64_t> hashes;
+    std::vector<uint64_t> hashes;
     if (check::hashlog_enabled() || check::round_trip_active()) {
       hashes = gold::block_hashes();
     }
@@ -156,7 +156,7 @@ long env_long(char const *name, long fallback) {
   return v ? std::strtol(v, nullptr, 10) : fallback;
 }
 
-std::uint64_t current_tick() { return runtime().tick; }
+uint64_t current_tick() { return runtime().tick; }
 
 namespace {
 

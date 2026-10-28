@@ -32,13 +32,13 @@ namespace {
 
 // JE_specialComplete: sets off special special_type for player player_num.
 // Some specials take their power from the C code's temp2 (Scratch).
-void special_complete(State& state, HudLog& hud, JE_byte player_num, JE_byte special_type) {
+void special_complete(State& state, HudLog& hud, uint8_t player_num, uint8_t special_type) {
   auto& players = state.players.slots;
   auto& shot_repeat = state.players.shot_repeat;
   auto& shot_multi_pos = state.players.shot_multi_pos;
   auto& sound_queue = state.sound.queue;
   Specials& specials = state.specials;
-  JE_byte const temp2 = state.scratch.temp2;
+  uint8_t const temp2 = state.scratch.temp2;
   auto const& special_data = special[special_type];
 
   specials.next_wait = 0;
@@ -230,7 +230,7 @@ void special_complete(State& state, HudLog& hud, JE_byte player_num, JE_byte spe
 // A special move's cost: some of the player's shield or armor, all of the
 // shield, or half of it.  The C code keeps it in temp2 (Scratch), which the
 // special reads.  Returns whether the player can afford it.
-bool pay_for_special(JE_byte& temp2, uint& armor, uint& shield) {
+bool pay_for_special(uint8_t& temp2, unsigned& armor, unsigned& shield) {
   if (temp2 == 0) {
     return true;
   }
@@ -269,7 +269,7 @@ bool pay_for_special(JE_byte& temp2, uint& armor, uint& shield) {
 }
 
 // The flares and the specials that fire while they last.
-void update_flare(State& state, JE_byte player_num) {
+void update_flare(State& state, uint8_t player_num) {
   auto& players = state.players.slots;
   auto& shot_repeat = state.players.shot_repeat;
   Specials& specials = state.specials;
@@ -308,7 +308,7 @@ void update_flare(State& state, JE_byte player_num) {
     }
 
     if ((signed)(mt_rand_r(&mt) % 6) < specials.weapon_freq) {
-      JE_integer b = MAX_PWEAPON;
+      int16_t b = MAX_PWEAPON;
 
       if (specials.link_to_player) {
         if (shot_repeat[SHOT_SPECIAL] == 0) {
@@ -354,7 +354,7 @@ void update_flare(State& state, JE_byte player_num) {
 
 }  // namespace
 
-void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint& armor, uint& shield,
+void do_special_shot(State& state, DrawRecord& record, uint8_t player_num, unsigned& armor, unsigned& shield,
                      VisiblePlayer& visible) {
   HudLog& hud = record.hud;
   auto& players = state.players.slots;
@@ -377,9 +377,9 @@ void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint&
   }
 
   // A special move's code
-  JE_byte const executed = specials.sf_executed[player_num - 1];
+  uint8_t const executed = specials.sf_executed[player_num - 1];
   if (executed > 0 && shot_repeat[SHOT_SPECIAL] == 0 && specials.flare_duration == 0) {
-    JE_byte& temp2 = state.scratch.temp2;
+    uint8_t& temp2 = state.scratch.temp2;
     temp2 = special[executed].pwr;
 
     bool const can_afford = pay_for_special(temp2, armor, shield);
@@ -401,7 +401,7 @@ void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint&
 
   // Main Begin: the fire button's special
   if (player_num == 1 && players[0].items.special > 0) {
-    JE_byte const sa = state.game.super_arcade_mode;
+    uint8_t const sa = state.game.super_arcade_mode;
     if (sa > 0 && (button[2 - 1] || button[3 - 1])) {
       state.input.fire_button_held = false;
     }
@@ -427,7 +427,7 @@ void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint&
     return;
   }
 
-  JE_byte const width = 25 - abs(specials.zinglon_duration - 25);
+  uint8_t const width = 25 - abs(specials.zinglon_duration - 25);
 
   visible.zinglon = VisiblePlayer::Zinglon{record.screen, players[0].x, width};
 
@@ -437,13 +437,12 @@ void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint&
   }
 }
 
-void sf_codes(State& state, JE_byte player_num, JE_integer px, JE_integer py, JE_integer mouse_x,
-              JE_integer mouse_y) {
+void sf_codes(State& state, uint8_t player_num, int16_t px, int16_t py, int16_t mouse_x, int16_t mouse_y) {
   auto const& button = state.input.button;
   Specials& specials = state.specials;
-  JE_byte temp, temp2, temp3, temp4, temp5;
+  uint8_t temp, temp2, temp3, temp4, temp5;
 
-  uint ship = state.players.slots[player_num - 1].items.ship;
+  unsigned ship = state.players.slots[player_num - 1].items.ship;
 
   // Get direction
   if (player_num == 2 && ship < 15) {

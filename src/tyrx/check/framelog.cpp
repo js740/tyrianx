@@ -64,7 +64,7 @@ void framelog_frame() {
 
   gold::Hasher h;
   for (int y = 0; y < VGAScreen->h; ++y) {
-    h.bytes(static_cast<Uint8 const *>(VGAScreen->pixels) + y * VGAScreen->pitch, VGAScreen->w);
+    h.bytes(static_cast<uint8_t const *>(VGAScreen->pixels) + y * VGAScreen->pitch, VGAScreen->w);
   }
   h.bytes(rgb_palette, sizeof rgb_palette);
   std::fprintf(out, "%" PRIu64 " %016" PRIx64 "\n", current_tick(), h.value());

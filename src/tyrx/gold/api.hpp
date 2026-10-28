@@ -55,12 +55,12 @@ extern "C" {
 
 // vga256d.h isn't valid C++ (its fill_rectangle_wh narrows), so its functions
 // are declared here.
-void JE_pix(SDL_Surface *surface, int x, int y, JE_byte c);
-void JE_pix3(SDL_Surface *surface, int x, int y, JE_byte c);
+void JE_pix(SDL_Surface *surface, int x, int y, uint8_t c);
+void JE_pix3(SDL_Surface *surface, int x, int y, uint8_t c);
 void JE_rectangle(SDL_Surface *surface, int a, int b, int c, int d, int e);
-void fill_rectangle_xy(SDL_Surface *, int x, int y, int x2, int y2, Uint8 color);
+void fill_rectangle_xy(SDL_Surface *, int x, int y, int x2, int y2, uint8_t color);
 void JE_barShade(SDL_Surface *surface, int a, int b, int c, int d);
 void JE_barBright(SDL_Surface *surface, int a, int b, int c, int d);
-void draw_segmented_gauge(SDL_Surface *surface, int x, int y, Uint8 color, uint segment_width,
-                          uint segment_height, uint segment_value, uint value);
+void draw_segmented_gauge(SDL_Surface *surface, int x, int y, uint8_t color, unsigned segment_width,
+                          unsigned segment_height, unsigned segment_value, unsigned value);
 }

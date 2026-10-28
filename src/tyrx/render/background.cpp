@@ -24,8 +24,8 @@
 
 #include "render.hpp"
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 #include <cstdlib>
 #include <cstring>
 
@@ -50,9 +50,9 @@ TileRows tile_rows(int y) {
 }
 
 // A row of 12 opaque 24x28 tiles (port of blitBackground1Row).
-void blit_background_1_row(Canvas dst, int x, int y, JE_byte **map) {
+void blit_background_1_row(Canvas dst, int x, int y, uint8_t **map) {
   TileRows const r = tile_rows(y);
-  std::size_t di = (std::size_t)r.y * dst.pitch + x;
+  size_t di = (size_t)r.y * dst.pitch + x;
   for (int ty = r.first; ty < r.end; ++ty) {
     for (int ti = 0; ti < 12; ++ti) {
       std::memcpy(&dst.pixels[di], map[ti] + ty * 24, 24);
@@ -65,22 +65,22 @@ void blit_background_1_row(Canvas dst, int x, int y, JE_byte **map) {
 // A row of 12 tiles whose 0 pixels are transparent, with missing (null) tiles
 // skipped (port of blitBackgroundRow and blitBackgroundRowBlend).
 template <bool kBlend>
-void blit_background_row(Canvas dst, int x, int y, JE_byte **map) {
+void blit_background_row(Canvas dst, int x, int y, uint8_t **map) {
   TileRows const r = tile_rows(y);
-  std::size_t di = (std::size_t)r.y * dst.pitch + x;
+  size_t di = (size_t)r.y * dst.pitch + x;
   for (int ty = r.first; ty < r.end; ++ty) {
     for (int ti = 0; ti < 12; ++ti) {
       if (map[ti] == nullptr) {
         di += 24;
         continue;
       }
-      JE_byte const *data = map[ti] + ty * 24;
+      uint8_t const *data = map[ti] + ty * 24;
       for (int tx = 0; tx < 24; ++tx, ++di) {
         if (data[tx] == 0) {
           continue;
         }
         if constexpr (kBlend) {
-          Uint8 const value = (data[tx] & 0x0F) + (dst.pixels[di] & 0x0F);
+          uint8_t const value = (data[tx] & 0x0F) + (dst.pixels[di] & 0x0F);
           dst.pixels[di] = (data[tx] & 0xF0) | (value >> 1);
         }
         else {
@@ -94,7 +94,7 @@ void blit_background_row(Canvas dst, int x, int y, JE_byte **map) {
 
 // Draws the 8 tile rows of a background that cover the screen.
 template <typename Row>
-void draw_background(Row row, JE_byte **map, intptr_t map_x_bp_pos, JE_word map_x_pos, JE_word back_pos,
+void draw_background(Row row, uint8_t **map, intptr_t map_x_bp_pos, uint16_t map_x_pos, uint16_t back_pos,
                      int map_width) {
   map = map + map_x_bp_pos - 12;
   for (int i = -1; i < 7; ++i) {
@@ -105,9 +105,9 @@ void draw_background(Row row, JE_byte **map, intptr_t map_x_bp_pos, JE_word map_
 
 // The value (low nibble) of a pixel plus brightness, or 0xF if the sum is
 // 0x10..0x1E and 0x0 if it is negative or larger (port of filterScreenValue).
-Uint8 adjust_value(Uint8 pixel, Sint8 brightness) {
+uint8_t adjust_value(uint8_t pixel, int8_t brightness) {
   int const sum = (pixel & 0x0F) + brightness;
-  Uint8 const value = sum < 0 || sum >= 0x1F ? 0x0 : sum >= 0x10 ? 0xF : sum;
+  uint8_t const value = sum < 0 || sum >= 0x1F ? 0x0 : sum >= 0x10 ? 0xF : sum;
   return (pixel & 0xF0) | value;
 }
 
@@ -115,54 +115,54 @@ Uint8 adjust_value(Uint8 pixel, Sint8 brightness) {
 template <typename Op>
 void for_playing_area(Canvas dst, Op op) {
   for (int y = 0; y < 184; ++y) {
-    Uint8 *row = dst.pixels + (std::size_t)y * dst.pitch + 24;
+    uint8_t *row = dst.pixels + (size_t)y * dst.pitch + 24;
     for (int x = 0; x < 264; ++x) {
       row[x] = op(row[x]);
     }
   }
 }
 
-Uint8 dark(Uint8 pixel) { return (pixel & 0xF0) | ((pixel & 0x0F) >> 2); }
+uint8_t dark(uint8_t pixel) { return (pixel & 0xF0) | ((pixel & 0x0F) >> 2); }
 
 }  // namespace
 
-void draw_background_1(Canvas dst, JE_byte **map, intptr_t map_x_bp_pos, JE_word map_x_pos,
-                       JE_word back_pos) {
-  draw_background([&](int x, int y, JE_byte **m) { blit_background_1_row(dst, x, y, m); }, map, map_x_bp_pos,
+void draw_background_1(Canvas dst, uint8_t **map, intptr_t map_x_bp_pos, uint16_t map_x_pos,
+                       uint16_t back_pos) {
+  draw_background([&](int x, int y, uint8_t **m) { blit_background_1_row(dst, x, y, m); }, map, map_x_bp_pos,
                   map_x_pos, back_pos, 14);
 }
 
-void draw_background_2(Canvas dst, JE_byte **map, intptr_t map_x_bp_pos, JE_word map_x_pos,
-                       JE_word back_pos) {
-  draw_background([&](int x, int y, JE_byte **m) { blit_background_row<false>(dst, x, y, m); }, map,
+void draw_background_2(Canvas dst, uint8_t **map, intptr_t map_x_bp_pos, uint16_t map_x_pos,
+                       uint16_t back_pos) {
+  draw_background([&](int x, int y, uint8_t **m) { blit_background_row<false>(dst, x, y, m); }, map,
                   map_x_bp_pos, map_x_pos, back_pos, 14);
 }
 
-void draw_background_2_blend(Canvas dst, JE_byte **map, intptr_t map_x_bp_pos, JE_word map_x_pos,
-                             JE_word back_pos) {
-  draw_background([&](int x, int y, JE_byte **m) { blit_background_row<true>(dst, x, y, m); }, map,
+void draw_background_2_blend(Canvas dst, uint8_t **map, intptr_t map_x_bp_pos, uint16_t map_x_pos,
+                             uint16_t back_pos) {
+  draw_background([&](int x, int y, uint8_t **m) { blit_background_row<true>(dst, x, y, m); }, map,
                   map_x_bp_pos, map_x_pos, back_pos, 14);
 }
 
-void draw_background_3(Canvas dst, JE_byte **map, intptr_t map_x_bp_pos, JE_word map_x_pos,
-                       JE_word back_pos) {
-  draw_background([&](int x, int y, JE_byte **m) { blit_background_row<false>(dst, x, y, m); }, map,
+void draw_background_3(Canvas dst, uint8_t **map, intptr_t map_x_bp_pos, uint16_t map_x_pos,
+                       uint16_t back_pos) {
+  draw_background([&](int x, int y, uint8_t **m) { blit_background_row<false>(dst, x, y, m); }, map,
                   map_x_bp_pos, map_x_pos, back_pos, 15);
 }
 
-void filter_screen(Canvas dst, JE_shortint col, JE_shortint brightness, bool filtration_avail,
+void filter_screen(Canvas dst, int8_t col, int8_t brightness, bool filtration_avail,
                    bool explosion_transparent) {
   if (col != -99 && filtration_avail) {
-    Uint8 const hue = (Uint8)col << 4;
-    for_playing_area(dst, [=](Uint8 p) { return (Uint8)(hue | (p & 0x0F)); });
+    uint8_t const hue = (uint8_t)col << 4;
+    for_playing_area(dst, [=](uint8_t p) { return (uint8_t)(hue | (p & 0x0F)); });
   }
   if (brightness != -99 && explosion_transparent && brightness != 0) {
-    for_playing_area(dst, [=](Uint8 p) { return adjust_value(p, brightness); });
+    for_playing_area(dst, [=](uint8_t p) { return adjust_value(p, brightness); });
   }
 }
 
-void darken_background(Canvas dst, JE_word neat) {
-  Uint8 *s = dst.pixels + 24;
+void darken_background(Canvas dst, uint16_t neat) {
+  uint8_t *s = dst.pixels + 24;
   for (int y = 184; y; --y) {
     for (int x = 264; x; --x) {
       int const above = y == 184 ? 0 : *(s - (dst.pitch - 1));
@@ -190,7 +190,7 @@ constexpr int kLanes = UINTPTR_MAX >= UINT64_MAX ? 8 : UINTPTR_MAX >= UINT32_MAX
 template <typename Filter>
 void filter_words(int x0, Filter filter) {
   for (int w = x0 + 8 - kLanes; w >= x0; w -= kLanes) {
-    Uint8 out[kLanes];
+    uint8_t out[kLanes];
     for (int i = 0; i < kLanes; ++i) {
       out[i] = filter(w + i, false);
     }
@@ -207,8 +207,8 @@ void lava_filter(Canvas dst, Canvas src) {
     for (int x0 = 320 - 8; x0 >= 0; x0 -= 8) {
       unsigned const diw = y * 320 + x0 + 8;
       int const wavey = std::abs((int)((diw >> 9) & 0xF) - 8) - 1;  // -1..7
-      filter_words(x0, [&](int x, bool write, Uint8 pixel = 0) -> Uint8 {
-        std::size_t const di = (std::size_t)y * dst.pitch + x, si = (std::size_t)y * src.pitch + x;
+      filter_words(x0, [&](int x, bool write, uint8_t pixel = 0) -> uint8_t {
+        size_t const di = (size_t)y * dst.pitch + x, si = (size_t)y * src.pitch + x;
         if (write) {
           dst.pixels[di] = pixel;
           return pixel;
@@ -226,14 +226,14 @@ void lava_filter(Canvas dst, Canvas src) {
   }
 }
 
-void water_filter(Canvas dst, Canvas src, JE_byte hue_index) {
-  Uint8 const hue = hue_index << 4;
+void water_filter(Canvas dst, Canvas src, uint8_t hue_index) {
+  uint8_t const hue = hue_index << 4;
   for (int y = 184; y >= 0; --y) {
     for (int x0 = 320 - 8; x0 >= 0; x0 -= 8) {
       unsigned const diw = y * 320 + x0 + 8;
       int const wavey = std::abs((int)((diw >> 10) & 0x7) - 4) - 1;  // -1..3
-      filter_words(x0, [&](int x, bool write, Uint8 pixel = 0) -> Uint8 {
-        std::size_t const di = (std::size_t)y * dst.pitch + x, si = (std::size_t)y * src.pitch + x;
+      filter_words(x0, [&](int x, bool write, uint8_t pixel = 0) -> uint8_t {
+        size_t const di = (size_t)y * dst.pitch + x, si = (size_t)y * src.pitch + x;
         if (write) {
           dst.pixels[di] = pixel;
           return pixel;
@@ -241,11 +241,11 @@ void water_filter(Canvas dst, Canvas src, JE_byte hue_index) {
         // Gray and cloud-blue pixels are copied.  Others become the average
         // of the values of the source pixel and the wavey destination pixel
         // below, in the water's hue.
-        Uint8 const source = src.pixels[si];
+        uint8_t const source = src.pixels[si];
         if ((source & 0x30) == 0) {
           return source;
         }
-        Uint8 const value = (source & 0x0F) + (dst.pixels[di + wavey + dst.pitch] & 0x0F);
+        uint8_t const value = (source & 0x0F) + (dst.pixels[di + wavey + dst.pitch] & 0x0F);
         return hue | (value >> 1);
       });
     }
@@ -256,8 +256,8 @@ void water_filter(Canvas dst, Canvas src, JE_byte hue_index) {
 void iced_blur_filter(Canvas dst, Canvas src) {
   for (int y = 0; y < 184; ++y) {
     for (int x = 0; x < 320; ++x) {
-      Uint8& d = dst.pixels[(std::size_t)y * dst.pitch + x];
-      Uint8 const s = src.pixels[(std::size_t)y * src.pitch + x];
+      uint8_t& d = dst.pixels[(size_t)y * dst.pitch + x];
+      uint8_t const s = src.pixels[(size_t)y * src.pitch + x];
       d = 0x80 | (((s & 0x0F) + (d & 0x0F)) >> 1);
     }
   }
@@ -268,8 +268,8 @@ void iced_blur_filter(Canvas dst, Canvas src) {
 void blur_filter(Canvas dst, Canvas src) {
   for (int y = 0; y < 184; ++y) {
     for (int x = 0; x < 320; ++x) {
-      Uint8& d = dst.pixels[(std::size_t)y * dst.pitch + x];
-      Uint8 const s = src.pixels[(std::size_t)y * src.pitch + x];
+      uint8_t& d = dst.pixels[(size_t)y * dst.pitch + x];
+      uint8_t const s = src.pixels[(size_t)y * src.pitch + x];
       d = (s & 0xF0) | (((s & 0x0F) + (d & 0x0F)) >> 1);
     }
   }
@@ -277,12 +277,12 @@ void blur_filter(Canvas dst, Canvas src) {
 
 // A light cone in front of the player, with the rest darkened.  x counts down
 // from 264 at the left edge of the playing area, as in the C code.
-void show_headlight(Canvas dst, Canvas src, Sint16 player_x, Sint16 player_y) {
+void show_headlight(Canvas dst, Canvas src, int16_t player_x, int16_t player_y) {
   int lx = (player_x - 17) - (player_y + 12) + 1;  // light starting at X
   int rx = (player_x - 17) + (player_y + 12);      // light until X
   for (int row = 0; row < 184; ++row) {
-    Uint8 *d = dst.pixels + (std::size_t)row * dst.pitch;
-    Uint8 const *s = src.pixels + (std::size_t)row * src.pitch + 24;
+    uint8_t *d = dst.pixels + (size_t)row * dst.pitch;
+    uint8_t const *s = src.pixels + (size_t)row * src.pitch + 24;
     auto const at = [](int x) { return 264 - x; };  // column of x
     int x = 264;
     if (lx <= rx + 1) {
@@ -299,7 +299,7 @@ void show_headlight(Canvas dst, Canvas src, Sint16 player_x, Sint16 player_y) {
       // gradient left side
       for (; x > x2; --x) {
         int const light = 3 * (6 - (x - x2));
-        Uint8 const pixel = s[at(x)];
+        uint8_t const pixel = s[at(x)];
         d[at(x)] = (pixel & 0xF0) | (((pixel & 0xF) + light) >> 2);
       }
       // light
@@ -311,7 +311,7 @@ void show_headlight(Canvas dst, Canvas src, Sint16 player_x, Sint16 player_y) {
       // gradient right side
       for (; x > x4; --x) {
         int const light = 3 * (x - x4);
-        Uint8 const pixel = s[at(x)];
+        uint8_t const pixel = s[at(x)];
         d[at(x)] = (pixel & 0xF0) | (((pixel & 0xF) + light) >> 2);
       }
     }
@@ -324,21 +324,19 @@ void show_headlight(Canvas dst, Canvas src, Sint16 player_x, Sint16 player_y) {
 
 void show_flipped(Canvas dst, Canvas src) {
   for (int row = 0; row < 184; ++row) {
-    std::memcpy(dst.pixels + (std::size_t)(183 - row) * dst.pitch,
-                src.pixels + (std::size_t)row * src.pitch + 24, 264);
+    std::memcpy(dst.pixels + (size_t)(183 - row) * dst.pitch, src.pixels + (size_t)row * src.pitch + 24, 264);
   }
 }
 
 void show_normal(Canvas dst, Canvas src) {
   for (int row = 0; row < 184; ++row) {
-    std::memcpy(dst.pixels + (std::size_t)row * dst.pitch, src.pixels + (std::size_t)row * src.pitch + 24,
-                264);
+    std::memcpy(dst.pixels + (size_t)row * dst.pitch, src.pixels + (size_t)row * src.pitch + 24, 264);
   }
 }
 
 void update_and_draw_starfield(Canvas dst, StarfieldStar (&stars)[MAX_STARS], int move_speed) {
   constexpr int kHue = 0x90;  // STARFIELD_HUE
-  Uint8 *const p = dst.pixels;
+  uint8_t *const p = dst.pixels;
   for (int i = MAX_STARS - 1; i >= 0; --i) {
     StarfieldStar& star = stars[i];
     star.position += (star.speed + move_speed) * dst.pitch;
@@ -377,7 +375,7 @@ void draw_superpixels(Canvas dst, superpixel_type (&superpixels)[MAX_SUPERPIXELS
     sp.x += sp.delta_x;
     sp.y += sp.delta_y;
     if (sp.x < (unsigned)dst.w && sp.y < (unsigned)dst.h) {
-      Uint8 *const s = dst.pixels + sp.y * dst.pitch + sp.x;
+      uint8_t *const s = dst.pixels + sp.y * dst.pitch + sp.x;
       *s = (((*s & 0x0f) + sp.z) >> 1) + sp.color;
       if (sp.x > 0) {
         *(s - 1) = (((*(s - 1) & 0x0f) + (sp.z >> 1)) >> 1) + sp.color;

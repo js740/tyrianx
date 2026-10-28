@@ -23,7 +23,7 @@
 
 #include "render.hpp"
 
-#include <cstddef>
+#include <stddef.h>
 #include <cstring>
 
 namespace tyrx::render {
@@ -40,13 +40,13 @@ void blit_table_sprite(Canvas dst, int x, int y, unsigned table, unsigned index,
     return;
   }
   Sprite const& s = sprite_table[table].sprite[index];
-  Uint8 const *data = s.data;
-  Uint8 const *const data_ul = data + s.size;
+  uint8_t const *data = s.data;
+  uint8_t const *const data_ul = data + s.size;
   unsigned const width = s.width;
   unsigned x_offset = 0;
 
-  std::ptrdiff_t p = (std::ptrdiff_t)y * dst.pitch + x;
-  std::ptrdiff_t const p_ul = (std::ptrdiff_t)dst.h * dst.pitch;
+  ptrdiff_t p = (ptrdiff_t)y * dst.pitch + x;
+  ptrdiff_t const p_ul = (ptrdiff_t)dst.h * dst.pitch;
   for (; data < data_ul; ++data) {
     switch (*data) {
       case 255:  // transparent pixels; the next byte says how many
@@ -82,8 +82,8 @@ void blit_table_sprite(Canvas dst, int x, int y, unsigned table, unsigned index,
 
 // The data of sprite `index` (1-based) in a sprite sheet, after its offset
 // table.
-Uint8 const *sheet_sprite(Sprite2_array sheet, unsigned index) {
-  Uint16 offset;
+uint8_t const *sheet_sprite(Sprite2_array sheet, unsigned index) {
+  uint16_t offset;
   std::memcpy(&offset, sheet.data + 2 * (index - 1), sizeof offset);
   return sheet.data + SDL_SwapLE16(offset);
 }
@@ -93,9 +93,9 @@ Uint8 const *sheet_sprite(Sprite2_array sheet, unsigned index) {
 // nibble; 0 pixels ends a 12-pixel row, and 0x0F ends the sprite.
 template <typename Op>
 void blit_sheet_sprite(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, Op op) {
-  std::ptrdiff_t p = (std::ptrdiff_t)y * dst.pitch + x;
-  std::ptrdiff_t const p_ul = (std::ptrdiff_t)dst.h * dst.pitch;
-  for (Uint8 const *data = sheet_sprite(sheet, index); *data != 0x0f; ++data) {
+  ptrdiff_t p = (ptrdiff_t)y * dst.pitch + x;
+  ptrdiff_t const p_ul = (ptrdiff_t)dst.h * dst.pitch;
+  for (uint8_t const *data = sheet_sprite(sheet, index); *data != 0x0f; ++data) {
     p += *data & 0x0f;
     unsigned count = (*data & 0xf0) >> 4;
     if (count == 0) {
@@ -118,19 +118,19 @@ void blit_sheet_sprite(Canvas dst, int x, int y, Sprite2_array sheet, unsigned i
 // The same, clipping on all edges.
 template <typename Op>
 void blit_sheet_sprite_clip(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, Op op) {
-  for (Uint8 const *data = sheet_sprite(sheet, index); *data != 0x0f; ++data) {
+  for (uint8_t const *data = sheet_sprite(sheet, index); *data != 0x0f; ++data) {
     if (y >= dst.h) {
       return;
     }
-    Uint8 const skip_count = *data & 0x0f;
-    Uint8 fill_count = (*data >> 4) & 0x0f;
+    uint8_t const skip_count = *data & 0x0f;
+    uint8_t fill_count = (*data >> 4) & 0x0f;
     x += skip_count;
     if (fill_count == 0) {
       y += 1;
       x -= 12;
     }
     else if (y >= 0) {
-      Uint8 *const row = dst.pixels + (std::ptrdiff_t)y * dst.pitch;
+      uint8_t *const row = dst.pixels + (ptrdiff_t)y * dst.pitch;
       do {
         ++data;
         if (x >= 0 && x < dst.pitch) {
@@ -155,14 +155,14 @@ void blit_2x2(Blit blit, int x, int y, unsigned index) {
   blit(x + 12, y + 14, index + 20);
 }
 
-Uint8 copy(Uint8 src, Uint8) { return src; }
+uint8_t copy(uint8_t src, uint8_t) { return src; }
 
-Uint8 blend(Uint8 src, Uint8 dst) { return (src & 0xf0) | (((dst & 0x0f) + (src & 0x0f)) / 2); }
+uint8_t blend(uint8_t src, uint8_t dst) { return (src & 0xf0) | (((dst & 0x0f) + (src & 0x0f)) / 2); }
 
 // The sum of a value and an adjustment, or 0xF on overflow and 0x0 on
 // underflow (as blit_sprite_hv computes it).
-Uint8 adjusted_value(Uint8 src, Sint8 value) {
-  Uint8 v = (src & 0x0f) + value;
+uint8_t adjusted_value(uint8_t src, int8_t value) {
+  uint8_t v = (src & 0x0f) + value;
   if (v > 0xf) {
     v = (v >= 0x1f) ? 0x0 : 0xf;
   }
@@ -180,28 +180,30 @@ void blit_sprite_blend(Canvas dst, int x, int y, unsigned table, unsigned index)
 }
 
 // Unsafe because the value may overflow into the hue.
-void blit_sprite_hv_unsafe(Canvas dst, int x, int y, unsigned table, unsigned index, Uint8 hue, Sint8 value) {
-  Uint8 const h = hue << 4;
+void blit_sprite_hv_unsafe(Canvas dst, int x, int y, unsigned table, unsigned index, uint8_t hue,
+                           int8_t value) {
+  uint8_t const h = hue << 4;
   blit_table_sprite(dst, x, y, table, index,
-                    [=](Uint8 src, Uint8) { return (Uint8)(h | ((src & 0x0f) + value)); });
+                    [=](uint8_t src, uint8_t) { return (uint8_t)(h | ((src & 0x0f) + value)); });
 }
 
-void blit_sprite_hv(Canvas dst, int x, int y, unsigned table, unsigned index, Uint8 hue, Sint8 value) {
-  Uint8 const h = hue << 4;
+void blit_sprite_hv(Canvas dst, int x, int y, unsigned table, unsigned index, uint8_t hue, int8_t value) {
+  uint8_t const h = hue << 4;
   blit_table_sprite(dst, x, y, table, index,
-                    [=](Uint8 src, Uint8) { return (Uint8)(h | adjusted_value(src, value)); });
+                    [=](uint8_t src, uint8_t) { return (uint8_t)(h | adjusted_value(src, value)); });
 }
 
-void blit_sprite_hv_blend(Canvas dst, int x, int y, unsigned table, unsigned index, Uint8 hue, Sint8 value) {
-  Uint8 const h = hue << 4;
-  blit_table_sprite(dst, x, y, table, index, [=](Uint8 src, Uint8 d) {
-    return (Uint8)(h | (((d & 0x0f) + adjusted_value(src, value)) / 2));
+void blit_sprite_hv_blend(Canvas dst, int x, int y, unsigned table, unsigned index, uint8_t hue,
+                          int8_t value) {
+  uint8_t const h = hue << 4;
+  blit_table_sprite(dst, x, y, table, index, [=](uint8_t src, uint8_t d) {
+    return (uint8_t)(h | (((d & 0x0f) + adjusted_value(src, value)) / 2));
   });
 }
 
 void blit_sprite_dark(Canvas dst, int x, int y, unsigned table, unsigned index, bool black) {
-  blit_table_sprite(dst, x, y, table, index, [=](Uint8, Uint8 d) {
-    return black ? (Uint8)0x00 : (Uint8)((d & 0xf0) | ((d & 0x0f) / 2));
+  blit_table_sprite(dst, x, y, table, index, [=](uint8_t, uint8_t d) {
+    return black ? (uint8_t)0x00 : (uint8_t)((d & 0xf0) | ((d & 0x0f) / 2));
   });
 }
 
@@ -219,17 +221,17 @@ void blit_sprite2_blend(Canvas dst, int x, int y, Sprite2_array sheet, unsigned 
 
 void blit_sprite2_darken(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index) {
   blit_sheet_sprite(dst, x, y, sheet, index,
-                    [](Uint8, Uint8 d) { return (Uint8)(((d & 0x0f) / 2) + (d & 0xf0)); });
+                    [](uint8_t, uint8_t d) { return (uint8_t)(((d & 0x0f) / 2) + (d & 0xf0)); });
 }
 
-void blit_sprite2_filter(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, Uint8 filter) {
+void blit_sprite2_filter(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, uint8_t filter) {
   blit_sheet_sprite(dst, x, y, sheet, index,
-                    [=](Uint8 src, Uint8) { return (Uint8)(filter | (src & 0x0f)); });
+                    [=](uint8_t src, uint8_t) { return (uint8_t)(filter | (src & 0x0f)); });
 }
 
-void blit_sprite2_filter_clip(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, Uint8 filter) {
+void blit_sprite2_filter_clip(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, uint8_t filter) {
   blit_sheet_sprite_clip(dst, x, y, sheet, index,
-                         [=](Uint8 src, Uint8) { return (Uint8)(filter | (src & 0x0f)); });
+                         [=](uint8_t src, uint8_t) { return (uint8_t)(filter | (src & 0x0f)); });
 }
 
 void blit_sprite2x2(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index) {
@@ -248,12 +250,13 @@ void blit_sprite2x2_darken(Canvas dst, int x, int y, Sprite2_array sheet, unsign
   blit_2x2([&](int bx, int by, unsigned i) { blit_sprite2_darken(dst, bx, by, sheet, i); }, x, y, index);
 }
 
-void blit_sprite2x2_filter(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, Uint8 filter) {
+void blit_sprite2x2_filter(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, uint8_t filter) {
   blit_2x2([&](int bx, int by, unsigned i) { blit_sprite2_filter(dst, bx, by, sheet, i, filter); }, x, y,
            index);
 }
 
-void blit_sprite2x2_filter_clip(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, Uint8 filter) {
+void blit_sprite2x2_filter_clip(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index,
+                                uint8_t filter) {
   blit_2x2([&](int bx, int by, unsigned i) { blit_sprite2_filter_clip(dst, bx, by, sheet, i, filter); }, x, y,
            index);
 }
