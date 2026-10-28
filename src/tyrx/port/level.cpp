@@ -628,7 +628,6 @@ void players_tick() {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
   auto& backMove3 = state().map.back_move3;
   auto& oldMapXOfs = state().map.old_map_x_ofs;
   auto& mapX2Ofs = state().map.map_x2_ofs;
@@ -639,94 +638,18 @@ void enemy_shots_tick() {
   auto& skyEnemyOverAll = state().map.sky_enemy_over_all;
   auto& topEnemyOver = state().map.top_enemy_over;
   auto& endLevel = state().ending.end_level;
-  auto& player = state().players.slots;
   auto& enemyOnScreen = state().enemies.on_screen;
   DrawRecord& r = draw_record();
-  auto& enemyShot = state().enemy_shots.slots;
-  auto& enemyShotAvail = state().enemy_shots.available;
   int lastEnemyOnScreen;
 
   // MAIN DRAWING IS STOPPED STARTING HERE
   if (!endLevel) {
     // Draw Enemy Shots
-    r.enemy_shots = EnemyShotsDrawn{VGAScreen, {}};
-    for (int z = 0; z < ENEMY_SHOT_MAX; z++) {
-      if (enemyShotAvail[z] != 0) {
-        continue;
-      }
-
-      enemyShot[z].sxm += enemyShot[z].sxc;
-      enemyShot[z].sx += enemyShot[z].sxm;
-
-      if (enemyShot[z].tx != 0) {
-        if (enemyShot[z].sx > player[0].x) {
-          if (enemyShot[z].sxm > -enemyShot[z].tx) {
-            enemyShot[z].sxm--;
-          }
-        }
-        else {
-          if (enemyShot[z].sxm < enemyShot[z].tx) {
-            enemyShot[z].sxm++;
-          }
-        }
-      }
-
-      enemyShot[z].sym += enemyShot[z].syc;
-      enemyShot[z].sy += enemyShot[z].sym;
-
-      if (enemyShot[z].ty != 0) {
-        if (enemyShot[z].sy > player[0].y) {
-          if (enemyShot[z].sym > -enemyShot[z].ty) {
-            enemyShot[z].sym--;
-          }
-        }
-        else {
-          if (enemyShot[z].sym < enemyShot[z].ty) {
-            enemyShot[z].sym++;
-          }
-        }
-      }
-
-      if (enemyShot[z].duration-- == 0 || enemyShot[z].sy > 190 || enemyShot[z].sy <= -14 ||
-          enemyShot[z].sx > 275 || enemyShot[z].sx <= 0)
-      {
-        enemyShotAvail[z] = true;
-      }
-      // check if shot collided with player
-      else {
-        for (uint i = 0; i < (twoPlayerMode ? 2 : 1); ++i) {
-          if (!(player[i].is_alive && enemyShot[z].sx > player[i].x - (signed)player[i].shot_hit_area_x &&
-                enemyShot[z].sx < player[i].x + (signed)player[i].shot_hit_area_x &&
-                enemyShot[z].sy > player[i].y - (signed)player[i].shot_hit_area_y &&
-                enemyShot[z].sy < player[i].y + (signed)player[i].shot_hit_area_y))
-          {
-            continue;
-          }
-
-          JE_integer tempX = enemyShot[z].sx;
-          JE_integer tempY = enemyShot[z].sy;
-          temp = enemyShot[z].sdmg;
-
-          enemyShotAvail[z] = true;
-
-          setup_explosion(tempX, tempY, 0, 0, false, false);
-
-          if (player[i].invulnerable_ticks == 0 && (temp = player_damage(temp, &player[i])) > 0) {
-            player[i].x_velocity += (enemyShot[z].sxm * temp) / 2;
-            player[i].y_velocity += (enemyShot[z].sym * temp) / 2;
-          }
-
-          break;
-        }
-
-        if (enemyShotAvail[z] == false) {
-          if (enemyShot[z].animax != 0 && ++enemyShot[z].animate >= enemyShot[z].animax) {
-            enemyShot[z].animate = 0;
-          }
-
-          r.enemy_shots->drawn[z] = true;
-        }
-      }
+    sim::EnemyShotsUpdate const update = sim::update_enemy_shots(state());
+    r.enemy_shots = EnemyShotsDrawn{VGAScreen, update.visible};
+    for (sim::PlayerDamage const& d : update.damage) {
+      player_damage_hud(d);
+      VGAScreen = game_screen;  // side-effect of game_screen
     }
   }
 

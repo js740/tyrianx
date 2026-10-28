@@ -31,6 +31,7 @@
 #include "hidden.hpp"
 #include "state.hpp"
 
+#include <array>
 #include <bitset>
 #include <span>
 #include <vector>
@@ -122,6 +123,31 @@ int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zin
 // to where the last jump came from if jump is 65535, and to the first event
 // at or after it.
 void event_jump(Level& level, JE_word jump);
+
+// What JE_playerDamage did: the damage that got through the shield, and the
+// shields and armor that it drew in the HUD (JE_wipeShieldArmorBars,
+// JE_drawShield and JE_drawArmor).
+struct PlayerDamage {
+  JE_byte through;
+  uint armor_before_limit;            // player 1's, as JE_wipeShieldArmorBars drew it
+  std::array<uint, 2> shield, armor;  // both players', the armor after JE_drawArmor limited it to 28
+};
+
+// varz.c: JE_playerDamage, which damages the player's shield, and its armor
+// if the damage gets through, and limits both players' armor to 28 (in
+// JE_drawArmor).
+PlayerDamage damage_player(State& state, Player& player, JE_byte damage);
+
+// The enemy shots visible in a tick, and the damage they did to the players.
+struct EnemyShotsUpdate {
+  std::bitset<ENEMY_SHOT_MAX> visible;  // which stay in their slots for the rest of the tick
+  std::vector<PlayerDamage> damage;     // in order, for the HUD
+};
+
+// tyrian2.c: the enemy shots' update in JE_main's level loop ("Draw Enemy
+// Shots"), which moves them and ends those that time out, leave the screen or
+// hit a player.
+EnemyShotsUpdate update_enemy_shots(State& state);
 
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.
