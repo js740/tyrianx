@@ -149,6 +149,28 @@ struct EnemyShotsUpdate {
 // hit a player.
 EnemyShotsUpdate update_enemy_shots(State& state);
 
+// A player shot as it was drawn.
+struct VisiblePlayerShot {
+  int x, y;
+  JE_word sprite_frame;  // over 60000 for special shots
+  bool shadow;
+};
+
+// tyrian2.c: the player shots' update in JE_main's level loop ("Player Shot
+// Images"): each moves (player_shot_move_and_draw, in shots.c), then hits
+// the enemies it collides with (hit_enemy), or sets off a chain reaction.
+// Returns the shots drawn.
+std::vector<VisiblePlayerShot> update_player_shots(State& state);
+
+// shots.c: player_shot_create, which fires player player_num's weapon wp_num
+// from port port_num's bay bay_i at (px, py), if there is power for it.
+// Returns the slot of the last shot made, or MAX_PWEAPON if one couldn't be.
+JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_word px, JE_word py,
+                              JE_word mouse_x, JE_word mouse_y, JE_word wp_num, JE_byte player_num);
+
+// shots.c: player_shot_set_direction, which turns a linked weapon's shot.
+void set_player_shot_direction(PlayerShotDataType& shot, uint weapon_id, JE_real direction);
+
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.
 void update_starfield(Starfield& starfield, int pitch);
