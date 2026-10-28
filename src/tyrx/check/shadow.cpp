@@ -67,9 +67,9 @@ bool same_calls(DrawCall const& a, DrawList const& la, DrawCall const& b, DrawLi
 // The calls of a list that touch a surface, drawing on it or reading it, in
 // their order.  Two lists draw the same pixels if each surface's calls are
 // the same: calls touching different surfaces commute.
-std::vector<std::size_t> surface_calls(DrawList const& list, SDL_Surface const *surface) {
-  std::vector<std::size_t> calls;
-  for (std::size_t i = 0; i < list.calls.size(); ++i) {
+std::vector<size_t> surface_calls(DrawList const& list, SDL_Surface const *surface) {
+  std::vector<size_t> calls;
+  for (size_t i = 0; i < list.calls.size(); ++i) {
     if (list.calls[i].dst == surface || list.calls[i].src == surface) {
       calls.push_back(i);
     }
@@ -78,9 +78,9 @@ std::vector<std::size_t> surface_calls(DrawList const& list, SDL_Surface const *
 }
 
 // "name count" lines for the kinds of calls counted.
-std::string summary(std::array<std::uint64_t, render::kDrawOps> const& counts) {
+std::string summary(std::array<uint64_t, render::kDrawOps> const& counts) {
   std::string s;
-  for (std::size_t op = 0; op < counts.size(); ++op) {
+  for (size_t op = 0; op < counts.size(); ++op) {
     if (counts[op] != 0) {
       s += render::op_name(static_cast<DrawOp>(op));
       s += ' ';
@@ -131,7 +131,7 @@ class Shadow final : public port::Runner {
     }
     if (env("TYRX_SHADOW_CALLS") != nullptr) {
       auto const print = [](char const *what, std::string const& calls) {
-        for (std::size_t b = 0, e; b < calls.size(); b = e + 1) {
+        for (size_t b = 0, e; b < calls.size(); b = e + 1) {
           e = calls.find('\n', b);
           std::fprintf(stderr, "tyrx shadow: %s: %.*s\n", what, (int)(e - b), calls.data() + b);
         }
@@ -156,7 +156,7 @@ class Shadow final : public port::Runner {
 
   bool enabled() const { return enabled_; }
   bool active() const { return active_; }
-  std::uint64_t mismatches() const { return mismatched_; }
+  uint64_t mismatches() const { return mismatched_; }
 
   void level_start() {
     have_pre_ = false;
@@ -174,7 +174,7 @@ class Shadow final : public port::Runner {
   // File reads in a C tick (demo input) are recorded, and the shadow pass gets
   // the same data instead of reading the file again.
   template <typename Read>
-  std::size_t file_read(File *file, void *data, std::size_t size, Read read) {
+  size_t file_read(File *file, void *data, size_t size, Read read) {
     if (active_) {
       if (next_read_ >= reads_.size() || reads_[next_read_].requested != size) {
         abort("unexpected file read");
@@ -184,7 +184,7 @@ class Shadow final : public port::Runner {
       *file = r.file;
       return r.data.size();
     }
-    std::size_t const n = read();
+    size_t const n = read();
     if (have_pre_) {
       auto const *b = static_cast<unsigned char const *>(data);
       reads_.push_back({size, std::vector<unsigned char>(b, b + n), *file});
@@ -253,8 +253,8 @@ class Shadow final : public port::Runner {
     copy_joysticks(pre_joysticks_);
     for (int i = 0; i < 3; ++i) {
       SDL_Surface const *s = *kSurfaces[i];
-      Uint8 const *p = static_cast<Uint8 const *>(s->pixels);
-      pre_pixels_[i].assign(p, p + (std::size_t)s->pitch * s->h);
+      uint8_t const *p = static_cast<uint8_t const *>(s->pixels);
+      pre_pixels_[i].assign(p, p + (size_t)s->pitch * s->h);
     }
     pre_clock_ = vclock_now();
     pre_old_weapon_bar_[0] = old_weapon_bar_[0];
@@ -265,7 +265,7 @@ class Shadow final : public port::Runner {
 
   static void copy_joysticks(std::vector<unsigned char>& to) {
     auto const *p = reinterpret_cast<unsigned char const *>(joystick);
-    to.assign(p, p + (std::size_t)joysticks * sizeof *joystick);
+    to.assign(p, p + (size_t)joysticks * sizeof *joystick);
   }
 
   static void restore_joysticks(std::vector<unsigned char> const& from) {
@@ -280,8 +280,8 @@ class Shadow final : public port::Runner {
     post_memory.capture();
     std::vector<unsigned char> post_joysticks;
     copy_joysticks(post_joysticks);
-    std::vector<std::uint64_t> const post_hashes = gold::block_hashes();
-    Uint32 const post_clock = vclock_now();
+    std::vector<uint64_t> const post_hashes = gold::block_hashes();
+    uint32_t const post_clock = vclock_now();
     SDL_Surface *real[3];
     for (int i = 0; i < 3; ++i) {
       real[i] = *kSurfaces[i];
@@ -336,8 +336,8 @@ class Shadow final : public port::Runner {
     port::state_target() = nullptr;
     gold::write_sim_state(sim_state_);
     DrawList shadow_list = std::move(pass_list_);
-    for (std::size_t i = 0; i < shadow_list.calls.size(); ++i) {
-      std::size_t const op = static_cast<std::size_t>(shadow_list.calls[i].op);
+    for (size_t i = 0; i < shadow_list.calls.size(); ++i) {
+      size_t const op = static_cast<size_t>(shadow_list.calls[i].op);
       ++emitted_[op];
       if (i < simulated_calls_) {
         ++during_simulation_[op];
@@ -371,15 +371,15 @@ class Shadow final : public port::Runner {
     vclock_set(post_clock);
   }
 
-  void compare(std::vector<std::uint64_t> const& post_hashes, DrawList const& shadow_list,
+  void compare(std::vector<uint64_t> const& post_hashes, DrawList const& shadow_list,
                SDL_Surface *const *real) {
     ++checked_;
-    std::uint64_t const tick = draw::drawlist_current().tick;
+    uint64_t const tick = draw::drawlist_current().tick;
     bool differed = false;
 
-    std::vector<std::uint64_t> const hashes = gold::block_hashes();
+    std::vector<uint64_t> const hashes = gold::block_hashes();
     std::string blocks;
-    for (std::size_t i = 0; i < hashes.size(); ++i) {
+    for (size_t i = 0; i < hashes.size(); ++i) {
       if (hashes[i] != post_hashes[i]) {
         blocks += ' ';
         blocks += gold::hashed_blocks()[i]->name;
@@ -394,10 +394,10 @@ class Shadow final : public port::Runner {
     DrawList const& c_list = draw::drawlist_current();
     bool list_differed = false;
     for (int r = 0; r < 3 && !list_differed; ++r) {
-      std::vector<std::size_t> const c_calls = surface_calls(c_list, real[r]),
-                                     shadow_calls = surface_calls(shadow_list, real[r]);
-      std::size_t const n = std::min(c_calls.size(), shadow_calls.size());
-      std::size_t i = 0;
+      std::vector<size_t> const c_calls = surface_calls(c_list, real[r]),
+                                shadow_calls = surface_calls(shadow_list, real[r]);
+      size_t const n = std::min(c_calls.size(), shadow_calls.size());
+      size_t i = 0;
       while (i < n &&
              same_calls(c_list.calls[c_calls[i]], c_list, shadow_list.calls[shadow_calls[i]], shadow_list))
       {
@@ -433,7 +433,7 @@ class Shadow final : public port::Runner {
       for (int s = 0; s < 3; ++s) {
         if (r == real[s]) {
           SDL_Surface *const c = shadow_surfaces_[s];
-          return {static_cast<Uint8 *>(c->pixels), c->pitch, c->w, c->h};
+          return {static_cast<uint8_t *>(c->pixels), c->pitch, c->w, c->h};
         }
       }
       return {nullptr, 0, 0, 0};
@@ -442,12 +442,12 @@ class Shadow final : public port::Runner {
       render::execute(c, shadow_list.blob.data() + c.blob, canvas(c.dst), canvas(c.src));
     }
 
-    std::uint64_t differing = 0;
+    uint64_t differing = 0;
     for (int s = 0; s < 3; ++s) {
       SDL_Surface const *a = real[s], *b = shadow_surfaces_[s];
       for (int y = 0; y < a->h; ++y) {
-        Uint8 const *ra = static_cast<Uint8 const *>(a->pixels) + y * a->pitch;
-        Uint8 const *rb = static_cast<Uint8 const *>(b->pixels) + y * b->pitch;
+        uint8_t const *ra = static_cast<uint8_t const *>(a->pixels) + y * a->pitch;
+        uint8_t const *rb = static_cast<uint8_t const *>(b->pixels) + y * b->pitch;
         for (int x = 0; x < a->w; ++x) {
           differing += ra[x] != rb[x];
         }
@@ -479,10 +479,10 @@ class Shadow final : public port::Runner {
   // The pass's draw list, which the C++ code draws into (render/tick/draw.hpp), and
   // how many of its calls the simulation made (all, until drawing begins).
   DrawList pass_list_;
-  std::size_t simulated_calls_ = SIZE_MAX;
+  size_t simulated_calls_ = SIZE_MAX;
   // The calls of each kind in shadow passes, and those made during the
   // simulation, for TYRX_SHADOW_CALLS.
-  using OpCounts = std::array<std::uint64_t, render::kDrawOps>;
+  using OpCounts = std::array<uint64_t, render::kDrawOps>;
   OpCounts emitted_ = {}, during_simulation_ = {};
   bool have_pre_ = false;
   char const *skip_reason_ = nullptr;
@@ -490,29 +490,29 @@ class Shadow final : public port::Runner {
 
   gold::CMemory pre_memory_;
   std::vector<unsigned char> pre_joysticks_;
-  std::vector<Uint8> pre_pixels_[3];
-  Uint32 pre_clock_ = 0;
+  std::vector<uint8_t> pre_pixels_[3];
+  uint32_t pre_clock_ = 0;
   SDL_Surface *shadow_surfaces_[3] = {};
   struct FileRead {
-    std::size_t requested;
+    size_t requested;
     std::vector<unsigned char> data;
     File file;  // after the read
   };
   std::vector<FileRead> reads_;
-  std::size_t next_read_ = 0;
+  size_t next_read_ = 0;
   struct JoystickPoll {
     std::vector<unsigned char> joysticks;
     bool joydown;
   };
   std::vector<JoystickPoll> polls_;
-  std::size_t next_poll_ = 0;
+  size_t next_poll_ = 0;
 
   bool hud_pending_ = false;
   unsigned weapon_power_[2] = {}, old_weapon_bar_[2] = {}, pre_old_weapon_bar_[2] = {};
 
-  std::uint64_t checked_ = 0, mismatched_ = 0, reported_ = 0;
-  std::uint64_t state_mismatches_ = 0, list_mismatches_ = 0, pixel_mismatches_ = 0;
-  std::map<std::string, std::uint64_t> skipped_, aborted_;
+  uint64_t checked_ = 0, mismatched_ = 0, reported_ = 0;
+  uint64_t state_mismatches_ = 0, list_mismatches_ = 0, pixel_mismatches_ = 0;
+  std::map<std::string, uint64_t> skipped_, aborted_;
 };
 
 Shadow& shadow() {
@@ -524,8 +524,7 @@ Shadow& shadow() {
 
 bool shadow_enabled() { return shadow().enabled(); }
 
-std::size_t shadow_file_read(File *file, void *data, std::size_t size,
-                             std::size_t (*read)(File *, void *, std::size_t)) {
+size_t shadow_file_read(File *file, void *data, size_t size, size_t (*read)(File *, void *, size_t)) {
   Shadow& s = shadow();
   if (!s.enabled()) {
     return read(file, data, size);
@@ -570,7 +569,7 @@ void shadow_level_ended() {
   }
 }
 
-std::uint64_t shadow_mismatches() { return shadow().mismatches(); }
+uint64_t shadow_mismatches() { return shadow().mismatches(); }
 
 }  // namespace tyrx::check
 
@@ -581,9 +580,9 @@ std::uint64_t shadow_mismatches() { return shadow().mismatches(); }
 
 extern "C" {
 
-void __real_multiSamplePlay(Sint16 const *, size_t, Uint8, Uint8);
+void __real_multiSamplePlay(int16_t const *, size_t, uint8_t, uint8_t);
 void __real_play_song(unsigned int);
-void __real_set_volume(Uint8, Uint8);
+void __real_set_volume(uint8_t, uint8_t);
 void __real_push_joysticks_as_keyboard(void);
 void __real_poll_joystick(int);
 void __real_JE_loadCompShapes(Sprite2_array *, char);
@@ -600,13 +599,13 @@ size_t __wrap_fileReadAtMost(File *file, void *data, size_t size) {
 }
 
 void __wrap_fileReadExactly(File *file, void *data, size_t size) {
-  tyrx::check::shadow_file_read(file, data, size, [](File *f, void *d, std::size_t n) {
+  tyrx::check::shadow_file_read(file, data, size, [](File *f, void *d, size_t n) {
     __real_fileReadExactly(f, d, n);
     return n;
   });
 }
 
-void __wrap_multiSamplePlay(Sint16 const *samples, size_t count, Uint8 chan, Uint8 vol) {
+void __wrap_multiSamplePlay(int16_t const *samples, size_t count, uint8_t chan, uint8_t vol) {
   if (!tyrx::check::shadow_active()) {
     __real_multiSamplePlay(samples, count, chan, vol);
   }
@@ -618,7 +617,7 @@ void __wrap_play_song(unsigned int song) {
   }
 }
 
-void __wrap_set_volume(Uint8 music, Uint8 sample) {
+void __wrap_set_volume(uint8_t music, uint8_t sample) {
   if (!tyrx::check::shadow_active()) {
     __real_set_volume(music, sample);
   }

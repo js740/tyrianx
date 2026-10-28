@@ -26,11 +26,11 @@
 
 namespace tyrx::sim {
 
-void do_sp(Superpixels& superpixels, MtState& mt, JE_word x, JE_word y, JE_word num, JE_byte explowidth,
-           JE_byte color) {
-  // JE_doSP counts in a JE_byte (the global temp)
-  for (JE_byte i = 0; i < num; i++) {
-    JE_real tempr = mt_rand_lt1_r(&mt) * (2 * M_PI);
+void do_sp(Superpixels& superpixels, MtState& mt, uint16_t x, uint16_t y, uint16_t num, uint8_t explowidth,
+           uint8_t color) {
+  // JE_doSP counts in a uint8_t (the global temp)
+  for (uint8_t i = 0; i < num; i++) {
+    float tempr = mt_rand_lt1_r(&mt) * (2 * M_PI);
     signed int tempy = roundf(cosf(tempr) * mt_rand_1_r(&mt) * explowidth);
     signed int tempx = roundf(sinf(tempr) * mt_rand_1_r(&mt) * explowidth);
 

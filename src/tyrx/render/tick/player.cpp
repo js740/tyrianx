@@ -31,7 +31,7 @@ namespace tyrx::render {
 namespace {
 
 // The ship as drawn: in the fade-out at the end of a level, its trail.
-void draw_ship_trail(SDL_Surface *screen, JE_word shipGr_, Sprite2_array *shipGrPtr_, int x, int trail_y) {
+void draw_ship_trail(SDL_Surface *screen, uint16_t shipGr_, Sprite2_array *shipGrPtr_, int x, int trail_y) {
   if (shipGr_ == 0) {
     draw::blit_sprite2x2(screen, x - 17, trail_y - 7, *shipGrPtr_, 13);
     draw::blit_sprite2x2(screen, x + 7, trail_y - 7, *shipGrPtr_, 51);
@@ -45,11 +45,11 @@ void draw_ship_trail(SDL_Surface *screen, JE_word shipGr_, Sprite2_array *shipGr
   }
 }
 
-void draw_ship(SDL_Surface *screen, JE_word shipGr_, Sprite2_array *shipGrPtr_,
+void draw_ship(SDL_Surface *screen, uint16_t shipGr_, Sprite2_array *shipGrPtr_,
                sim::VisiblePlayer::Ship const& d) {
   int const x = d.x, y = d.y;
   int const ship_sprite = d.sprite;
-  JE_word const mapX2Ofs = d.map_x2_ofs;
+  uint16_t const mapX2Ofs = d.map_x2_ofs;
 
   if (shipGr_ == 0) {
     if (d.background2) {

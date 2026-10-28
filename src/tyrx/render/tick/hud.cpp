@@ -37,19 +37,19 @@ namespace tyrx::render {
 namespace {
 
 // Port of JE_barX.
-void bar_x(SDL_Surface *screen, JE_word x1, JE_word y1, JE_word x2, JE_word y2, JE_byte col) {
+void bar_x(SDL_Surface *screen, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t col) {
   draw::fill_rectangle_xy(screen, x1, y1, x2, y1, col + 1);
   draw::fill_rectangle_xy(screen, x1, y1 + 1, x2, y2 - 1, col);
   draw::fill_rectangle_xy(screen, x1, y2, x2, y2, col - 1);
 }
 
 // Port of JE_dBar3.
-void dbar3(SDL_Surface *surface, JE_integer x, JE_integer y, JE_integer num, JE_integer col) {
-  JE_byte zWait = 2;
+void dbar3(SDL_Surface *surface, int16_t x, int16_t y, int16_t num, int16_t col) {
+  uint8_t zWait = 2;
 
   col += 2;
 
-  for (JE_byte z = 0; z <= num; z++) {
+  for (uint8_t z = 0; z <= num; z++) {
     draw::JE_rectangle(surface, x, y - 1, x + 8, y, col);  // <MXD> SEGa000
     if (zWait > 0) {
       zWait--;
@@ -82,14 +82,14 @@ void hud_draw(hud::Draw const& draw) {
 
     void operator()(hud::Shield const& d) const {
       if (d.two) {
-        for (uint i = 0; i < std::size(d.shield); ++i) {
+        for (unsigned i = 0; i < std::size(d.shield); ++i) {
           dbar3(screen, 270, 60 + 134 * i, roundf(d.shield[i] * 0.8f), 144);
         }
       }
       else {
         dbar3(screen, 270, 194, d.shield[0], 144);
         if (d.shield[0] != d.shield_max) {
-          uint const y = 193 - (d.shield_max * 2);
+          unsigned const y = 193 - (d.shield_max * 2);
           draw::JE_rectangle(screen, 270, y, 278, y, 68);  // <MXD> SEGa000
         }
       }
@@ -97,7 +97,7 @@ void hud_draw(hud::Draw const& draw) {
 
     void operator()(hud::Armor const& d) const {
       if (d.two) {
-        for (uint i = 0; i < std::size(d.armor); ++i) {
+        for (unsigned i = 0; i < std::size(d.armor); ++i) {
           dbar3(screen, 307, 60 + 134 * i, roundf(d.armor[i] * 0.8f), 224);
         }
       }
@@ -127,7 +127,7 @@ void hud_draw(hud::Draw const& draw) {
       int x = d.x;
       draw::fill_rectangle_xy(screen, x, d.y, x + 1 + 10 * 2, d.y + 2, 0);
 
-      for (uint j = 1; j <= d.item_power; ++j) {
+      for (unsigned j = 1; j <= d.item_power; ++j) {
         draw::JE_rectangle(screen, x, d.y, x + 1, d.y + 2, 115 + j);  // SEGa000
         x += 2;
       }
@@ -220,7 +220,7 @@ void in_game_displays_draw(sim::State const& state, SDL_Surface *screen) {
       unsigned const extra_lives = *player[temp].lives - 1;
 
       int const y = (temp == 0 && player[0].items.special > 0) ? 35 : 15;
-      JE_word x = (temp == 0) ? 30 : 270;  // tempW in the C code
+      uint16_t x = (temp == 0) ? 30 : 270;  // tempW in the C code
 
       if (extra_lives >= 5) {
         draw::blit_sprite2(screen, x, y, spriteSheet9, 285);

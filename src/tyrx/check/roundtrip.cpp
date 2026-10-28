@@ -39,15 +39,15 @@ struct RoundTrip {
 
   bool active = false;     // a snapshot has been taken ...
   bool replaying = false;  // ... and restored
-  std::uint64_t start_tick = 0;
+  uint64_t start_tick = 0;
   gold::Snapshot snapshot;
   // Block hashes at the top of each tick of the first pass, and at its end.
-  std::vector<std::vector<std::uint64_t>> recorded;
+  std::vector<std::vector<uint64_t>> recorded;
 
-  std::uint64_t completed = 0;
-  std::uint64_t cancelled = 0;  // by a level change
-  std::uint64_t replayed_ticks = 0;
-  std::uint64_t mismatched_ticks = 0;
+  uint64_t completed = 0;
+  uint64_t cancelled = 0;  // by a level change
+  uint64_t replayed_ticks = 0;
+  uint64_t mismatched_ticks = 0;
 
   RoundTrip() {
     if (char const *v = env("TYRX_ROUNDTRIP")) {
@@ -74,15 +74,15 @@ struct RoundTrip {
   static bool included(gold::StateClass c) { return gold::is_hashed(c) || c == gold::StateClass::input; }
 
   // Checks the replay's hashes at `tick` against the first pass's.
-  void check(std::uint64_t tick, std::vector<std::uint64_t> const& hashes) {
-    std::vector<std::uint64_t> const& expected = recorded[tick - start_tick];
+  void check(uint64_t tick, std::vector<uint64_t> const& hashes) {
+    std::vector<uint64_t> const& expected = recorded[tick - start_tick];
     if (hashes == expected || ++mismatched_ticks > 10) {
       return;
     }
     std::fprintf(stderr, "tyrx roundtrip: tick %" PRIu64 " differs after restoring tick %" PRIu64 ":", tick,
                  start_tick);
     auto const blocks = gold::hashed_blocks();
-    for (std::size_t i = 0; i < hashes.size(); ++i) {
+    for (size_t i = 0; i < hashes.size(); ++i) {
       if (hashes[i] != expected[i]) {
         std::fprintf(stderr, " %.*s", (int)blocks[i]->name.size(), blocks[i]->name.data());
       }
@@ -107,7 +107,7 @@ void round_trip_level_start() {
   }
 }
 
-std::uint64_t round_trip_begin_tick(std::uint64_t tick) {
+uint64_t round_trip_begin_tick(uint64_t tick) {
   RoundTrip& rt = round_trip();
   if (rt.length == 0) {
     return tick;
@@ -141,7 +141,7 @@ std::uint64_t round_trip_begin_tick(std::uint64_t tick) {
 
 bool round_trip_active() { return round_trip().active; }
 
-bool round_trip_end_tick(std::uint64_t tick, std::vector<std::uint64_t> const& hashes) {
+bool round_trip_end_tick(uint64_t tick, std::vector<uint64_t> const& hashes) {
   RoundTrip& rt = round_trip();
   if (!rt.active) {
     return false;

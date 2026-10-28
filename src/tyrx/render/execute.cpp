@@ -27,7 +27,7 @@ namespace tyrx::render {
 
 void execute(DrawCall const& c, unsigned char const *blob, Canvas dst, Canvas src) {
   auto const& a = c.args;
-  JE_byte **const map = static_cast<JE_byte **>(const_cast<void *>(c.map));
+  uint8_t **const map = static_cast<uint8_t **>(const_cast<void *>(c.map));
   switch (c.op) {
     case DrawOp::blit_sprite:
       blit_sprite(dst, a[0], a[1], a[2], a[3]);
@@ -122,8 +122,8 @@ void execute(DrawCall const& c, unsigned char const *blob, Canvas dst, Canvas sr
       break;
     case DrawOp::draw_background_3: {
       // Recorded before it scrolls, which it does before drawing.
-      JE_word back_pos = a[2] + a[3];
-      JE_byte **m = map;
+      uint16_t back_pos = a[2] + a[3];
+      uint8_t **m = map;
       if (back_pos > 27) {
         back_pos -= 28;
         m -= 15;

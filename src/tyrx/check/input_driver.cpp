@@ -26,8 +26,8 @@
 #include "roundtrip.hpp"
 #include "vclock.hpp"
 
+#include <stdint.h>
 #include <array>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <initializer_list>
@@ -47,7 +47,7 @@ constexpr int kJoystickAxes = 2, kJoystickButtons = 6;
 class InputDriver {
  public:
   explicit InputDriver(long seed)
-      : seed_(static_cast<std::uint64_t>(seed)),
+      : seed_(static_cast<uint64_t>(seed)),
         press_rewind_(env("TYRX_INPUT_REWIND") != nullptr),
         press_commands_(env("TYRX_INPUT_COMMANDS") != nullptr),
         press_cheats_(env("TYRX_INPUT_CHEATS") != nullptr),
@@ -67,7 +67,7 @@ class InputDriver {
     }
   }
 
-  void advance(Uint32 from, Uint32 to) {
+  void advance(uint32_t from, uint32_t to) {
     if (!focused_) {
       SDL_Event ev{};
       ev.type = SDL_WINDOWEVENT;
@@ -79,7 +79,7 @@ class InputDriver {
     bool const in_level = tick_ms_valid_ && to - last_tick_ms_ < 200;
     if (screen_open_) {
       // Escape closes the pause screen (as any key) and the in-game menu.
-      for (Uint32 t = from / 350 + 1; t * 350 <= to; ++t) {
+      for (uint32_t t = from / 350 + 1; t * 350 <= to; ++t) {
         key(SDL_SCANCODE_ESCAPE, true);
         key(SDL_SCANCODE_ESCAPE, false);
       }
@@ -94,7 +94,7 @@ class InputDriver {
       }
       level_ended_ = false;
       between_levels_ = true;
-      for (Uint32 t = from / 350 + 1; t * 350 <= to; ++t) {
+      for (uint32_t t = from / 350 + 1; t * 350 <= to; ++t) {
         SDL_Scancode const k = menu_key();
         key(k, true);
         key(k, false);
@@ -156,12 +156,12 @@ class InputDriver {
   // arrives, or with TYRX_INPUT_MIDTICK at the top of the tick before: after
   // the game has polled events for it, so they arrive while it runs.  That
   // shows whether the game reads input only at tick boundaries.
-  void push_input(std::uint64_t next_tick) {
+  void push_input(uint64_t next_tick) {
     if (next_tick == pushed_tick_) {
       return;
     }
     pushed_tick_ = next_tick;
-    for (std::size_t i = 0; i < kKeys.size(); ++i) {
+    for (size_t i = 0; i < kKeys.size(); ++i) {
       set_key(kKeys[i], key_down(i, next_tick));
     }
     if (press_rewind_) {
@@ -181,7 +181,7 @@ class InputDriver {
       // P opens the pause screen, F1 the in-game help and Escape the in-game
       // menu, in turn every 1000 ticks.  The help closes at the next key, and
       // advance closes the others.
-      std::uint64_t const t = next_tick % 1000;
+      uint64_t const t = next_tick % 1000;
       set_key(SDL_SCANCODE_P, t == 400);
       set_key(SDL_SCANCODE_F1, t == 600);
       set_key(SDL_SCANCODE_ESCAPE, t == 800);
@@ -202,8 +202,8 @@ class InputDriver {
   // rest of the game.  Between levels, the detail level goes to the next one,
   // as the setup menu would set it, and so does the difficulty (Wimp to
   // Nortaneous).
-  void push_cheats(std::uint64_t next_tick) {
-    std::uint64_t const t = next_tick - level_first_tick_;
+  void push_cheats(uint64_t next_tick) {
+    uint64_t const t = next_tick - level_first_tick_;
     bool const debug = t == 30 || t == 230;
     bool const smoothie = t < 500 && t % 100 == 60;
     bool const skip = t >= 500 && t < 503;
@@ -246,8 +246,8 @@ class InputDriver {
   // like the keys' (with seeds of their own), and the change-fire button is
   // down for one tick in every 200.  Menu and pause are never pressed.  The
   // game sees the new state at its next poll_joystick().
-  void push_joystick(std::uint64_t tick) {
-    auto const down = [tick, this](std::size_t i) { return key_down(kKeys.size() + i, tick); };
+  void push_joystick(uint64_t tick) {
+    auto const down = [tick, this](size_t i) { return key_down(kKeys.size() + i, tick); };
     SDL_JoystickSetVirtualAxis(joystick_, 0, axis_value(down(0), down(1)));  // left, right
     SDL_JoystickSetVirtualAxis(joystick_, 1, axis_value(down(2), down(3)));  // up, down
     SDL_JoystickSetVirtualButton(joystick_, 0, down(4));                     // fire
@@ -259,10 +259,8 @@ class InputDriver {
   // With TYRX_INPUT_MOUSE, the mouse moves left, right, up and down, and its
   // left and right buttons are held, in runs like the keys' (with seeds of
   // their own).  Motion goes out once per tick, as relative motion.
-  void push_mouse(std::uint64_t tick) {
-    auto const down = [tick, this](std::size_t i) {
-      return key_down(kKeys.size() + kJoystickInputs + i, tick);
-    };
+  void push_mouse(uint64_t tick) {
+    auto const down = [tick, this](size_t i) { return key_down(kKeys.size() + kJoystickInputs + i, tick); };
     int const xrel = (down(1) - down(0)) * kMouseStep, yrel = (down(3) - down(2)) * kMouseStep;
     if (xrel != 0 || yrel != 0) {
       SDL_Event ev{};
@@ -277,7 +275,7 @@ class InputDriver {
     set_mouse_button(SDL_BUTTON_RIGHT, down(5));
   }
 
-  static void set_mouse_button(Uint8 button, bool down) {
+  static void set_mouse_button(uint8_t button, bool down) {
     if (down == ((mouseButtonsDown & SDL_BUTTON(button)) != 0)) {
       return;
     }
@@ -291,11 +289,11 @@ class InputDriver {
     SDL_PushEvent(&ev);
   }
 
-  static constexpr std::size_t kJoystickInputs = 7;  // the stick's four directions and three buttons
+  static constexpr size_t kJoystickInputs = 7;  // the stick's four directions and three buttons
   static constexpr int kMouseStep = 8;
 
-  static Sint16 axis_value(bool negative, bool positive) {
-    return static_cast<Sint16>((positive - negative) * SDL_JOYSTICK_AXIS_MAX);
+  static int16_t axis_value(bool negative, bool positive) {
+    return static_cast<int16_t>((positive - negative) * SDL_JOYSTICK_AXIS_MAX);
   }
 
   static void set_key(SDL_Scancode scancode, bool down) {
@@ -306,7 +304,7 @@ class InputDriver {
 
   static constexpr SDL_Scancode kCommandModifier = SDL_SCANCODE_BACKSPACE;
 
-  static std::uint64_t mix(std::uint64_t x) {  // splitmix64 finalizer
+  static uint64_t mix(uint64_t x) {  // splitmix64 finalizer
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ull;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebull;
     return x ^ (x >> 31);
@@ -314,9 +312,9 @@ class InputDriver {
 
   // Each key keeps its state for runs of 2 to 9 ticks (fixed per key) and is
   // down in about a third of the runs.
-  bool key_down(std::size_t i, std::uint64_t tick) const {
-    std::uint64_t const key_seed = mix(seed_ + 0x9e3779b97f4a7c15ull * (i + 1));
-    std::uint64_t const run = tick / (2 + key_seed % 8);
+  bool key_down(size_t i, uint64_t tick) const {
+    uint64_t const key_seed = mix(seed_ + 0x9e3779b97f4a7c15ull * (i + 1));
+    uint64_t const run = tick / (2 + key_seed % 8);
     return mix(key_seed ^ run) % 3 == 0;
   }
 
@@ -332,10 +330,10 @@ class InputDriver {
     if (!in_item_screen) {
       return SDL_SCANCODE_RETURN;
     }
-    JE_integer const menu = curMenu;
-    JE_byte const sel = curSel[menu];
-    constexpr JE_integer kFullGame = 0, kPlayNextLevel = 3, k2PlayerArcade = 9,
-                         k1PlayerArcade = 10;  // game_menu.c
+    int16_t const menu = curMenu;
+    uint8_t const sel = curSel[menu];
+    constexpr int16_t kFullGame = 0, kPlayNextLevel = 3, k2PlayerArcade = 9,
+                      k1PlayerArcade = 10;  // game_menu.c
     if (menu == kFullGame) {
       return sel == 6 ? SDL_SCANCODE_RETURN : SDL_SCANCODE_DOWN;
     }
@@ -398,7 +396,7 @@ class InputDriver {
     }
   }
 
-  std::uint64_t seed_;
+  uint64_t seed_;
   bool press_rewind_;
   bool press_commands_;
   bool press_cheats_;
@@ -411,11 +409,11 @@ class InputDriver {
   bool between_levels_ = true;
   bool level_ended_ = false;
   bool screen_open_ = false;  // the pause screen or the in-game menu
-  std::uint64_t level_first_tick_ = 0;
-  std::uint64_t pushed_tick_ = UINT64_MAX;
+  uint64_t level_first_tick_ = 0;
+  uint64_t pushed_tick_ = UINT64_MAX;
   bool focused_ = false;
   bool tick_ms_valid_ = false;
-  Uint32 last_tick_ms_ = 0;
+  uint32_t last_tick_ms_ = 0;
 };
 
 InputDriver *input_driver() {
@@ -440,7 +438,7 @@ void input_driver_screen(bool open) {
   }
 }
 
-void input_driver_advance(Uint32 from, Uint32 to) {
+void input_driver_advance(uint32_t from, uint32_t to) {
   if (InputDriver *d = input_driver()) {
     d->advance(from, to);
   }

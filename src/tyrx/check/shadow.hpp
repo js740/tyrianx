@@ -40,8 +40,8 @@
 
 #include "../gold/api.hpp"
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 #include <functional>
 
 namespace tyrx::check {
@@ -50,8 +50,7 @@ bool shadow_enabled();
 
 // Reads from a file with `read`, recording the data in C ticks and giving the
 // shadow pass the same data (for the fileRead wraps).
-std::size_t shadow_file_read(File *file, void *data, std::size_t size,
-                             std::size_t (*read)(File *, void *, std::size_t));
+size_t shadow_file_read(File *file, void *data, size_t size, size_t (*read)(File *, void *, size_t));
 
 // Polls joysticks with `poll`, recording what it leaves in the joystick array
 // in C ticks, and giving the shadow pass the same (for the joystick wraps).
@@ -73,6 +72,6 @@ void shadow_level_tick();
 void shadow_level_ended();
 
 // Number of ticks whose shadow pass differed from the C tick.
-std::uint64_t shadow_mismatches();
+uint64_t shadow_mismatches();
 
 }  // namespace tyrx::check

@@ -36,7 +36,7 @@ void set_new_game_speed(State& state) {
 
   game.pentium_mode = false;
 
-  Uint16 speed;
+  uint16_t speed;
   switch (game.fast_play) {
     default:
       assert(false);
@@ -81,7 +81,7 @@ void set_new_game_speed(State& state) {
 // { Edited Ships }: a number key with tab (player 1) or caps lock (player 2)
 // gives the player that edited ship.  edited is whether the player has had
 // one, which keeps the armor from rising.
-void edit_ship(State& state, DrawRecord& record, int i, JE_boolean& edited) {
+void edit_ship(State& state, DrawRecord& record, int i, bool& edited) {
   Player& player = state.players.slots[i];
 
   for (int key = SDL_SCANCODE_1; key <= SDL_SCANCODE_0; key++) {
@@ -106,7 +106,7 @@ void edit_ship(State& state, DrawRecord& record, int i, JE_boolean& edited) {
       player.weapon_mode = 1;
     }
 
-    JE_word const armor = player.armor;
+    uint16_t const armor = player.armor;
     get_ship_info(state);
     if (player.armor > armor && edited) {
       player.armor = armor;
@@ -261,7 +261,7 @@ void main_keyboard_input(State& state, DrawRecord& record, Host& host) {
   }
   // {CYCLE THROUGH FILTER COLORS}
   else if (keysactive[SDL_SCANCODE_MINUS]) {
-    JE_shortint& filter = state.display.filter;
+    int8_t& filter = state.display.filter;
     if (filter == -99) {
       filter = 0;
     }

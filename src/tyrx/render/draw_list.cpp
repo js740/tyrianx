@@ -77,9 +77,9 @@ void append_format(std::string& s, char const *format, ...) {
 
 }  // namespace
 
-char const *op_name(DrawOp op) { return kOpNames[static_cast<std::size_t>(op)]; }
+char const *op_name(DrawOp op) { return kOpNames[static_cast<size_t>(op)]; }
 
-void DrawList::append(DrawCall const& call, void const *blob_data, std::size_t blob_size) {
+void DrawList::append(DrawCall const& call, void const *blob_data, size_t blob_size) {
   DrawCall& c = calls.emplace_back(call);
   if (blob_data != nullptr) {
     c.blob = blob.size();
@@ -123,7 +123,7 @@ std::string describe(DrawCall const& c, DrawList const& list) {
       line += " <unresolved>";
     }
   }
-  for (std::intptr_t a : c.args) {
+  for (intptr_t a : c.args) {
     append_format(line, " %" PRIdPTR, a);
   }
   if (c.blob_size != 0) {

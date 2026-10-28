@@ -31,9 +31,9 @@
 #include "hud.hpp"
 #include "visible.hpp"
 
+#include <stdint.h>
 #include <array>
 #include <bitset>
-#include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
@@ -49,35 +49,35 @@ struct Copy {
 struct Background1Drawn {
   Surface screen;
   bool clr;  // JE_clr256 instead (astral zone)
-  JE_byte **mapYPos;
+  uint8_t **mapYPos;
   intptr_t mapXbpPos;
-  JE_word mapXPos, backPos;
+  uint16_t mapXPos, backPos;
 };
 struct Background2Drawn {
   Surface screen;
   bool blend;
-  JE_byte **mapY2Pos;
+  uint8_t **mapY2Pos;
   intptr_t mapX2bpPos;
-  JE_word mapX2Pos, backPos2;
+  uint16_t mapX2Pos, backPos2;
   bool background2, smoothies_1;  // smoothies[1] draws it at background 1's x position
   intptr_t mapXbpPos;
-  JE_word mapXPos;
+  uint16_t mapXPos;
 };
 struct Background3Drawn {  // before the scroll that comes first
   Surface screen;
-  JE_byte **mapY3Pos;
+  uint8_t **mapY3Pos;
   intptr_t mapX3bpPos;
-  JE_word mapX3Pos, backPos3, backMove3;
+  uint16_t mapX3Pos, backPos3, backMove3;
 };
 
 struct Darkened {
   Surface screen;
-  JE_word neat;
+  uint16_t neat;
 };
 
 struct EnemiesDrawn {  // by one JE_drawEnemy
   Surface screen;
-  JE_word mapXOfs;
+  uint16_t mapXOfs;
   std::vector<VisibleEnemy> drawn;
 };
 
@@ -103,7 +103,7 @@ struct DebugDrawn {
 
 struct MessageDrawn {  // displayTime
   Surface screen;
-  JE_byte flash;
+  uint8_t flash;
 };
 
 struct SuperpixelsDrawn {  // the ones that were active, before moving
@@ -113,7 +113,7 @@ struct SuperpixelsDrawn {  // the ones that were active, before moving
 
 struct FilterDrawn {  // before the fade moves on
   Surface screen;
-  JE_shortint col, brightness;
+  int8_t col, brightness;
 };
 
 struct BossBarsDrawn {
@@ -121,7 +121,7 @@ struct BossBarsDrawn {
   unsigned bars;
   struct Bar {
     unsigned x;
-    Uint8 armor, color;
+    uint8_t armor, color;
   };
   std::array<Bar, 2> bar;
 };

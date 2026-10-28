@@ -32,7 +32,7 @@ namespace tyrx::render {
 namespace {
 
 // Port of blit_enemy.
-void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, JE_word mapXOfs, signed int x_offset,
+void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, uint16_t mapXOfs, signed int x_offset,
                 signed int y_offset, signed int sprite_offset) {
   if (e.sprite2s == nullptr) {
     return;
@@ -53,7 +53,7 @@ void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, JE_word mapXOf
 
 void enemies_draw(EnemiesDrawn const& d) {
   SDL_Surface *const screen = surface(d.screen);
-  JE_word const mapXOfs = d.mapXOfs;
+  uint16_t const mapXOfs = d.mapXOfs;
   for (sim::VisibleEnemy const& e : d.drawn) {
     // 2x2 enemy
     if (e.size == 1) {

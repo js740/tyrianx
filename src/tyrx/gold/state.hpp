@@ -28,8 +28,8 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <memory>
 #include <meta>
@@ -73,9 +73,9 @@ std::string_view to_string(StateClass c);
 // are often adjacent in memory, so it is indistinguishable from a pointer to
 // the start of whatever follows, which may be an unregistered global.
 struct PointerRef {
-  enum class Kind : std::uint8_t { null, block, unresolved } kind = Kind::null;
+  enum class Kind : uint8_t { null, block, unresolved } kind = Kind::null;
   std::string_view block;  // for Kind::block
-  std::uintptr_t offset = 0;
+  uintptr_t offset = 0;
 };
 
 PointerRef describe_pointer(void const *p);
@@ -83,7 +83,7 @@ PointerRef describe_pointer(void const *p);
 // Number of non-null pointers that Hasher::pointer could not attribute to a
 // registered block.  Such pointers are hashed only as "unresolved", so a
 // nonzero count means the hash may miss changes; register their targets.
-std::uint64_t unresolved_pointers();
+uint64_t unresolved_pointers();
 
 //------------------------------------------------------------------------------
 // Hashing
@@ -91,24 +91,24 @@ std::uint64_t unresolved_pointers();
 
 class Hasher {
  public:
-  void bytes(void const *data, std::size_t size) {
+  void bytes(void const *data, size_t size) {
     // FNV-1a, 64-bit.
     auto *p = static_cast<unsigned char const *>(data);
-    for (std::size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       h_ = (h_ ^ p[i]) * 0x100000001b3ull;
     }
   }
-  void u64(std::uint64_t v) { bytes(&v, sizeof v); }
+  void u64(uint64_t v) { bytes(&v, sizeof v); }
   void string(std::string_view s) {
     u64(s.size());
     bytes(s.data(), s.size());
   }
   void pointer(void const *p);
 
-  std::uint64_t value() const { return h_; }
+  uint64_t value() const { return h_; }
 
  private:
-  std::uint64_t h_ = 0xcbf29ce484222325ull;
+  uint64_t h_ = 0xcbf29ce484222325ull;
 };
 
 namespace detail {
@@ -167,7 +167,7 @@ class Dumper {
     }
     path_ += name;
   }
-  void push_index(std::size_t i) {
+  void push_index(size_t i) {
     stack_.push_back(path_.size());
     path_ += '[';
     path_ += std::to_string(i);
@@ -186,7 +186,7 @@ class Dumper {
  private:
   std::FILE *out_;
   std::string path_;
-  std::vector<std::size_t> stack_;
+  std::vector<size_t> stack_;
 };
 
 template <typename T>
@@ -211,7 +211,7 @@ void dump_value(Dumper& d, T const& v) {
     d.pointer(reinterpret_cast<void const *>(v));
   }
   else if constexpr (std::is_array_v<U>) {
-    for (std::size_t i = 0; i < std::extent_v<U>; ++i) {
+    for (size_t i = 0; i < std::extent_v<U>; ++i) {
       d.push_index(i);
       dump_value(d, v[i]);
       d.pop();
@@ -237,7 +237,7 @@ struct StateBlock {
   std::string_view name;
   StateClass cls;
   void *addr = nullptr;
-  std::size_t size = 0;
+  size_t size = 0;
   void (*hash)(Hasher&, void const *) = nullptr;  // hashed classes only
   void (*dump)(Dumper&, void const *) = nullptr;  // hashed classes only
 };
@@ -251,10 +251,10 @@ std::span<StateBlock const *const> hashed_blocks();
 // Registers memory that the C code allocates at run time (e.g. the joystick
 // array) as a block of a class that is not hashed, so that snapshots of that
 // class include it.  Must be called before the first snapshot.
-void register_heap_block(std::string_view name, StateClass cls, void *addr, std::size_t size);
+void register_heap_block(std::string_view name, StateClass cls, void *addr, size_t size);
 
 // Hashes of every hashed block, in hashed_blocks() order.
-std::vector<std::uint64_t> block_hashes();
+std::vector<uint64_t> block_hashes();
 
 void dump_state(std::FILE *out);
 
@@ -275,7 +275,7 @@ class Snapshot {
   void restore() const;
 
   // Bytes copied by this snapshot rather than shared with the previous one.
-  std::size_t unshared_size() const { return unshared_size_; }
+  size_t unshared_size() const { return unshared_size_; }
 
  private:
   struct Copy {
@@ -283,7 +283,7 @@ class Snapshot {
     std::shared_ptr<std::byte const[]> bytes;
   };
   std::vector<Copy> copies_;
-  std::size_t unshared_size_ = 0;
+  size_t unshared_size_ = 0;
 };
 
 }  // namespace tyrx::gold

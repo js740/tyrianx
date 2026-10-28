@@ -39,7 +39,7 @@ render::Canvas canvas(SDL_Surface *s) {
   if (s == nullptr) {
     return {nullptr, 0, 0, 0};
   }
-  return {static_cast<Uint8 *>(s->pixels), s->pitch, s->w, s->h};
+  return {static_cast<uint8_t *>(s->pixels), s->pitch, s->w, s->h};
 }
 
 class CxxTick final : public port::Runner {

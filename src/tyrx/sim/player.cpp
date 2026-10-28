@@ -61,11 +61,11 @@ bool play_demo_keys(State& state) {
 
 // JE_SGr: the ship graphic of edited ship ship, whose sprites may be in
 // extraShapes.
-JE_word s_gr(JE_word ship, Sprite2_array *& ptr) {
-  static JE_word const GR[15] = {233, 157, 195, 271, 81,  0,   119, 5,
-                                 43,  81,  119, 157, 195, 233, 271};  // [1..15]
+uint16_t s_gr(uint16_t ship, Sprite2_array *& ptr) {
+  static uint16_t const GR[15] = {233, 157, 195, 271, 81,  0,   119, 5,
+                                  43,  81,  119, 157, 195, 233, 271};  // [1..15]
 
-  JE_word const graphic = extraShips[(ship - 1) * 15];
+  uint16_t const graphic = extraShips[(ship - 1) * 15];
   if (graphic > 7) {
     ptr = &extraShapes;
   }
@@ -75,12 +75,12 @@ JE_word s_gr(JE_word ship, Sprite2_array *& ptr) {
 
 // player.c's power-ups.
 void calc_purple_balls_needed(Player& player) {
-  static uint const purple_balls_required[12] = {1, 1, 2, 4, 8, 12, 16, 20, 25, 30, 40, 50};
+  static unsigned const purple_balls_required[12] = {1, 1, 2, 4, 8, 12, 16, 20, 25, 30, 40, 50};
 
   player.purple_balls_needed = purple_balls_required[*player.lives];
 }
 
-bool power_up_weapon(State& state, Player& player, uint port) {
+bool power_up_weapon(State& state, Player& player, unsigned port) {
   bool const can_power_up = player.items.weapon[port].id != 0 &&   // not None
                             player.items.weapon[port].power < 11;  // not at max power
   if (can_power_up) {
@@ -113,15 +113,15 @@ struct Movement {
   State& state;
   DrawRecord& record;
   Player& player;
-  JE_byte input_device;
-  JE_byte num;  // 1 or 2
-  JE_word ship_gr;
+  uint8_t input_device;
+  uint8_t num;  // 1 or 2
+  uint16_t ship_gr;
   VisiblePlayer& visible;
 
   // What the input asks for: the mouse's or the analog joystick's movement,
   // and the acceleration it gives.
-  JE_integer mouse_xc = 0, mouse_yc = 0;
-  JE_integer accel_xc = 0, accel_yc = 0;
+  int16_t mouse_xc = 0, mouse_yc = 0;
+  int16_t accel_xc = 0, accel_yc = 0;
   bool link_gun_analog = false;
   float link_gun_angle = 0;
 
@@ -398,8 +398,8 @@ void Movement::read_input() {
     button[1] |= (mouseButtonsDown & SDL_BUTTON_RMASK) != 0;
     button[2] |= (mouseButtonsDown & (mouse_has_three_buttons ? SDL_BUTTON_MMASK : SDL_BUTTON_RMASK)) != 0;
 
-    Sint32 mouse_xr;
-    Sint32 mouse_yr;
+    int32_t mouse_xr;
+    int32_t mouse_yr;
     mouseGetRelativePosition(&mouse_xr, &mouse_yr);
     mouse_xc += mouse_xr;
     mouse_yc += mouse_yr;
@@ -448,8 +448,8 @@ void Movement::read_input() {
   accel_xc += player.x - player.mouseX;
   accel_yc += player.y - player.mouseY;
 
-  mouse_xc = std::clamp<JE_integer>(mouse_xc, -30, 30);
-  mouse_yc = std::clamp<JE_integer>(mouse_yc, -30, 30);
+  mouse_xc = std::clamp<int16_t>(mouse_xc, -30, 30);
+  mouse_yc = std::clamp<int16_t>(mouse_yc, -30, 30);
 
   if (mouse_xc > 0) {
     player.x += (mouse_xc + 3) / 4;
@@ -485,8 +485,8 @@ void Movement::link() {
   auto& players = state.players.slots;
   auto const& button = state.input.button;
   bool const galaga = state.game.galaga_mode;
-  JE_boolean& linked = state.players.two_player_linked;
-  JE_real& direction = state.players.link_gun_direction;
+  bool& linked = state.players.two_player_linked;
+  float& direction = state.players.link_gun_direction;
 
   if (state.game.two_player_mode && !linked && player.x == player.mouseX && player.y == player.mouseY &&
       abs(players[0].x - players[1].x) < 8 && abs(players[0].y - players[1].y) < 8 && players[0].is_alive &&
@@ -516,7 +516,7 @@ void Movement::link() {
     direction = link_gun_angle;
   }
   else {
-    JE_real target;
+    float target;
 
     if (abs(player.x - player.mouseX) > abs(player.y - player.mouseY)) {
       target = (player.x - player.mouseX > 0) ? M_PI_2 : (M_PI + M_PI_2);
@@ -665,7 +665,7 @@ void Movement::follow_linked() {
   auto& players = state.players.slots;
   auto& shot_repeat = state.players.shot_repeat;
   auto& shot_multi_pos = state.players.shot_multi_pos;
-  JE_real const direction = state.players.link_gun_direction;
+  float const direction = state.players.link_gun_direction;
 
   if (ship_gr == 0) {
     player.x = players[0].x - 1;
@@ -699,10 +699,9 @@ void Movement::follow_linked() {
   }
 
   shot_multi_pos[SHOT_REAR] = 0;
-  JE_integer const b =
-      create_player_shot(state, 0, SHOT_REAR, player.x + 1 + roundf(sinf(direction) * 20),
-                         player.y + roundf(cosf(direction) * 20), player.mouseX, player.mouseY,
-                         linkGunWeapons[player.items.weapon[REAR_WEAPON].id - 1], num);
+  int16_t const b = create_player_shot(state, 0, SHOT_REAR, player.x + 1 + roundf(sinf(direction) * 20),
+                                       player.y + roundf(cosf(direction) * 20), player.mouseX, player.mouseY,
+                                       linkGunWeapons[player.items.weapon[REAR_WEAPON].id - 1], num);
   set_player_shot_direction(state.player_shots.slots[b], player.items.weapon[REAR_WEAPON].id, direction);
 }
 
@@ -710,7 +709,7 @@ void Movement::follow_linked() {
 // follow it, its drawing and its sparks go by.
 void Movement::place() {
   auto& shot_repeat = state.players.shot_repeat;
-  JE_shortint& constant_last_x = state.cheats.constant_last_x;
+  int8_t& constant_last_x = state.cheats.constant_last_x;
 
   if (player.x > 256) {
     player.x = 256;
@@ -767,7 +766,7 @@ void Movement::place() {
   }
   else if (ship_gr == 1) {
     // NortSparks, from the side the ship banks to
-    JE_word sparks_x = 0;
+    uint16_t sparks_x = 0;
     int sparks_banking = 0;
     switch (ship_sprite) {
       case 5:
@@ -834,7 +833,7 @@ void Movement::fire() {
     if (display.port_config_done) {
       shot_multi_pos[SHOT_REAR] = 0;
 
-      JE_byte const sa = game.super_arcade_mode;
+      uint8_t const sa = game.super_arcade_mode;
       if (sa != SA_NONE && sa <= SA_NORTSHIPZ) {
         shot_multi_pos[SHOT_SPECIAL] = 0;
         shot_multi_pos[SHOT_SPECIAL2] = 0;
@@ -867,7 +866,7 @@ void Movement::fire() {
     int const max = game.two_player_mode ? num : 2;
 
     for (int i = min - 1; i < max; i++) {
-      uint const item = player.items.weapon[i].id;
+      unsigned const item = player.items.weapon[i].id;
 
       if (item <= 0) {
         continue;
@@ -877,8 +876,8 @@ void Movement::fire() {
         --shot_repeat[i];
       }
       else if (button[1 - 1]) {
-        uint const item_power = game.galaga_mode ? 0 : player.items.weapon[i].power - 1,
-                   item_mode = (i == REAR_WEAPON) ? player.weapon_mode - 1 : 0;
+        unsigned const item_power = game.galaga_mode ? 0 : player.items.weapon[i].power - 1,
+                       item_mode = (i == REAR_WEAPON) ? player.weapon_mode - 1 : 0;
 
         create_player_shot(state, item, i, player.x, player.y, player.mouseX, player.mouseY,
                            weaponPort[item].op[item_mode][item_power], num);
@@ -945,7 +944,7 @@ void Movement::fire() {
   }
 
   // SUPER BOMB
-  JE_byte const bomber = num == 0 ? 1 : num;  // Get whether player 1 or 2
+  uint8_t const bomber = num == 0 ? 1 : num;  // Get whether player 1 or 2
   Player& bomber_player = players.slots[bomber - 1];
 
   if (bomber_player.superbombs > 0) {
@@ -984,7 +983,7 @@ void Movement::place_sidekicks() {
     players.option_satellite_rotate += 0.15f;
   }
 
-  JE_real const rotate = players.option_satellite_rotate;
+  float const rotate = players.option_satellite_rotate;
 
   switch (left.style) {
     case 1:  // trailing
@@ -1013,8 +1012,8 @@ void Movement::place_sidekicks() {
       right.y = player.old_y[0];
       break;
     case 2: {  // front-mounted
-      JE_integer& move = players.option_attachment_move;
-      JE_boolean& comes_back = players.option_attachment_return;
+      int16_t& move = players.option_attachment_move;
+      bool& comes_back = players.option_attachment_return;
 
       if (players.option_attachment_linked) {
         right.x = player.x;
@@ -1096,8 +1095,8 @@ void Movement::fire_sidekicks() {
   auto& shot_multi_pos = state.players.shot_multi_pos;
   auto const& button = state.input.button;
 
-  for (uint i = 0; i < std::size(player.items.sidekick); ++i) {
-    uint const shot_i = (i == 0) ? SHOT_LEFT_SIDEKICK : SHOT_RIGHT_SIDEKICK;
+  for (unsigned i = 0; i < std::size(player.items.sidekick); ++i) {
+    unsigned const shot_i = (i == 0) ? SHOT_LEFT_SIDEKICK : SHOT_RIGHT_SIDEKICK;
     JE_OptionType const& option = options[player.items.sidekick[i]];
     auto& sidekick = player.sidekick[i];
 
@@ -1166,7 +1165,7 @@ void Movement::fire_sidekicks() {
 
 // The sidekicks' animation and charge, and their drawing.
 void Movement::animate_sidekicks() {
-  for (uint i = 0; i < std::size(player.sidekick); ++i) {
+  for (unsigned i = 0; i < std::size(player.sidekick); ++i) {
     JE_OptionType const& option = options[player.items.sidekick[i]];
     auto& sidekick = player.sidekick[i];
 
@@ -1178,7 +1177,7 @@ void Movement::animate_sidekicks() {
         }
       }
 
-      uint const sprite = option.gr[sidekick.animation_frame] + sidekick.charge;
+      unsigned const sprite = option.gr[sidekick.animation_frame] + sidekick.charge;
 
       visible.sidekicks[i] =
           VisiblePlayer::Sidekick{record.screen, sidekick.x, sidekick.y, sprite, sidekick.style};
@@ -1215,11 +1214,11 @@ void main_game_player_functions(State& state, DrawRecord& record, std::vector<Vi
 
   state.display.port_config_change = false;
 
-  auto const movement = [&](int i, JE_byte input_device, JE_word ship_gr, Sprite2_array *ship_gr_ptr) {
+  auto const movement = [&](int i, uint8_t input_device, uint16_t ship_gr, Sprite2_array *ship_gr_ptr) {
     VisiblePlayer& v = visible.emplace_back();
     v.ship_gr = ship_gr;
     v.ship_gr_ptr = ship_gr_ptr;
-    Movement{state, record, players.slots[i], input_device, JE_byte(i + 1), ship_gr, v}.run();
+    Movement{state, record, players.slots[i], input_device, uint8_t(i + 1), ship_gr, v}.run();
   };
 
   if (game.two_player_mode) {
@@ -1231,10 +1230,10 @@ void main_game_player_functions(State& state, DrawRecord& record, std::vector<Vi
   }
 
   // == Parallax Map Scrolling ==
-  JE_word const center_x =
+  uint16_t const center_x =
       game.two_player_mode ? (players.slots[0].x + players.slots[1].x) / 2 : players.slots[0].x;
 
-  JE_word const ofs = floorf((float)(260 - (center_x - 36)) / (260 - 36) * (24 * 3) - 1);
+  uint16_t const ofs = floorf((float)(260 - (center_x - 36)) / (260 - 36) * (24 * 3) - 1);
   map.map_x3_ofs = ofs;
   map.map_x3_pos = map.map_x3_ofs % 24;
   map.map_x3_bp_pos = 1 - (map.map_x3_ofs / 24);
@@ -1268,7 +1267,7 @@ void pickup_message(State& state, HudLog& hud, char const *who, char const *what
 
 // JE_playerCollide: the player's collisions with enemies, which pick up
 // items, or damage both.
-void collide(State& state, DrawRecord& record, Player& player, JE_byte num) {
+void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
   auto& game = state.game;
   auto& players = state.players.slots;
   auto& shot_repeat = state.players.shot_repeat;
@@ -1317,7 +1316,7 @@ void collide(State& state, DrawRecord& record, Player& player, JE_byte num) {
         shot_multi_pos[SHOT_FRONT] = 0;
         shot_repeat[SHOT_FRONT] = 10;
 
-        JE_word const weapon = SAWeapon[game.super_arcade_mode - 1][evalue - 30000 - 1];
+        uint16_t const weapon = SAWeapon[game.super_arcade_mode - 1][evalue - 30000 - 1];
 
         // if picked up already-owned weapon, power weapon up
         if (weapon == players[0].items.weapon[FRONT_WEAPON].id) {
@@ -1380,8 +1379,8 @@ void collide(State& state, DrawRecord& record, Player& player, JE_byte num) {
             ++players[1].items.sidekick_level;
           }
 
-          uint const level = players[1].items.sidekick_level - 100 - 1;
-          for (uint i = 0; i < std::size(players[1].items.sidekick); ++i) {
+          unsigned const level = players[1].items.sidekick_level - 100 - 1;
+          for (unsigned i = 0; i < std::size(players[1].items.sidekick); ++i) {
             players[1].items.sidekick[i] = optionSelect[players[1].items.sidekick_series][level][i];
           }
 
@@ -1394,7 +1393,7 @@ void collide(State& state, DrawRecord& record, Player& player, JE_byte num) {
           enemies.status[z] = 1;
           pickup_message(state, record.hud, miscText[64 - 1], options[evalue - 32000].name);
 
-          for (uint i = 0; i < std::size(players[0].items.sidekick); ++i) {
+          for (unsigned i = 0; i < std::size(players[0].items.sidekick); ++i) {
             players[0].items.sidekick[i] = evalue - 32000;
           }
           shot_multi_pos[SHOT_LEFT_SIDEKICK] = 0;
@@ -1599,7 +1598,7 @@ void collide(State& state, DrawRecord& record, Player& player, JE_byte num) {
         armorleft2 = 30000;
       }
 
-      JE_byte link = e.linknum;
+      uint8_t link = e.linknum;
       if (link == 0) {
         link = 255;
       }
@@ -1615,14 +1614,14 @@ void collide(State& state, DrawRecord& record, Player& player, JE_byte num) {
 
       // kill enemy, and those linked to it; the C code counts them in
       // temp2 (Scratch)
-      JE_byte& temp2 = state.scratch.temp2;
+      uint8_t& temp2 = state.scratch.temp2;
       for (temp2 = 0; temp2 < 100; temp2++) {
         if (enemies.status[temp2] == 1) {
           continue;
         }
 
         JE_SingleEnemyType& killed = enemies.slots[temp2];
-        JE_byte const linknum = killed.linknum;
+        uint8_t const linknum = killed.linknum;
         bool const linked = link != 255 && (link == linknum || link - 100 == linknum ||
                                             (linknum > 40 && linknum / 20 == link / 20 && linknum <= link));
         if (temp2 != z && !linked) {
@@ -1666,7 +1665,7 @@ std::vector<VisiblePlayer> update_players(State& state, DrawRecord& record) {
   // =======Collisions Detection======
   // =================================
 
-  for (uint i = 0; i < (state.game.two_player_mode ? 2 : 1); ++i) {
+  for (unsigned i = 0; i < (state.game.two_player_mode ? 2 : 1); ++i) {
     if (players[i].is_alive && !state.ending.end_level) {
       collide(state, record, players[i], i + 1);
     }
@@ -1689,7 +1688,7 @@ void get_ship_info(State& state) {
 
   bool const extra_ship = slots[0].items.ship > 90;
   if (extra_ship) {
-    JE_byte base = (slots[0].items.ship - 91) * 15;
+    uint8_t base = (slots[0].items.ship - 91) * 15;
     players.ship_gr = s_gr(slots[0].items.ship - 90, players.ship_gr_ptr);
     slots[0].armor = extraShips[base + 7];
   }
@@ -1700,7 +1699,7 @@ void get_ship_info(State& state) {
 
   bool const extra_ship2 = slots[1].items.ship > 90;
   if (extra_ship2) {
-    JE_byte base2 = (slots[1].items.ship - 91) * 15;
+    uint8_t base2 = (slots[1].items.ship - 91) * 15;
     players.ship_gr2 = s_gr(slots[1].items.ship - 90, players.ship_gr2_ptr);
     slots[1].armor = extraShips[base2 + 7];  // bug?
   }
@@ -1709,10 +1708,11 @@ void get_ship_info(State& state) {
     slots[1].armor = 10;
   }
 
-  for (uint i = 0; i < std::size(slots); ++i) {
+  for (unsigned i = 0; i < std::size(slots); ++i) {
     slots[i].initial_armor = slots[i].armor;
 
-    uint const ani = ((i == 0 && extra_ship) || (i == 1 && extra_ship2)) ? 2 : ships[slots[i].items.ship].ani;
+    unsigned const ani =
+        ((i == 0 && extra_ship) || (i == 1 && extra_ship2)) ? 2 : ships[slots[i].items.ship].ani;
 
     if (ani == 0) {
       slots[i].shot_hit_area_x = 12;
@@ -1725,14 +1725,14 @@ void get_ship_info(State& state) {
   }
 }
 
-JE_word port_configs(State const& state) {
-  uint const player_index = state.game.two_player_mode ? 1 : 0;
+uint16_t port_configs(State const& state) {
+  unsigned const player_index = state.game.two_player_mode ? 1 : 0;
   return weaponPort[state.players.slots[player_index].items.weapon[REAR_WEAPON].id].opnum;
 }
 
-JE_byte damage_player(State& state, DrawRecord& record, Player& player, JE_byte damage) {
+uint8_t damage_player(State& state, DrawRecord& record, Player& player, uint8_t damage) {
   auto& sound_queue = state.sound.queue;
-  JE_byte through = 0;
+  uint8_t through = 0;
   sound_queue[7] = S_SHIELD_HIT;
 
   // Player Damage Routines

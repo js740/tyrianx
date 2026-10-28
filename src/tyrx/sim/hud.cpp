@@ -62,7 +62,7 @@ void hud_port_config(State const& state, HudLog& hud) {
 }
 
 void hud_text_window(State& state, HudLog& hud, char const *text) {
-  JE_word& text_erase = state.display.text_erase;
+  uint16_t& text_erase = state.display.text_erase;
   bool const erase = text_erase > 0;  // erase current text
 
   text_erase = 100;
@@ -73,7 +73,7 @@ void hud_options(State& state, HudLog& hud) {
   bool const two = state.game.two_player_mode;
   Player& player = state.players.slots[two ? 1 : 0];
 
-  for (uint i = 0; i < std::size(player.sidekick); ++i) {
+  for (unsigned i = 0; i < std::size(player.sidekick); ++i) {
     JE_OptionType const& option = options[player.items.sidekick[i]];
 
     player.sidekick[i].ammo = player.sidekick[i].ammo_max = option.ammo;
@@ -106,7 +106,7 @@ void hud_option_level(State const& state, HudLog& hud) {
   hud.draws.push_back(hud::OptionLevel{state.players.slots[1].items.sidekick_level});
 }
 
-void hud_charge_level(State const& state, HudLog& hud, JE_byte color) {
+void hud_charge_level(State const& state, HudLog& hud, uint8_t color) {
   hud.draws.push_back(hud::ChargeLevel{state.players.charge_level, color});
 }
 

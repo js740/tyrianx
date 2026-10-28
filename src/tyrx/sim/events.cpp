@@ -41,7 +41,8 @@ namespace {
 // eventdat + enemy_type_ofs, in the first free slot of the 25 from first, at
 // the event's position.  Returns the slot + 1, or 0 if none was free (the C
 // code returns it in the global b).
-int create_new_event_enemy(State& state, JE_byte enemy_type_ofs, JE_word first, Sint16 unique_shape_table_i) {
+int create_new_event_enemy(State& state, uint8_t enemy_type_ofs, uint16_t first,
+                           int16_t unique_shape_table_i) {
   Level& level = state.level;
   Map const& map = state.map;
   JE_EventRecType const& ev = level.events[level.event_loc - 1];
@@ -107,7 +108,7 @@ int create_new_event_enemy(State& state, JE_byte enemy_type_ofs, JE_word first, 
 // JE_searchFor: whether an enemy with armor has link number link, in which
 // case it puts the last one's slot in out_index.  In Galaga mode, it doubles
 // their value.
-bool search_for(State& state, JE_byte link, JE_byte *out_index) {
+bool search_for(State& state, uint8_t link, uint8_t *out_index) {
   int found_id = -1;
 
   for (int i = 0; i < 100; i++) {
@@ -216,11 +217,11 @@ void event_system(State& state, HudLog& hud) {
       break;
 
     case 5: {  // load enemy shape banks
-      Uint8 const new_tables[] = {
-          (Uint8)(ev.eventdat > 0 ? ev.eventdat : 0),
-          (Uint8)(ev.eventdat2 > 0 ? ev.eventdat2 : 0),
-          (Uint8)(ev.eventdat3 > 0 ? ev.eventdat3 : 0),
-          (Uint8)(ev.eventdat4 > 0 ? ev.eventdat4 : 0),
+      uint8_t const new_tables[] = {
+          (uint8_t)(ev.eventdat > 0 ? ev.eventdat : 0),
+          (uint8_t)(ev.eventdat2 > 0 ? ev.eventdat2 : 0),
+          (uint8_t)(ev.eventdat3 > 0 ? ev.eventdat3 : 0),
+          (uint8_t)(ev.eventdat4 > 0 ? ev.eventdat4 : 0),
       };
 
       for (unsigned int i = 0; i < std::size(new_tables); ++i) {
@@ -273,7 +274,7 @@ void event_system(State& state, HudLog& hud) {
       break;
 
     case 12: {  // Custom 4x4 Ground Enemy
-      uint first = 0;
+      unsigned first = 0;
       switch (ev.eventdat6) {
         case 0:
         case 1:
@@ -316,7 +317,7 @@ void event_system(State& state, HudLog& hud) {
       break;
 
     case 16: {  // Window Text
-      Sint16 id = ev.eventdat;
+      int16_t id = ev.eventdat;
       if (id < 1 || id > 9) {
         logWarn("Event %05d %d has invalid window text ID %d.", ev.eventtime, ev.eventtype, id);
         break;
@@ -551,7 +552,7 @@ void event_system(State& state, HudLog& hud) {
         enemy[i].freq[2 - 1] = ev.eventdat2;
         enemy[i].freq[3 - 1] = ev.eventdat3;
         // the C code counts in temp2 (Scratch)
-        JE_byte& temp2 = state.scratch.temp2;
+        uint8_t& temp2 = state.scratch.temp2;
         for (temp2 = 0; temp2 < 3; temp2++) {
           enemy[i].eshotwait[temp2] = 1;
         }
@@ -581,7 +582,7 @@ void event_system(State& state, HudLog& hud) {
         }
       }
       else if (!game.super_tyrian) {
-        Uint8 const lives = *players.slots[0].lives;
+        uint8_t const lives = *players.slots[0].lives;
 
         if (ev.eventdat == 533 && (lives == 11 || (mt_rand_r(&mt) % 15) < lives)) {
           // enemy will drop random special weapon
@@ -625,7 +626,7 @@ void event_system(State& state, HudLog& hud) {
     case 38: {
       level.cur_loc = ev.eventdat;
       int new_event_loc = 1;
-      for (JE_word i = 0; i < level.max_event; i++) {
+      for (uint16_t i = 0; i < level.max_event; i++) {
         if (level.events[i].eventtime <= level.cur_loc) {
           new_event_loc = i + 1 - 1;
         }
@@ -680,7 +681,7 @@ void event_system(State& state, HudLog& hud) {
         break;
       }
 
-      if (Uint8 const lives = *players.slots[0].lives;
+      if (uint8_t const lives = *players.slots[0].lives;
           ev.eventdat == 533 && (lives == 11 || (mt_rand_r(&mt) % 15) < lives))
       {
         ev.eventdat = 829 + (mt_rand_r(&mt) % 6);
@@ -729,15 +730,15 @@ void event_system(State& state, HudLog& hud) {
       // An enemy of type 0, whose graphic and armor the event gives
       // (eventdat and eventdat6), from the shape table eventdat3.  The C code
       // keeps them in tempDat2, tempDat3 and tempDat while it clears them.
-      JE_integer const graphic = ev.eventdat;
+      int16_t const graphic = ev.eventdat;
       ev.eventdat = 0;
-      JE_integer const shape_table = ev.eventdat3;
+      int16_t const shape_table = ev.eventdat3;
       ev.eventdat3 = 0;
-      JE_integer const armor = ev.eventdat6;
+      int16_t const armor = ev.eventdat6;
       ev.eventdat6 = 0;
       enemyDat[0].armor = armor;
       enemyDat[0].egraphic[1 - 1] = graphic;
-      JE_byte first = 0;
+      uint8_t first = 0;
       switch (ev.eventtype - 48) {
         case 1:
           first = 25;
@@ -823,7 +824,7 @@ void event_system(State& state, HudLog& hud) {
     case 64:
       if (!(ev.eventdat == 6 && game.two_player_mode && game.difficulty_level > DIFFICULTY_NORMAL)) {
         display.smoothies[ev.eventdat - 1] = ev.eventdat2;
-        JE_byte smoothie = ev.eventdat;
+        uint8_t smoothie = ev.eventdat;
         if (smoothie == 5) {
           smoothie = 3;
         }
@@ -862,7 +863,7 @@ void event_system(State& state, HudLog& hud) {
       if (ev.eventdat2 == 0) {
         bool found = false;
 
-        for (JE_byte link = 1; link <= 19; link++) {
+        for (uint8_t link = 1; link <= 19; link++) {
           found = found || search_for(state, link, NULL);
         }
 
@@ -879,7 +880,7 @@ void event_system(State& state, HudLog& hud) {
       break;
 
     case 71:
-      if (((((intptr_t)map.map_y_pos - (intptr_t)&megaData1.mainmap) / sizeof(JE_byte *)) * 2) <=
+      if (((((intptr_t)map.map_y_pos - (intptr_t)&megaData1.mainmap) / sizeof(uint8_t *)) * 2) <=
           (unsigned)ev.eventdat2)
       {
         event_jump(level, ev.eventdat);
@@ -933,8 +934,8 @@ void event_system(State& state, HudLog& hud) {
       }
 
       if (any) {
-        JE_byte link;
-        JE_byte enemy_i;
+        uint8_t link;
+        uint8_t enemy_i;
         do {
           link = (mt_rand_r(&mt) % (ev.eventdat2 + 1 - ev.eventdat)) + ev.eventdat;
         } while (!(search_for(state, link, &enemy_i) && enemy[enemy_i].eyc == 0));
@@ -1019,7 +1020,7 @@ void update_events(State& state, HudLog& hud) {
   }
 }
 
-void event_jump(Level& level, JE_word jump) {
+void event_jump(Level& level, uint16_t jump) {
   if (jump == 65535) {
     level.cur_loc = level.return_loc;
   }
@@ -1028,7 +1029,7 @@ void event_jump(Level& level, JE_word jump) {
     level.cur_loc = jump;
   }
 
-  JE_word i = 0;
+  uint16_t i = 0;
   do {
     i++;
   } while (!(level.events[i - 1].eventtime >= level.cur_loc));

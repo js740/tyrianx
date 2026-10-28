@@ -61,8 +61,8 @@ void explosions_draw(sim::State const& state, ExplosionsDrawn const& d) {
     }
 
     Explosion const& explosion = state.explosions.slots[j];
-    JE_integer x = explosion.x, y = explosion.y;
-    JE_word sprite = explosion.sprite;
+    int16_t x = explosion.x, y = explosion.y;
+    uint16_t sprite = explosion.sprite;
     if (e != d.visible.ended.end() && e->slot == j) {
       x = e->x, y = e->y, sprite = e->sprite;
       ++e;
@@ -179,7 +179,7 @@ void draw_tick(sim::State const& state, DrawRecord const& r) {
 
   if (r.message) {
     draw::JE_outTextAndDarken(surface(r.message->screen), 90, 10, miscText[59], 15,
-                              (JE_byte)r.message->flash - 8, FONT_SHAPES);
+                              (uint8_t)r.message->flash - 8, FONT_SHAPES);
   }
 
   // --------  Level Timer    ---------

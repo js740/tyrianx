@@ -29,16 +29,16 @@ namespace tyrx::check {
 namespace {
 
 bool const enabled = env("TYRX_VCLOCK") != nullptr;
-Uint32 now_ms = 0;
+uint32_t now_ms = 0;
 bool quiet = false;
 
 }  // namespace
 
 bool vclock_enabled() { return enabled; }
 
-Uint32 vclock_now() { return now_ms; }
+uint32_t vclock_now() { return now_ms; }
 
-void vclock_set(Uint32 ms) { now_ms = ms; }
+void vclock_set(uint32_t ms) { now_ms = ms; }
 
 void vclock_set_quiet(bool q) { quiet = q; }
 
@@ -46,17 +46,17 @@ void vclock_set_quiet(bool q) { quiet = q; }
 
 // Linked with -Wl,--wrap=SDL_GetTicks,--wrap=SDL_Delay,--wrap=time so that the
 // C code's calls come here.
-extern "C" Uint32 __real_SDL_GetTicks(void);
-extern "C" void __real_SDL_Delay(Uint32 ms);
+extern "C" uint32_t __real_SDL_GetTicks(void);
+extern "C" void __real_SDL_Delay(uint32_t ms);
 extern "C" std::time_t __real_time(std::time_t *t);
 
-extern "C" Uint32 __wrap_SDL_GetTicks(void) {
+extern "C" uint32_t __wrap_SDL_GetTicks(void) {
   return tyrx::check::enabled ? tyrx::check::now_ms : __real_SDL_GetTicks();
 }
 
-extern "C" void __wrap_SDL_Delay(Uint32 ms) {
+extern "C" void __wrap_SDL_Delay(uint32_t ms) {
   if (tyrx::check::enabled) {
-    Uint32 const from = tyrx::check::now_ms;
+    uint32_t const from = tyrx::check::now_ms;
     tyrx::check::now_ms += ms;
     if (!tyrx::check::quiet) {
       tyrx::check::input_driver_advance(from, tyrx::check::now_ms);

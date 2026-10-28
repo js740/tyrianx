@@ -29,13 +29,13 @@
 
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 namespace tyrx::check {
 
 bool render_diff_enabled();
 
 // Number of calls whose pixels differed so far (all slices).
-std::uint64_t render_diff_mismatches();
+uint64_t render_diff_mismatches();
 
 }  // namespace tyrx::check

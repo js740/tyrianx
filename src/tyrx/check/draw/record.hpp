@@ -44,8 +44,8 @@
 #include "../../gold/api.hpp"
 #include "../../render/draw_list.hpp"
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 
 namespace tyrx::check::draw {
 
@@ -60,7 +60,7 @@ DrawList const& drawlist_current();
 
 // Number of failures TYRX_DRAWLIST_CHECK found: pixel changes outside recorded
 // calls, and ticks whose replay differed.
-std::uint64_t drawlist_check_failures();
+uint64_t drawlist_check_failures();
 
 // Called at the top of each level tick, and when a level ends.
 void drawlist_level_tick();
@@ -76,13 +76,13 @@ void drawlist_background_1(SDL_Surface *s, void (*draw)(SDL_Surface *));
 void drawlist_replay(DrawCall const& call, unsigned char const *blob, SDL_Surface *dst, SDL_Surface *src);
 
 namespace detail {
-bool drawlist_begin(DrawCall const& call, void const *blob = nullptr, std::size_t blob_size = 0);
+bool drawlist_begin(DrawCall const& call, void const *blob = nullptr, size_t blob_size = 0);
 void drawlist_end();
 }  // namespace detail
 
 // Runs a drawing primitive, recording it if it is not nested in another.
 template <typename F>
-void draw_call(DrawCall const& call, F&& run, void const *blob = nullptr, std::size_t blob_size = 0) {
+void draw_call(DrawCall const& call, F&& run, void const *blob = nullptr, size_t blob_size = 0) {
   if (!drawlist_enabled()) {
     run();
     return;

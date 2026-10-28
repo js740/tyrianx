@@ -24,9 +24,9 @@
 
 #include "../gold/api.hpp"
 
+#include <stdint.h>
 #include <array>
 #include <bitset>
-#include <cstdint>
 #include <optional>
 #include <vector>
 
@@ -34,7 +34,7 @@ namespace tyrx::sim {
 
 // The surfaces that the C code's level tick draws on, which its VGAScreen
 // points at one of.
-enum class Surface : std::uint8_t {
+enum class Surface : uint8_t {
   vga_screen_seg,  // VGAScreenSeg, the HUD's, which the playing area is copied onto at the end
   game_screen,     // game_screen
   vga_screen2,     // VGAScreen2, for the smoothies
@@ -46,8 +46,8 @@ enum class Surface : std::uint8_t {
 // the tick.
 struct EndedExplosion {
   int slot;
-  JE_integer x, y;
-  JE_word sprite;
+  int16_t x, y;
+  uint16_t sprite;
 };
 struct VisibleExplosions {
   std::bitset<MAX_EXPLOSIONS> slots;
@@ -56,23 +56,23 @@ struct VisibleExplosions {
 
 // An enemy as it was drawn, before it moved.
 struct VisibleEnemy {
-  JE_integer x, y;
-  JE_word sprite;  // egr[enemycycle - 1]
-  JE_byte filter, size;
+  int16_t x, y;
+  uint16_t sprite;  // egr[enemycycle - 1]
+  uint8_t filter, size;
   Sprite2_array *sprite2s;
 };
 
 // A player shot as it was drawn.
 struct VisiblePlayerShot {
   int x, y;
-  JE_word sprite_frame;  // over 60000 for special shots
+  uint16_t sprite_frame;  // over 60000 for special shots
   bool shadow;
 };
 
 // A player as JE_playerMovement drew it, each part on the surface it was
 // drawn on.
 struct VisiblePlayer {
-  JE_word ship_gr;
+  uint16_t ship_gr;
   Sprite2_array *ship_gr_ptr;
   struct Trail {  // at the end of a level
     Surface screen;
@@ -88,7 +88,7 @@ struct VisiblePlayer {
     Surface screen;
     int x, y;
     int sprite;
-    JE_word map_x2_ofs;
+    uint16_t map_x2_ofs;
     bool background2, super_wild, invulnerable;
   };
   std::optional<Ship> ship;
@@ -100,7 +100,7 @@ struct VisiblePlayer {
   struct Zinglon {
     Surface screen;
     int x;
-    JE_byte width;
+    uint8_t width;
   };
   std::optional<Zinglon> zinglon;
   struct Charge {
@@ -112,8 +112,8 @@ struct VisiblePlayer {
   struct Sidekick {
     Surface screen;
     int x, y;
-    uint sprite;
-    uint style;
+    unsigned sprite;
+    unsigned style;
   };
   std::array<std::optional<Sidekick>, 2> sidekicks;
 };

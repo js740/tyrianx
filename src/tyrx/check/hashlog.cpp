@@ -76,21 +76,21 @@ HashLog& hashlog() {
 
 bool hashlog_enabled() { return hashlog().out != nullptr; }
 
-void hashlog_level_start(unsigned level, std::uint64_t tick) {
+void hashlog_level_start(unsigned level, uint64_t tick) {
   if (std::FILE *out = hashlog().out) {
     std::fprintf(out, "L %u %" PRIu64 " episode=%u level=%.10s demo=%d\n", level, tick, (unsigned)episodeNum,
                  levelName, (int)playDemo);
   }
 }
 
-void hashlog_tick(std::uint64_t tick, std::vector<std::uint64_t> const& hashes) {
+void hashlog_tick(uint64_t tick, std::vector<uint64_t> const& hashes) {
   HashLog& log = hashlog();
   if (log.out) {
     gold::Hasher total;
     std::fprintf(log.out, "T %" PRIu64, tick);
     std::string line;
     char buf[24];
-    for (std::uint64_t const h : hashes) {
+    for (uint64_t const h : hashes) {
       total.u64(h);
       std::snprintf(buf, sizeof buf, " %016" PRIx64, h);
       line += buf;

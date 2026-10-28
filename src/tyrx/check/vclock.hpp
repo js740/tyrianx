@@ -31,11 +31,11 @@ namespace tyrx::check {
 bool vclock_enabled();
 
 // Milliseconds since startup on the virtual clock.
-Uint32 vclock_now();
+uint32_t vclock_now();
 
 // Sets the virtual clock, and whether SDL_Delay advances it without giving the
 // input driver a chance to send input (for the shadow tick, shadow.hpp).
-void vclock_set(Uint32 ms);
+void vclock_set(uint32_t ms);
 void vclock_set_quiet(bool quiet);
 
 }  // namespace tyrx::check

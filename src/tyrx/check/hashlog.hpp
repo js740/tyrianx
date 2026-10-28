@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include <vector>
 
 namespace tyrx::check {
@@ -38,10 +38,10 @@ namespace tyrx::check {
 bool hashlog_enabled();
 
 // Logs the start of a level, `level` counting from 1, at `tick`.
-void hashlog_level_start(unsigned level, std::uint64_t tick);
+void hashlog_level_start(unsigned level, uint64_t tick);
 
 // Logs a tick's block hashes (gold::block_hashes), and dumps the state if it is
 // the tick to dump.
-void hashlog_tick(std::uint64_t tick, std::vector<std::uint64_t> const& hashes);
+void hashlog_tick(uint64_t tick, std::vector<uint64_t> const& hashes);
 
 }  // namespace tyrx::check

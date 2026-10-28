@@ -44,7 +44,7 @@ bool all_players_dead(State const& state) {
 // Whether background 2 is drawn where the C code draws it over things: not
 // with smoothies that draw it themselves.
 bool background_2_drawn(State const& state) {
-  JE_byte const processor = state.game.processor_type;
+  uint8_t const processor = state.game.processor_type;
   auto const& smoothies = state.display.smoothies;
   return !(smoothies[2 - 1] && processor < 4) && !(smoothies[1 - 1] && processor == 3);
 }
@@ -63,7 +63,7 @@ void smoothie(DrawRecord& record, std::optional<Copy>& copy) {
 
 // One JE_drawEnemy: the enemies before slot end, on a layer that has scrolled
 // map_x_ofs sideways and moved back_move down.
-void enemies(State& state, DrawRecord& record, int end, JE_word map_x_ofs, JE_word back_move,
+void enemies(State& state, DrawRecord& record, int end, uint16_t map_x_ofs, uint16_t back_move,
              std::optional<EnemiesDrawn>& drawn) {
   drawn = EnemiesDrawn{record.screen, map_x_ofs, update_enemies(state, end, map_x_ofs, back_move)};
 }
@@ -155,7 +155,7 @@ void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
       game.two_player_mode = false;
     }
 
-    JE_longint& galaga_life = state.level.galaga_life;
+    int32_t& galaga_life = state.level.galaga_life;
     if (slots[0].cash >= (unsigned)galaga_life) {
       state.sound.queue[6] = S_EXPLOSION_11;
       state.sound.queue[7] = S_SOUL_OF_ZINGLON;
@@ -206,8 +206,8 @@ void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
   }
 
   // ---------------------Weapon Display-------------------------
-  for (uint i = 0; i < 2; ++i) {
-    uint const item_power = slots[game.two_player_mode ? i : 0].items.weapon[i].power;
+  for (unsigned i = 0; i < 2; ++i) {
+    unsigned const item_power = slots[game.two_player_mode ? i : 0].items.weapon[i].power;
 
     if (locals.old_weapon_bar[i] == item_power) {
       continue;
@@ -231,7 +231,7 @@ void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
       players.power = 900;
     }
 
-    JE_byte const bar = players.power / 10;
+    uint8_t const bar = players.power / 10;
 
     if (bar != players.last_power) {
       hud.draws.push_back(hud::PowerBar{bar, players.last_power});
@@ -247,12 +247,12 @@ void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
 
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under(State& state, DrawRecord& record, Host& host) {
-  JE_byte const processor = state.game.processor_type;
+  uint8_t const processor = state.game.processor_type;
   auto const& smoothies = state.display.smoothies;
   auto const& smoothie_data = state.display.smoothie_data;
   Map& map = state.map;
   Level& level = state.level;
-  JE_byte const astral_duration = state.specials.astral_duration;
+  uint8_t const astral_duration = state.specials.astral_duration;
 
   // SMOOTHIES!
   check_smoothies(state);
@@ -320,16 +320,16 @@ void backgrounds_under(State& state, DrawRecord& record, Host& host) {
 // The ground, sky and top enemies, with the background 2 and 3 layers and
 // smoothie filters between them, and new random enemies.
 void enemies_under(State& state, DrawRecord& record) {
-  JE_byte const processor = state.game.processor_type;
+  uint8_t const processor = state.game.processor_type;
   auto const& smoothies = state.display.smoothies;
   auto const& smoothie_data = state.display.smoothie_data;
   Map& map = state.map;
   Level& level = state.level;
-  JE_word& on_screen = state.enemies.on_screen;
+  uint16_t& on_screen = state.enemies.on_screen;
   MtState& mt = state.random.mt;
 
   // -----------------------Ground Enemy------------------------
-  JE_word last_on_screen = on_screen;
+  uint16_t last_on_screen = on_screen;
 
   enemies(state, record, 50, map.map_x_ofs, map.back_move, record.ground_enemies);
   enemies(state, record, 100, map.map_x_ofs, map.back_move, record.ground_enemies_2);
@@ -364,7 +364,7 @@ void enemies_under(State& state, DrawRecord& record) {
 
   // New Enemy
   if (level.enemies_active && mt_rand_r(&mt) % 100 > level.enemy_frequency) {
-    JE_word const type = level.enemy_types[mt_rand_r(&mt) % level.enemy_types_max];
+    uint16_t const type = level.enemy_types[mt_rand_r(&mt) % level.enemy_types_max];
     if (type == 2) {
       state.sound.queue[3] = S_WEAPON_7;
     }
@@ -403,7 +403,7 @@ void enemies_under(State& state, DrawRecord& record) {
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_and_over(State& state, DrawRecord& record) {
   Map& map = state.map;
-  JE_word& on_screen = state.enemies.on_screen;
+  uint16_t& on_screen = state.enemies.on_screen;
 
   // MAIN DRAWING IS STOPPED STARTING HERE
   if (!state.ending.end_level) {
@@ -427,7 +427,7 @@ void enemy_shots_and_over(State& state, DrawRecord& record) {
   }
 
   // Draw Sky Enemy
-  JE_word const last_on_screen = on_screen;
+  uint16_t const last_on_screen = on_screen;
 
   enemies(state, record, 25, map.map_x2_ofs, 0, record.sky_enemies_over);
 
@@ -469,7 +469,7 @@ void warning(State& state, DrawRecord& record) {
   if (player1_low || (game.two_player_mode && !game.galaga_mode && player2_low)) {
     int const armor_amount = player1_low ? players[0].armor : players[1].armor;
 
-    JE_word& delay = state.players.armor_ship_delay;
+    uint16_t& delay = state.players.armor_ship_delay;
     if (delay > 0) {
       delay--;
     }
@@ -486,7 +486,7 @@ void warning(State& state, DrawRecord& record) {
     if ((player1_low && (!isNetworkGame || thisPlayerNum == 1)) ||
         (game.two_player_mode && player2_low && (!isNetworkGame || thisPlayerNum == 2)))
     {
-      JE_word const sound_delay = armor_amount * 4 + 8;
+      uint16_t const sound_delay = armor_amount * 4 + 8;
       if (display.warning_sound_delay > sound_delay) {
         display.warning_sound_delay = sound_delay;
       }
@@ -526,14 +526,14 @@ void sound(State& state) {
   // =================================
   if (state.ending.first_game_over) {
     // The C code counts the channels in temp2 (Scratch).
-    JE_byte& temp2 = state.scratch.temp2;
+    uint8_t& temp2 = state.scratch.temp2;
     for (temp2 = 0; temp2 < std::size(queue); temp2++) {
       if (queue[temp2] == S_NONE) {
         continue;
       }
 
-      JE_byte const sample = queue[temp2];
-      JE_byte volume;
+      uint8_t const sample = queue[temp2];
+      uint8_t volume;
       if (temp2 == 3) {
         volume = fxPlayVol;
       }

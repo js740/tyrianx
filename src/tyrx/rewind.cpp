@@ -42,7 +42,7 @@ struct Rewind {
   long capacity = 0;  // 0 if disabled
   SDL_Scancode key = SDL_SCANCODE_BACKSPACE;
   std::deque<Kept> kept;
-  std::uint64_t rewound_ticks = 0;
+  uint64_t rewound_ticks = 0;
 
   Rewind() {
     if ((capacity = env_long("TYRX_REWIND", 0)) <= 0) {

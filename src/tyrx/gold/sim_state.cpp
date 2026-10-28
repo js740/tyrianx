@@ -21,8 +21,8 @@
 
 #include "state.hpp"
 
+#include <stdint.h>
 #include <algorithm>
-#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <set>
@@ -284,25 +284,25 @@ void copy(T& to, T const& from) {
   to = from;
 }
 
-template <typename T, typename U, std::size_t N>
+template <typename T, typename U, size_t N>
 void copy(std::array<T, N>& to, U const (&from)[N]) {
-  for (std::size_t i = 0; i < N; ++i) {
+  for (size_t i = 0; i < N; ++i) {
     copy(to[i], from[i]);
   }
 }
 
-template <typename T, typename U, std::size_t N>
+template <typename T, typename U, size_t N>
 void copy(T (&to)[N], std::array<U, N> const& from) {
-  for (std::size_t i = 0; i < N; ++i) {
+  for (size_t i = 0; i < N; ++i) {
     copy(to[i], from[i]);
   }
 }
 
 // Where a member or global is, and where its counterpart is.
 struct Relocation {
-  std::uintptr_t from;
-  std::size_t size;
-  std::uintptr_t to;
+  uintptr_t from;
+  size_t size;
+  uintptr_t to;
 };
 
 // Points the pointers in v that point into one of the relocations' from
@@ -315,7 +315,7 @@ void relocate_pointers(T& v, std::span<Relocation const> relocations) {
     return;
   }
   else if constexpr (std::is_pointer_v<U>) {
-    std::uintptr_t const p = reinterpret_cast<std::uintptr_t>(v);
+    uintptr_t const p = reinterpret_cast<uintptr_t>(v);
     for (Relocation const& r : relocations) {
       if (p - r.from < r.size) {
         v = reinterpret_cast<U>(r.to + (p - r.from));
@@ -338,7 +338,7 @@ std::vector<Relocation> relocations(sim::State const& state, bool to_state) {
   std::vector<Relocation> r;
   for_each_binding(state, [&](auto const& cxx, auto const& c) {
     static_assert(sizeof cxx == sizeof c);
-    auto const cxx_at = reinterpret_cast<std::uintptr_t>(&cxx), c_at = reinterpret_cast<std::uintptr_t>(&c);
+    auto const cxx_at = reinterpret_cast<uintptr_t>(&cxx), c_at = reinterpret_cast<uintptr_t>(&c);
     r.push_back(to_state ? Relocation{c_at, sizeof c, cxx_at} : Relocation{cxx_at, sizeof cxx, c_at});
   });
   return r;
@@ -388,7 +388,7 @@ bool sim_state_bound() {
     }
   });
 
-  std::size_t found = 0;
+  size_t found = 0;
   template for (constexpr auto sub : detail::data_members<sim::State>()) {
     auto& subsystem = state.[:sub:];
     template for (constexpr auto m : detail::data_members<std::remove_cvref_t<decltype(subsystem)>>()) {

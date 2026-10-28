@@ -31,7 +31,7 @@ namespace tyrx::render {
 void player_shots_draw(PlayerShotsDrawn const& d) {
   SDL_Surface *const screen = surface(d.screen);
   for (sim::VisiblePlayerShot const& shot : d.drawn) {
-    JE_word const sprite_frame = shot.sprite_frame;
+    uint16_t const sprite_frame = shot.sprite_frame;
     int const x = shot.x + 1, y = shot.y;
     if (sprite_frame > 60000) {
       draw::blit_sprite_blend(screen, x, y, OPTION_SHAPES, sprite_frame - 60001);

@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 #include <vector>
 
 namespace tyrx::check {
@@ -39,7 +39,7 @@ void round_trip_level_start();
 // Called at the top of each level tick.  At the end of a round trip's first
 // pass, restores its snapshot and returns the tick to replay from; otherwise
 // returns `tick`.
-std::uint64_t round_trip_begin_tick(std::uint64_t tick);
+uint64_t round_trip_begin_tick(uint64_t tick);
 
 // Whether a round trip is in progress, so that each tick's hashes are needed.
 bool round_trip_active();
@@ -47,7 +47,7 @@ bool round_trip_active();
 // Records the tick's block hashes on a round trip's first pass, or checks them
 // against the recorded ones on the replay.  Returns whether the tick is a
 // replay.
-bool round_trip_end_tick(std::uint64_t tick, std::vector<std::uint64_t> const& hashes);
+bool round_trip_end_tick(uint64_t tick, std::vector<uint64_t> const& hashes);
 
 // Whether any replay differed or no round trip completed.
 bool round_trip_failed();

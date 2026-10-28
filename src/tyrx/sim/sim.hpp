@@ -49,18 +49,18 @@ using namespace hidden;
 // (mt_rand_r etc. in mtrand.h) rather than a C++ copy of the generator.
 
 // varz.c
-void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, JE_integer x, JE_integer y,
-                     JE_integer delta_y, JE_integer type, bool fixed_position, bool follow_player);
+void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, int16_t x, int16_t y, int16_t delta_y,
+                     int16_t type, bool fixed_position, bool follow_player);
 
 // varz.c: JE_setupExplosionLarge
-void setup_explosion_large(Explosions& explosions, bool enemy_ground, JE_byte explo_num, JE_integer x,
-                           JE_integer y);
+void setup_explosion_large(Explosions& explosions, bool enemy_ground, uint8_t explo_num, int16_t x,
+                           int16_t y);
 
 // tyrian2.c: the repeating explosions' update in JE_main's level loop
 // ("Sequenced Explosions"), which sets off their explosions, with their
 // sounds in the sound queue.  Returns whether any is still exploding.
-bool update_repeating_explosions(Explosions& explosions, MtState& mt, JE_integer back_move,
-                                 std::span<JE_byte, 8> sound_queue);
+bool update_repeating_explosions(Explosions& explosions, MtState& mt, int16_t back_move,
+                                 std::span<uint8_t, 8> sound_queue);
 
 // tyrian2.c: the explosions' update in JE_main's level loop ("Draw
 // Explosions"), which moves them and ends those whose time ran out or that
@@ -68,8 +68,8 @@ bool update_repeating_explosions(Explosions& explosions, MtState& mt, JE_integer
 VisibleExplosions update_explosions(Explosions& explosions);
 
 // varz.c: JE_doSP, which creates num superpixels around (x, y)
-void do_sp(Superpixels& superpixels, MtState& mt, JE_word x, JE_word y, JE_word num, JE_byte explowidth,
-           JE_byte color);
+void do_sp(Superpixels& superpixels, MtState& mt, uint16_t x, uint16_t y, uint16_t num, uint8_t explowidth,
+           uint8_t color);
 
 // varz.c: the superpixels' update in JE_drawSP, which moves and fades them.
 // Returns the slots of those it updated, which the drawing draws.
@@ -78,18 +78,18 @@ std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels);
 // tyrian2.c: JE_makeEnemy, which makes enemy one of type e_dat_i (enemyDat),
 // with the sprites of shape table unique_shape_table_i if that is over 0.
 // Returns the slot's status (Enemies::status) for the enemy.
-JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sint16 unique_shape_table_i);
+uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i);
 
 // tyrian2.c: JE_newEnemy, which makes an enemy (make_enemy) in the first free
 // slot of the 25 from first.  Returns the slot + 1, or 0 if none was free.
-int new_enemy(State& state, int first, JE_word e_dat_i, Sint16 unique_shape_table_i);
+int new_enemy(State& state, int first, uint16_t e_dat_i, int16_t unique_shape_table_i);
 
 // tyrian2.c: JE_drawEnemy, which "actually does a whole lot more than just
 // drawing": the update of the 25 enemies before slot end, on a layer that has
 // scrolled map_x_ofs sideways and moved back_move down in the tick (kept in
 // the Map, as tempMapXOfs and tempBackMove).  Each is animated, moves, fires
 // and launches enemies.  Returns those on screen, as they were drawn.
-std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_ofs, JE_word back_move);
+std::vector<VisibleEnemy> update_enemies(State& state, int end, uint16_t map_x_ofs, uint16_t back_move);
 
 // tyrian2.c: a player shot's hit on the enemy in slot b, in JE_main's level
 // loop ("Player Shot Images"), with the shot's damage and blast filter.  A
@@ -98,8 +98,8 @@ std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_of
 // the enemy and the enemies linked to it, and a destruction leaves the
 // filter at 100.  The Zinglon's shot neither explodes nor makes sparks.
 // Returns the enemy's armor before the hit.
-int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zinglon, int shot_x, int shot_y,
-              JE_byte player_num);
+int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglon, int shot_x, int shot_y,
+              uint8_t player_num);
 
 // How a level tick ended: like the C code, back to level_loop for the next
 // tick, or to start_level to end the level; or not at all, for network games,
@@ -153,7 +153,7 @@ void update_events(State& state, HudLog& hud);
 // tyrian2.c: JE_eventJump, which jumps to the level position jump, or back
 // to where the last jump came from if jump is 65535, and to the first event
 // at or after it.
-void event_jump(Level& level, JE_word jump);
+void event_jump(Level& level, uint16_t jump);
 
 // The HUD's gauges and messages (hud.cpp), which log them in the HUD's log.
 void hud_shield(State const& state, HudLog& hud);             // JE_drawShield
@@ -164,7 +164,7 @@ void hud_text_window(State& state, HudLog& hud,
                      char const *text);                  // JE_drawTextWindow, which sets textErase
 void hud_options(State& state, HudLog& hud);             // JE_drawOptions, which sets up the sidekicks
 void hud_option_level(State const& state, HudLog& hud);  // JE_drawOptionLevel
-void hud_charge_level(State const& state, HudLog& hud, JE_byte color);
+void hud_charge_level(State const& state, HudLog& hud, uint8_t color);
 void hud_sidekick_ammo(HudLog& hud, int y, int ammo_max, int ammo, bool discharged);
 
 // tyrian2.c: the players' part of JE_main's level loop: their collisions
@@ -178,19 +178,18 @@ std::vector<VisiblePlayer> update_players(State& state, DrawRecord& record);
 void get_ship_info(State& state);
 
 // varz.c: JE_portConfigs, the number of modes of the rear weapon.
-JE_word port_configs(State const& state);
+uint16_t port_configs(State const& state);
 
 // varz.c: JE_doSpecialShot, the specials of player player_num, whose armor
 // and shield pay for them: those set off by the special-move codes or the
 // fire button, and the flares and the Zinglon while they last.
-void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint& armor, uint& shield,
+void do_special_shot(State& state, DrawRecord& record, uint8_t player_num, unsigned& armor, unsigned& shield,
                      VisiblePlayer& visible);
 
 // mainint.c: JE_SFCodes, which follows player player_num's input (the
 // movement from (mouse_x, mouse_y) to (px, py), and the fire button) through
 // the ship's special-move codes.
-void sf_codes(State& state, JE_byte player_num, JE_integer px, JE_integer py, JE_integer mouse_x,
-              JE_integer mouse_y);
+void sf_codes(State& state, uint8_t player_num, int16_t px, int16_t py, int16_t mouse_x, int16_t mouse_y);
 
 // varz.c: JE_playerDamage, which damages the player's shield, and its armor
 // if the damage gets through, and draws them in the HUD (which limits both
@@ -198,7 +197,7 @@ void sf_codes(State& state, JE_byte player_num, JE_integer px, JE_integer py, JE
 // HUD's surface, and leaves it at game_screen after (its "side-effect of
 // game_screen"), where the rest of the tick then draws.  Returns the damage if
 // it got through the shield.
-JE_byte damage_player(State& state, DrawRecord& record, Player& player, JE_byte damage);
+uint8_t damage_player(State& state, DrawRecord& record, Player& player, uint8_t damage);
 
 // tyrian2.c: the enemy shots' update in JE_main's level loop ("Draw Enemy
 // Shots"), which moves them and ends those that time out, leave the screen or
@@ -215,11 +214,11 @@ std::vector<VisiblePlayerShot> update_player_shots(State& state);
 // shots.c: player_shot_create, which fires player player_num's weapon wp_num
 // from port port_num's bay bay_i at (px, py), if there is power for it.
 // Returns the slot of the last shot made, or MAX_PWEAPON if one couldn't be.
-JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_word px, JE_word py,
-                              JE_word mouse_x, JE_word mouse_y, JE_word wp_num, JE_byte player_num);
+int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint16_t px, uint16_t py,
+                           uint16_t mouse_x, uint16_t mouse_y, uint16_t wp_num, uint8_t player_num);
 
 // shots.c: player_shot_set_direction, which turns a linked weapon's shot.
-void set_player_shot_direction(PlayerShotDataType& shot, uint weapon_id, JE_real direction);
+void set_player_shot_direction(PlayerShotDataType& shot, unsigned weapon_id, float direction);
 
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.

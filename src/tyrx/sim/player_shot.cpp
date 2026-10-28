@@ -31,28 +31,28 @@ namespace tyrx::sim {
 namespace {
 
 // shots.c
-constexpr JE_word link_multi_gr[17] = {77,  221, 183, 301, 1,   282, 164, 202, 58,  // [0..16]
-                                       201, 163, 281, 39,  300, 182, 220, 77};
-constexpr JE_word link_sonic_gr[17] = {85,  242, 131, 303, 47,  284, 150, 223, 66,  // [0..16]
-                                       224, 149, 283, 9,   302, 130, 243, 85};
-constexpr JE_word link_mult2_gr[17] = {78,  299, 295, 297, 2,   278, 276, 280, 59,  // [0..16]
-                                       279, 275, 277, 40,  296, 294, 298, 78};
+constexpr uint16_t link_multi_gr[17] = {77,  221, 183, 301, 1,   282, 164, 202, 58,  // [0..16]
+                                        201, 163, 281, 39,  300, 182, 220, 77};
+constexpr uint16_t link_sonic_gr[17] = {85,  242, 131, 303, 47,  284, 150, 223, 66,  // [0..16]
+                                        224, 149, 283, 9,   302, 130, 243, 85};
+constexpr uint16_t link_mult2_gr[17] = {78,  299, 295, 297, 2,   278, 276, 280, 59,  // [0..16]
+                                        279, 275, 277, 40,  296, 294, 298, 78};
 
 // What a shot's move leaves for its hits on enemies.  Its blast filter is in
 // the C code's temp2 (Scratch), which the hits use and can change.
 struct MovedShot {
   bool is_special = false;
   int x = 0, y = 0;
-  JE_integer damage = 0;
-  JE_byte chain = 0;
-  JE_word radius_w = 0, radius_h = 0;  // a special shot's
+  int16_t damage = 0;
+  uint8_t chain = 0;
+  uint16_t radius_w = 0, radius_h = 0;  // a special shot's
 };
 
 // player_shot_move_and_draw: moves the shot in slot shot_id, and adds it to
 // visible if it is drawn.  Returns false if it ended.  It sets player_num to
 // the shot's player, except for the Zinglon's shot (the last slot), whose
 // move does nothing.
-bool move_shot(State& state, int shot_id, MovedShot& moved, JE_byte& player_num,
+bool move_shot(State& state, int shot_id, MovedShot& moved, uint8_t& player_num,
                std::vector<VisiblePlayerShot>& visible) {
   auto& players = state.players.slots;
   auto& enemies = state.enemies;
@@ -68,7 +68,7 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, JE_byte& player_num,
 
   shot.shotXM += shot.shotXC;
   shot.shotX += shot.shotXM;
-  JE_integer const tmp_shot_xm = shot.shotXM;
+  int16_t const tmp_shot_xm = shot.shotXM;
 
   if (shot.shotXM > 100) {
     if (shot.shotXM == 101) {
@@ -155,7 +155,7 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, JE_byte& player_num,
     }
   }
 
-  JE_word sprite_frame = shot.shotGr + shot.shotAni;
+  uint16_t sprite_frame = shot.shotGr + shot.shotAni;
   if (++shot.shotAni == shot.shotAniMax) {
     shot.shotAni = 0;
   }
@@ -185,7 +185,7 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, JE_byte& player_num,
 }
 
 // The shot in slot z hits the enemies it collides with, until it ends.
-void hit_enemies(State& state, int z, MovedShot& shot, JE_byte player_num) {
+void hit_enemies(State& state, int z, MovedShot& shot, uint8_t player_num) {
   auto& players = state.players.slots;
   auto& enemies = state.enemies;
   bool const zinglon = z == MAX_PWEAPON - 1;
@@ -199,14 +199,14 @@ void hit_enemies(State& state, int z, MovedShot& shot, JE_byte player_num) {
     bool collided;
 
     if (zinglon) {
-      JE_byte const reach = 25 - abs(state.specials.zinglon_duration - 25);
+      uint8_t const reach = 25 - abs(state.specials.zinglon_duration - 25);
       collided = abs(e.ex + e.mapoffset - (players[0].x + 7)) < reach;
       state.scratch.temp2 = 9;
       shot.chain = 0;
       shot.damage = 10;
     }
     else if (shot.is_special) {
-      JE_word const w = shot.radius_w, h = shot.radius_h;
+      uint16_t const w = shot.radius_w, h = shot.radius_h;
       collided = ((e.enemycycle == 0) && (abs(e.ex + e.mapoffset - shot.x - w) < (25 + w)) &&
                   (abs(e.ey - shot.y - 12 - h) < (29 + h))) ||
                  ((e.enemycycle > 0) && (abs(e.ex + e.mapoffset - shot.x - w) < (13 + w)) &&
@@ -255,7 +255,7 @@ std::vector<VisiblePlayerShot> update_player_shots(State& state) {
   // The C code doesn't set the player number for the Zinglon's shot, whose
   // move does nothing, so it is undefined there.  Here it is the last moved
   // shot's, or player 1's.
-  JE_byte player_num = 1;
+  uint8_t player_num = 1;
 
   for (int z = 0; z < MAX_PWEAPON; z++) {
     if (state.player_shots.ttl[z] == 0) {
@@ -273,12 +273,12 @@ std::vector<VisiblePlayerShot> update_player_shots(State& state) {
 }
 
 // FKA Varz.initPlayerShot
-JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_word px, JE_word py,
-                              JE_word mouse_x, JE_word mouse_y, JE_word wp_num, JE_byte player_num) {
+int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint16_t px, uint16_t py,
+                           uint16_t mouse_x, uint16_t mouse_y, uint16_t wp_num, uint8_t player_num) {
   auto& players = state.players;
   auto& enemies = state.enemies;
   auto& ttl = state.player_shots.ttl;
-  static JE_byte const sound_channel[11] = {0, 2, 4, 4, 2, 2, 5, 5, 1, 4, 1};  // [1..11]
+  static uint8_t const sound_channel[11] = {0, 2, 4, 4, 2, 2, 5, 5, 1, 4, 1};  // [1..11]
 
   // Bounds check
   if (port_num > PORT_NUM || wp_num <= 0 || wp_num > WEAP_NUM) {
@@ -308,7 +308,7 @@ JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_wor
       return MAX_PWEAPON;
     }
 
-    JE_byte& multi_pos = players.shot_multi_pos[bay_i];
+    uint8_t& multi_pos = players.shot_multi_pos[bay_i];
     if (multi_pos == weapon.max || multi_pos > 8) {
       multi_pos = 1;
     }
@@ -335,10 +335,10 @@ JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_wor
       shot.shotCirSizeY = 0;
     }
     else {
-      JE_byte circsize = weapon.circlesize;
+      uint8_t circsize = weapon.circlesize;
 
       if (circsize > 19) {
-        JE_byte circsize_mod20 = circsize % 20;
+        uint8_t circsize_mod20 = circsize % 20;
         shot.shotCirSizeX = circsize_mod20;
         shot.shotDevX = circsize_mod20 >> 1;
 
@@ -368,7 +368,7 @@ JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_wor
 
     shot.shotBlastFilter = weapon.shipblastfilter;
 
-    JE_integer tmp_by = weapon.by[pos];
+    int16_t tmp_by = weapon.by[pos];
 
     // Note: Only front selection used for player shots...
 
@@ -381,7 +381,7 @@ JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_wor
     shot.shotXM = weapon.sx[pos];
 
     // Not sure what this field does exactly.
-    JE_byte del = weapon.del[pos];
+    uint8_t del = weapon.del[pos];
 
     if (del == 121) {
       shot.shotTrail = 0;
@@ -448,15 +448,15 @@ JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_wor
 
     // Guided Shot
     if (weapon.aim > 5) {
-      uint best_dist = 65000;
-      JE_byte closest_enemy = 0;
-      // Find Closest Enemy (the C code counts in the JE_word globals x and y)
-      for (JE_word i = 0; i < 100; i++) {
+      unsigned best_dist = 65000;
+      uint8_t closest_enemy = 0;
+      // Find Closest Enemy (the C code counts in the uint16_t globals x and y)
+      for (uint16_t i = 0; i < 100; i++) {
         if (enemies.status[i] == 1 || enemies.slots[i].scoreitem) {
           continue;
         }
 
-        JE_word const dist = abs(enemies.slots[i].ex - shot.shotX) + abs(enemies.slots[i].ey - shot.shotY);
+        uint16_t const dist = abs(enemies.slots[i].ex - shot.shotX) + abs(enemies.slots[i].ey - shot.shotY);
         if (dist < best_dist) {
           best_dist = dist;
           closest_enemy = i + 1;
@@ -476,7 +476,7 @@ JE_integer create_player_shot(State& state, JE_word port_num, uint bay_i, JE_wor
   return shot_id;
 }
 
-void set_player_shot_direction(PlayerShotDataType& shot, uint weapon_id, JE_real direction) {
+void set_player_shot_direction(PlayerShotDataType& shot, unsigned weapon_id, float direction) {
   shot.shotXM = -roundf(sinf(direction) * shot.shotYM);
   shot.shotYM = -roundf(cosf(direction) * shot.shotYM);
 

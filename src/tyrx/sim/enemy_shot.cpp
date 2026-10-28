@@ -28,7 +28,7 @@ namespace {
 
 // A shot that tracks player 1 on one axis (tx, ty): its speed changes by one
 // toward the player's position, up to limit either way.
-void track(JE_byte limit, JE_integer pos, int player_pos, JE_integer& speed) {
+void track(uint8_t limit, int16_t pos, int player_pos, int16_t& speed) {
   if (limit == 0) {
     return;
   }
@@ -71,7 +71,7 @@ std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record)
     }
 
     // check if shot collided with player
-    for (uint i = 0; i < (state.game.two_player_mode ? 2 : 1); ++i) {
+    for (unsigned i = 0; i < (state.game.two_player_mode ? 2 : 1); ++i) {
       Player& player = players[i];
       if (!(player.is_alive && shot.sx > player.x - (signed)player.shot_hit_area_x &&
             shot.sx < player.x + (signed)player.shot_hit_area_x &&
@@ -86,7 +86,7 @@ std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record)
       setup_explosion(state.explosions.slots, shot.sx, shot.sy, 0, 0, false, false);
 
       if (player.invulnerable_ticks == 0) {
-        JE_byte const through = damage_player(state, record, player, shot.sdmg);
+        uint8_t const through = damage_player(state, record, player, shot.sdmg);
         if (through > 0) {
           player.x_velocity += (shot.sxm * through) / 2;
           player.y_velocity += (shot.sym * through) / 2;
