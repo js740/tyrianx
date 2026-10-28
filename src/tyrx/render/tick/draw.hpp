@@ -165,7 +165,7 @@ inline void draw_background_3(SDL_Surface *s, uint8_t **mapY3Pos, intptr_t mapX3
 
 // Draws the stars after moving them from where they are in `stars`.
 inline void update_and_draw_starfield(SDL_Surface *s, StarfieldStar const (&stars)[MAX_STARS],
-                                      int move_speed) {
+                                      int          move_speed) {
   emit({.op = DrawOp::update_and_draw_starfield, .dst = s, .args = {move_speed}}, stars, sizeof stars);
 }
 

@@ -75,7 +75,7 @@ std::string_view to_string(StateClass c);
 struct PointerRef {
   enum class Kind : uint8_t { null, block, unresolved } kind = Kind::null;
   std::string_view block;  // for Kind::block
-  uintptr_t offset = 0;
+  uintptr_t        offset = 0;
 };
 
 PointerRef describe_pointer(void const *p);
@@ -184,8 +184,8 @@ class Dumper {
   void pointer(void const *p);
 
  private:
-  std::FILE *out_;
-  std::string path_;
+  std::FILE          *out_;
+  std::string         path_;
   std::vector<size_t> stack_;
 };
 
@@ -235,9 +235,9 @@ void dump_value(Dumper& d, T const& v) {
 
 struct StateBlock {
   std::string_view name;
-  StateClass cls;
-  void *addr = nullptr;
-  size_t size = 0;
+  StateClass       cls;
+  void            *addr = nullptr;
+  size_t           size = 0;
   void (*hash)(Hasher&, void const *) = nullptr;  // hashed classes only
   void (*dump)(Dumper&, void const *) = nullptr;  // hashed classes only
 };
@@ -272,7 +272,7 @@ class Snapshot {
   // unchanged since `previous` (captured with the same `include`) share its
   // copies, so consecutive snapshots cost only what changed.
   static Snapshot capture(bool (*include)(StateClass), Snapshot const *previous = nullptr);
-  void restore() const;
+  void            restore() const;
 
   // Bytes copied by this snapshot rather than shared with the previous one.
   size_t unshared_size() const { return unshared_size_; }
@@ -280,10 +280,11 @@ class Snapshot {
  private:
   struct Copy {
     StateBlock const *block;
+
     std::shared_ptr<std::byte const[]> bytes;
   };
   std::vector<Copy> copies_;
-  size_t unshared_size_ = 0;
+  size_t            unshared_size_ = 0;
 };
 
 }  // namespace tyrx::gold

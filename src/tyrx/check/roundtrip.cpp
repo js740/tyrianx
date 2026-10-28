@@ -37,9 +37,9 @@ struct RoundTrip {
   long length = 0;  // ticks per round trip; 0 if disabled
   long period = 0;  // ticks between round trip starts
 
-  bool active = false;     // a snapshot has been taken ...
-  bool replaying = false;  // ... and restored
-  uint64_t start_tick = 0;
+  bool           active = false;     // a snapshot has been taken ...
+  bool           replaying = false;  // ... and restored
+  uint64_t       start_tick = 0;
   gold::Snapshot snapshot;
   // Block hashes at the top of each tick of the first pass, and at its end.
   std::vector<std::vector<uint64_t>> recorded;

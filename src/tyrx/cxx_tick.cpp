@@ -119,8 +119,8 @@ class CxxTick final : public port::Runner {
     list_.blob.clear();
   }
 
-  sim::State state_;
-  bool owned_ = false;  // whether state_ is the game's state, or the C globals are
+  sim::State       state_;
+  bool             owned_ = false;  // whether state_ is the game's state, or the C globals are
   render::DrawList list_;
 };
 

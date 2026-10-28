@@ -39,13 +39,13 @@ void blit_table_sprite(Canvas dst, int x, int y, unsigned table, unsigned index,
   if (index >= sprite_table[table].count || sprite_table[table].sprite[index].data == nullptr) {
     return;
   }
-  Sprite const& s = sprite_table[table].sprite[index];
-  uint8_t const *data = s.data;
+  Sprite const&        s = sprite_table[table].sprite[index];
+  uint8_t const       *data = s.data;
   uint8_t const *const data_ul = data + s.size;
-  unsigned const width = s.width;
-  unsigned x_offset = 0;
+  unsigned const       width = s.width;
+  unsigned             x_offset = 0;
 
-  ptrdiff_t p = (ptrdiff_t)y * dst.pitch + x;
+  ptrdiff_t       p = (ptrdiff_t)y * dst.pitch + x;
   ptrdiff_t const p_ul = (ptrdiff_t)dst.h * dst.pitch;
   for (; data < data_ul; ++data) {
     switch (*data) {
@@ -93,7 +93,7 @@ uint8_t const *sheet_sprite(Sprite2_array sheet, unsigned index) {
 // nibble; 0 pixels ends a 12-pixel row, and 0x0F ends the sprite.
 template <typename Op>
 void blit_sheet_sprite(Canvas dst, int x, int y, Sprite2_array sheet, unsigned index, Op op) {
-  ptrdiff_t p = (ptrdiff_t)y * dst.pitch + x;
+  ptrdiff_t       p = (ptrdiff_t)y * dst.pitch + x;
   ptrdiff_t const p_ul = (ptrdiff_t)dst.h * dst.pitch;
   for (uint8_t const *data = sheet_sprite(sheet, index); *data != 0x0f; ++data) {
     p += *data & 0x0f;
@@ -123,7 +123,7 @@ void blit_sheet_sprite_clip(Canvas dst, int x, int y, Sprite2_array sheet, unsig
       return;
     }
     uint8_t const skip_count = *data & 0x0f;
-    uint8_t fill_count = (*data >> 4) & 0x0f;
+    uint8_t       fill_count = (*data >> 4) & 0x0f;
     x += skip_count;
     if (fill_count == 0) {
       y += 1;

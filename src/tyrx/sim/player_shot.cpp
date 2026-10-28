@@ -41,10 +41,10 @@ constexpr uint16_t link_mult2_gr[17] = {78,  299, 295, 297, 2,   278, 276, 280, 
 // What a shot's move leaves for its hits on enemies.  Its blast filter is in
 // the C code's temp2 (Scratch), which the hits use and can change.
 struct MovedShot {
-  bool is_special = false;
-  int x = 0, y = 0;
-  int16_t damage = 0;
-  uint8_t chain = 0;
+  bool     is_special = false;
+  int      x = 0, y = 0;
+  int16_t  damage = 0;
+  uint8_t  chain = 0;
   uint16_t radius_w = 0, radius_h = 0;  // a special shot's
 };
 
@@ -57,6 +57,7 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, uint8_t& player_num,
   auto& players = state.players.slots;
   auto& enemies = state.enemies;
   auto& ttl = state.player_shots.ttl;
+
   PlayerShotDataType& shot = state.player_shots.slots[shot_id];
 
   ttl[shot_id]--;
@@ -186,8 +187,8 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, uint8_t& player_num,
 
 // The shot in slot z hits the enemies it collides with, until it ends.
 void hit_enemies(State& state, int z, MovedShot& shot, uint8_t player_num) {
-  auto& players = state.players.slots;
-  auto& enemies = state.enemies;
+  auto&      players = state.players.slots;
+  auto&      enemies = state.enemies;
   bool const zinglon = z == MAX_PWEAPON - 1;
 
   for (int b = 0; b < 100; b++) {
@@ -196,6 +197,7 @@ void hit_enemies(State& state, int z, MovedShot& shot, uint8_t player_num) {
     }
 
     JE_SingleEnemyType const& e = enemies.slots[b];
+
     bool collided;
 
     if (zinglon) {
@@ -278,6 +280,7 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
   auto& players = state.players;
   auto& enemies = state.enemies;
   auto& ttl = state.player_shots.ttl;
+
   static uint8_t const sound_channel[11] = {0, 2, 4, 4, 2, 2, 5, 5, 1, 4, 1};  // [1..11]
 
   // Bounds check
@@ -449,7 +452,7 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
     // Guided Shot
     if (weapon.aim > 5) {
       unsigned best_dist = 65000;
-      uint8_t closest_enemy = 0;
+      uint8_t  closest_enemy = 0;
       // Find Closest Enemy (the C code counts in the uint16_t globals x and y)
       for (uint16_t i = 0; i < 100; i++) {
         if (enemies.status[i] == 1 || enemies.slots[i].scoreitem) {

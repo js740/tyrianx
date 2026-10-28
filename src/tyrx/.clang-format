@@ -41,3 +41,12 @@ BraceWrapping:
 
 # Keep include groups as written.
 IncludeBlocks: Preserve
+
+# Declarations in a run of consecutive lines align their names.  A blank line
+# or a comment ends the run: where types differ in length by more than about
+# a dozen characters, a blank line keeps the long one from padding out its
+# neighbors.
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false

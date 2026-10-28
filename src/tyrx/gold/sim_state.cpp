@@ -295,7 +295,7 @@ void copy(T (&to)[N], U const (&from)[N]) {
 // Where a member or global is, and where its counterpart is.
 struct Relocation {
   uintptr_t from;
-  size_t size;
+  size_t    size;
   uintptr_t to;
 };
 
@@ -372,8 +372,9 @@ void scramble_sim_state_globals() {
 }
 
 bool sim_state_bound() {
-  sim::State state;
+  sim::State             state;
   std::set<void const *> bound;
+
   bool ok = true;
   for_each_binding(state, [&](auto const& cxx, auto&) {
     if (!bound.insert(&cxx).second) {

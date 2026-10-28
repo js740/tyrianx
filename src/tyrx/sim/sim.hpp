@@ -118,7 +118,7 @@ struct LevelLocals {
 struct Host {
   virtual void in_game_help_ahead() = 0;
   virtual void c_loop(void (*loop)()) = 0;
-  virtual int pitch(Surface surface) = 0;
+  virtual int  pitch(Surface surface) = 0;
 
  protected:
   ~Host() = default;

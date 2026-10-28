@@ -55,7 +55,7 @@ std::jmp_buf abort_jump;
 
 // The three surfaces the game draws on, and copies of them for the shadow.
 SDL_Surface **const kSurfaces[3] = {&game_screen, &VGAScreen2, &VGAScreenSeg};
-char const *const kSurfaceNames[3] = {"game_screen", "VGAScreen2", "VGAScreenSeg"};
+char const *const   kSurfaceNames[3] = {"game_screen", "VGAScreen2", "VGAScreenSeg"};
 
 bool same_calls(DrawCall const& a, DrawList const& la, DrawCall const& b, DrawList const& lb) {
   return a.op == b.op && a.dst == b.dst && a.src == b.src && a.sheet.data == b.sheet.data &&
@@ -154,8 +154,8 @@ class Shadow final : public port::Runner {
   void in_game_help_ahead() override { abort("in-game help"); }
   void c_loop(void (*loop)()) override { loop(); }
 
-  bool enabled() const { return enabled_; }
-  bool active() const { return active_; }
+  bool     enabled() const { return enabled_; }
+  bool     active() const { return active_; }
   uint64_t mismatches() const { return mismatched_; }
 
   void level_start() {
@@ -253,7 +253,7 @@ class Shadow final : public port::Runner {
     copy_joysticks(pre_joysticks_);
     for (int i = 0; i < 3; ++i) {
       SDL_Surface const *s = *kSurfaces[i];
-      uint8_t const *p = static_cast<uint8_t const *>(s->pixels);
+      uint8_t const     *p = static_cast<uint8_t const *>(s->pixels);
       pre_pixels_[i].assign(p, p + (size_t)s->pitch * s->h);
     }
     pre_clock_ = vclock_now();
@@ -281,8 +281,9 @@ class Shadow final : public port::Runner {
     std::vector<unsigned char> post_joysticks;
     copy_joysticks(post_joysticks);
     std::vector<uint64_t> const post_hashes = gold::block_hashes();
+
     uint32_t const post_clock = vclock_now();
-    SDL_Surface *real[3];
+    SDL_Surface   *real[3];
     for (int i = 0; i < 3; ++i) {
       real[i] = *kSurfaces[i];
     }
@@ -325,7 +326,7 @@ class Shadow final : public port::Runner {
     render::draw::target() = &pass_list_;
     port::runner_target() = this;
     active_ = true;
-    bool const completed = setjmp(abort_jump) == 0;
+    bool const      completed = setjmp(abort_jump) == 0;
     port::LevelPass pass = port::LevelPass::unsupported;
     if (completed) {
       pass = port::level_pass();
@@ -375,9 +376,10 @@ class Shadow final : public port::Runner {
                SDL_Surface *const *real) {
     ++checked_;
     uint64_t const tick = draw::drawlist_current().tick;
-    bool differed = false;
+    bool           differed = false;
 
     std::vector<uint64_t> const hashes = gold::block_hashes();
+
     std::string blocks;
     for (size_t i = 0; i < hashes.size(); ++i) {
       if (hashes[i] != post_hashes[i]) {
@@ -392,12 +394,13 @@ class Shadow final : public port::Runner {
     }
 
     DrawList const& c_list = draw::drawlist_current();
-    bool list_differed = false;
+    bool            list_differed = false;
     for (int r = 0; r < 3 && !list_differed; ++r) {
       std::vector<size_t> const c_calls = surface_calls(c_list, real[r]),
                                 shadow_calls = surface_calls(shadow_list, real[r]);
+
       size_t const n = std::min(c_calls.size(), shadow_calls.size());
-      size_t i = 0;
+      size_t       i = 0;
       while (i < n &&
              same_calls(c_list.calls[c_calls[i]], c_list, shadow_list.calls[shadow_calls[i]], shadow_list))
       {
@@ -473,44 +476,52 @@ class Shadow final : public port::Runner {
     std::fputc('\n', stderr);
   }
 
-  bool enabled_ = false;
-  bool active_ = false;
+  bool       enabled_ = false;
+  bool       active_ = false;
   sim::State sim_state_;
   // The pass's draw list, which the C++ code draws into (render/tick/draw.hpp), and
   // how many of its calls the simulation made (all, until drawing begins).
   DrawList pass_list_;
-  size_t simulated_calls_ = SIZE_MAX;
+  size_t   simulated_calls_ = SIZE_MAX;
   // The calls of each kind in shadow passes, and those made during the
   // simulation, for TYRX_SHADOW_CALLS.
-  uint64_t emitted_[render::kDrawOps] = {}, during_simulation_[render::kDrawOps] = {};
-  bool have_pre_ = false;
+  uint64_t    emitted_[render::kDrawOps] = {}, during_simulation_[render::kDrawOps] = {};
+  bool        have_pre_ = false;
   char const *skip_reason_ = nullptr;
   char const *abort_reason_ = nullptr;
 
   gold::CMemory pre_memory_;
+
   std::vector<unsigned char> pre_joysticks_;
-  std::vector<uint8_t> pre_pixels_[3];
-  uint32_t pre_clock_ = 0;
+  std::vector<uint8_t>       pre_pixels_[3];
+
+  uint32_t     pre_clock_ = 0;
   SDL_Surface *shadow_surfaces_[3] = {};
   struct FileRead {
     size_t requested;
+
     std::vector<unsigned char> data;
+
     File file;  // after the read
   };
   std::vector<FileRead> reads_;
+
   size_t next_read_ = 0;
   struct JoystickPoll {
     std::vector<unsigned char> joysticks;
+
     bool joydown;
   };
   std::vector<JoystickPoll> polls_;
+
   size_t next_poll_ = 0;
 
-  bool hud_pending_ = false;
+  bool     hud_pending_ = false;
   unsigned weapon_power_[2] = {}, old_weapon_bar_[2] = {}, pre_old_weapon_bar_[2] = {};
 
   uint64_t checked_ = 0, mismatched_ = 0, reported_ = 0;
   uint64_t state_mismatches_ = 0, list_mismatches_ = 0, pixel_mismatches_ = 0;
+
   std::map<std::string, uint64_t> skipped_, aborted_;
 };
 
@@ -579,19 +590,19 @@ uint64_t shadow_mismatches() { return shadow().mismatches(); }
 
 extern "C" {
 
-void __real_multiSamplePlay(int16_t const *, size_t, uint8_t, uint8_t);
-void __real_play_song(unsigned int);
-void __real_set_volume(uint8_t, uint8_t);
-void __real_push_joysticks_as_keyboard(void);
-void __real_poll_joystick(int);
-void __real_JE_loadCompShapes(Sprite2_array *, char);
-void __real_free_sprite2s(Sprite2_array *);
-void __real_JE_pauseGame(void);
-void __real_JE_doInGameSetup(void);
-void __real_JE_showVGA(void);
-void __real_handleSdlEvents(void);
+void   __real_multiSamplePlay(int16_t const *, size_t, uint8_t, uint8_t);
+void   __real_play_song(unsigned int);
+void   __real_set_volume(uint8_t, uint8_t);
+void   __real_push_joysticks_as_keyboard(void);
+void   __real_poll_joystick(int);
+void   __real_JE_loadCompShapes(Sprite2_array *, char);
+void   __real_free_sprite2s(Sprite2_array *);
+void   __real_JE_pauseGame(void);
+void   __real_JE_doInGameSetup(void);
+void   __real_JE_showVGA(void);
+void   __real_handleSdlEvents(void);
 size_t __real_fileReadAtMost(File *, void *, size_t);
-void __real_fileReadExactly(File *, void *, size_t);
+void   __real_fileReadExactly(File *, void *, size_t);
 
 size_t __wrap_fileReadAtMost(File *file, void *data, size_t size) {
   return tyrx::check::shadow_file_read(file, data, size, __real_fileReadAtMost);

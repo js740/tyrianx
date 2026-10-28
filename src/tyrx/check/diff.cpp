@@ -43,6 +43,7 @@ struct DiffState {
     return v && *v && *v != '0';
   }();
   std::map<std::string, SliceStats, std::less<>> slices;
+
   uint64_t mismatches = 0;
 
   ~DiffState() {
@@ -72,8 +73,8 @@ uint64_t diff_mismatches() { return diff_state().mismatches; }
 namespace detail {
 
 std::string dump_to_string(void (*dump)(gold::Dumper&, void const *), void const *value) {
-  char *buf = nullptr;
-  size_t size = 0;
+  char      *buf = nullptr;
+  size_t     size = 0;
   std::FILE *f = open_memstream(&buf, &size);
   {
     gold::Dumper d(f);
@@ -89,7 +90,7 @@ std::string dump_to_string(void (*dump)(gold::Dumper&, void const *), void const
 
 void diff_record(std::string_view slice, bool match, std::string const& c_dump, std::string const& cxx_dump) {
   DiffState& ds = diff_state();
-  auto it = ds.slices.find(slice);
+  auto       it = ds.slices.find(slice);
   if (it == ds.slices.end()) {
     it = ds.slices.emplace(std::string(slice), SliceStats{}).first;
   }
@@ -105,7 +106,8 @@ void diff_record(std::string_view slice, bool match, std::string const& c_dump, 
   std::fprintf(stderr, "tyrx diff: MISMATCH in %.*s (call %llu):\n", (int)slice.size(), slice.data(),
                (unsigned long long)it->second.calls);
   std::istringstream c(c_dump), x(cxx_dump);
-  std::string lc, lx;
+  std::string        lc, lx;
+
   int shown = 0;
   while (std::getline(c, lc) && std::getline(x, lx) && shown < 20) {
     if (lc != lx) {
@@ -124,14 +126,14 @@ struct ExplosionsState {
 };
 
 struct ExplosionsLargeState {
-  Explosion explosions[MAX_EXPLOSIONS];
+  Explosion          explosions[MAX_EXPLOSIONS];
   rep_explosion_type rep_explosions[MAX_REPEATING_EXPLOSIONS];
 };
 
 struct SuperpixelsState {
   superpixel_type superpixels[MAX_SUPERPIXELS];
-  unsigned int last_superpixel;
-  MtState mt;
+  unsigned int    last_superpixel;
+  MtState         mt;
 };
 
 }  // namespace

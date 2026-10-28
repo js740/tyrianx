@@ -104,9 +104,9 @@ void bar_bright(Canvas dst, int a, int b, int c, int d) {
   int const width = c - a + 1;
   for (int i = b * dst.pitch + a; i <= d * dst.pitch + a; i += dst.pitch) {
     for (int j = 0; j < width; ++j) {
-      uint8_t& p = dst.pixels[i + j];
+      uint8_t&      p = dst.pixels[i + j];
       uint8_t const ah = p & 0xF0;
-      uint8_t al = (p & 0x0F) + 2;
+      uint8_t       al = (p & 0x0F) + 2;
       if (al > 0x0F) {
         al = 0x0F;
       }

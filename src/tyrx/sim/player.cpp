@@ -110,20 +110,20 @@ void handle_got_purple_ball(State& state, Player& player) {
 // movement, firing and sidekicks, in the C code's order.  The player's
 // mouseX and mouseY are where they were before they moved.
 struct Movement {
-  State& state;
-  DrawRecord& record;
-  Player& player;
-  uint8_t input_device;
-  uint8_t num;  // 1 or 2
-  uint16_t ship_gr;
+  State&         state;
+  DrawRecord&    record;
+  Player&        player;
+  uint8_t        input_device;
+  uint8_t        num;  // 1 or 2
+  uint16_t       ship_gr;
   VisiblePlayer& visible;
 
   // What the input asks for: the mouse's or the analog joystick's movement,
   // and the acceleration it gives.
   int16_t mouse_xc = 0, mouse_yc = 0;
   int16_t accel_xc = 0, accel_yc = 0;
-  bool link_gun_analog = false;
-  float link_gun_angle = 0;
+  bool    link_gun_analog = false;
+  float   link_gun_angle = 0;
 
   void run();
   bool update_dead();
@@ -219,9 +219,9 @@ void Movement::run() {
 // in arcade games; with constantDie, one who is dies again.  Returns whether
 // the player respawned.
 bool Movement::update_dead() {
-  auto& game = state.game;
-  auto& ending = state.ending;
-  auto& sound_queue = state.sound.queue;
+  auto&    game = state.game;
+  auto&    ending = state.ending;
+  auto&    sound_queue = state.sound.queue;
   MtState& mt = state.random.mt;
 
   if (player.is_alive) {
@@ -482,11 +482,11 @@ void Movement::read_input() {
 // the first breaks it with a sidekick button; linked, the second aims the
 // turret.
 void Movement::link() {
-  auto& players = state.players.slots;
+  auto&       players = state.players.slots;
   auto const& button = state.input.button;
-  bool const galaga = state.game.galaga_mode;
-  bool& linked = state.players.two_player_linked;
-  float& direction = state.players.link_gun_direction;
+  bool const  galaga = state.game.galaga_mode;
+  bool&       linked = state.players.two_player_linked;
+  float&      direction = state.players.link_gun_direction;
 
   if (state.game.two_player_mode && !linked && player.x == player.mouseX && player.y == player.mouseY &&
       abs(players[0].x - players[1].x) < 8 && abs(players[0].y - players[1].y) < 8 && players[0].is_alive &&
@@ -662,9 +662,9 @@ void Movement::move() {
 // The second player linked to the first: the turret, its direction marker,
 // and its shots.
 void Movement::follow_linked() {
-  auto& players = state.players.slots;
-  auto& shot_repeat = state.players.shot_repeat;
-  auto& shot_multi_pos = state.players.shot_multi_pos;
+  auto&       players = state.players.slots;
+  auto&       shot_repeat = state.players.shot_repeat;
+  auto&       shot_multi_pos = state.players.shot_multi_pos;
   float const direction = state.players.link_gun_direction;
 
   if (ship_gr == 0) {
@@ -708,7 +708,7 @@ void Movement::follow_linked() {
 // The ship's place on the screen and banking, which the explosions that
 // follow it, its drawing and its sparks go by.
 void Movement::place() {
-  auto& shot_repeat = state.players.shot_repeat;
+  auto&   shot_repeat = state.players.shot_repeat;
   int8_t& constant_last_x = state.cheats.constant_last_x;
 
   if (player.x > 256) {
@@ -767,7 +767,7 @@ void Movement::place() {
   else if (ship_gr == 1) {
     // NortSparks, from the side the ship banks to
     uint16_t sparks_x = 0;
-    int sparks_banking = 0;
+    int      sparks_banking = 0;
     switch (ship_sprite) {
       case 5:
         sparks_x = player.x - 7;
@@ -817,12 +817,12 @@ void Movement::place() {
 // PLAYER SHOT Change and Creation: the rear weapon's mode, the special, the
 // weapons, the second player's charge, the superbomb and the sidekicks.
 void Movement::fire() {
-  auto& game = state.game;
-  auto& players = state.players;
-  auto& shot_repeat = players.shot_repeat;
-  auto& shot_multi_pos = players.shot_multi_pos;
+  auto&       game = state.game;
+  auto&       players = state.players;
+  auto&       shot_repeat = players.shot_repeat;
+  auto&       shot_multi_pos = players.shot_multi_pos;
   auto const& button = state.input.button;
-  Display& display = state.display;
+  Display&    display = state.display;
 
   player.delta_x_shot_move = player.x - player.last_x_shot_move;
   player.delta_y_shot_move = player.y - player.last_y_shot_move;
@@ -945,7 +945,7 @@ void Movement::fire() {
 
   // SUPER BOMB
   uint8_t const bomber = num == 0 ? 1 : num;  // Get whether player 1 or 2
-  Player& bomber_player = players.slots[bomber - 1];
+  Player&       bomber_player = players.slots[bomber - 1];
 
   if (bomber_player.superbombs > 0) {
     if (shot_repeat[SHOT_P1_SUPERBOMB + bomber - 1] > 0) {
@@ -970,10 +970,10 @@ void Movement::fire() {
 // The sidekicks' places: trailing, front-mounted, orbiting, and the right
 // front-mounted one that detaches and comes back.
 void Movement::place_sidekicks() {
-  auto& players = state.players;
-  auto const& button = state.input.button;
-  auto& left = player.sidekick[LEFT_SIDEKICK];
-  auto& right = player.sidekick[RIGHT_SIDEKICK];
+  auto&        players = state.players;
+  auto const&  button = state.input.button;
+  auto&        left = player.sidekick[LEFT_SIDEKICK];
+  auto&        right = player.sidekick[RIGHT_SIDEKICK];
   size_t const history = std::size(player.old_x);
 
   if (left.style == 4 && right.style == 4) {
@@ -1013,7 +1013,7 @@ void Movement::place_sidekicks() {
       break;
     case 2: {  // front-mounted
       int16_t& move = players.option_attachment_move;
-      bool& comes_back = players.option_attachment_return;
+      bool&    comes_back = players.option_attachment_return;
 
       if (players.option_attachment_linked) {
         right.x = player.x;
@@ -1091,13 +1091,14 @@ void Movement::place_sidekicks() {
 
 // The sidekicks fire, and refill their ammo.
 void Movement::fire_sidekicks() {
-  auto& shot_repeat = state.players.shot_repeat;
-  auto& shot_multi_pos = state.players.shot_multi_pos;
+  auto&       shot_repeat = state.players.shot_repeat;
+  auto&       shot_multi_pos = state.players.shot_multi_pos;
   auto const& button = state.input.button;
 
   for (unsigned i = 0; i < std::size(player.items.sidekick); ++i) {
-    unsigned const shot_i = (i == 0) ? SHOT_LEFT_SIDEKICK : SHOT_RIGHT_SIDEKICK;
+    unsigned const       shot_i = (i == 0) ? SHOT_LEFT_SIDEKICK : SHOT_RIGHT_SIDEKICK;
     JE_OptionType const& option = options[player.items.sidekick[i]];
+
     auto& sidekick = player.sidekick[i];
 
     if (option.wport <= 0) {
@@ -1167,6 +1168,7 @@ void Movement::fire_sidekicks() {
 void Movement::animate_sidekicks() {
   for (unsigned i = 0; i < std::size(player.sidekick); ++i) {
     JE_OptionType const& option = options[player.items.sidekick[i]];
+
     auto& sidekick = player.sidekick[i];
 
     if (option.option > 0) {
@@ -1200,7 +1202,7 @@ void main_game_player_functions(State& state, DrawRecord& record, std::vector<Vi
   auto& game = state.game;
   auto& ending = state.ending;
   auto& players = state.players;
-  Map& map = state.map;
+  Map&  map = state.map;
 
   // PLAYER MOVEMENT/MOUSE ROUTINES
 
@@ -1274,7 +1276,7 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
   auto& shot_multi_pos = state.players.shot_multi_pos;
   auto& sound_queue = state.sound.queue;
   auto& enemies = state.enemies;
-  char text[256];
+  char  text[256];
 
   for (int z = 0; z < 100; z++) {
     if (enemies.status[z] == 1) {
@@ -1282,6 +1284,7 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
     }
 
     JE_SingleEnemyType& e = enemies.slots[z];
+
     int enemy_screen_x = e.ex + e.mapoffset;
 
     if (abs(player.x - enemy_screen_x) >= 12 || abs(player.y - e.ey) >= 14) {
@@ -1621,7 +1624,7 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
         }
 
         JE_SingleEnemyType& killed = enemies.slots[temp2];
-        uint8_t const linknum = killed.linknum;
+        uint8_t const       linknum = killed.linknum;
         bool const linked = link != 255 && (link == linknum || link - 100 == linknum ||
                                             (linknum > 40 && linknum / 20 == link / 20 && linknum <= link));
         if (temp2 != z && !linked) {
@@ -1653,6 +1656,7 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
 
 std::vector<VisiblePlayer> update_players(State& state, DrawRecord& record) {
   auto& players = state.players.slots;
+
   std::vector<VisiblePlayer> visible;
 
   // Player movement indicators for shots that track your ship
@@ -1731,7 +1735,7 @@ uint16_t port_configs(State const& state) {
 }
 
 uint8_t damage_player(State& state, DrawRecord& record, Player& player, uint8_t damage) {
-  auto& sound_queue = state.sound.queue;
+  auto&   sound_queue = state.sound.queue;
   uint8_t through = 0;
   sound_queue[7] = S_SHIELD_HIT;
 
@@ -1764,7 +1768,7 @@ uint8_t damage_player(State& state, DrawRecord& record, Player& player, uint8_t 
   else {
     player.shield -= damage;
 
-    auto& slots = state.explosions.slots;
+    auto&      slots = state.explosions.slots;
     bool const follow = !state.game.two_player_mode;
     setup_explosion(slots, player.x - 17, player.y - 12, 0, 14, false, follow);
     setup_explosion(slots, player.x - 5, player.y - 12, 0, 15, false, follow);

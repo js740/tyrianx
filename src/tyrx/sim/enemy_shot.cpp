@@ -48,6 +48,7 @@ void track(uint8_t limit, int16_t pos, int player_pos, int16_t& speed) {
 std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record) {
   auto& players = state.players.slots;
   auto& shots = state.enemy_shots;
+
   std::bitset<ENEMY_SHOT_MAX> visible;
 
   for (int z = 0; z < ENEMY_SHOT_MAX; z++) {

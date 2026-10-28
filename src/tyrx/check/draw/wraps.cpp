@@ -276,7 +276,7 @@ class Restore {
 
  private:
   T& v_;
-  T saved_;
+  T  saved_;
 };
 
 // The background scroll state that the background draws change after (or, for
@@ -284,7 +284,7 @@ class Restore {
 struct BackgroundScroll {
   Restore<uint16_t> back_move2{backMove2}, back_pos2{backPos2}, back_pos3{backPos3}, map_y2{mapY2},
       map_y3{mapY3};
-  Restore<uint8_t> map2_y_delay{map2YDelay};
+  Restore<uint8_t>    map2_y_delay{map2YDelay};
   Restore<uint8_t **> map_y2_pos{mapY2Pos}, map_y3_pos{mapY3Pos};
 };
 
@@ -292,7 +292,7 @@ struct BackgroundScroll {
 
 void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *blob, SDL_Surface *dst,
                                         SDL_Surface *src) {
-  auto const& a = c.args;
+  auto const&            a = c.args;
   Restore<SDL_Surface *> vga_screen{VGAScreen};  // some primitives draw on VGAScreen
   switch (c.op) {
     case DrawOp::blit_sprite:
@@ -362,8 +362,8 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       break;
     case DrawOp::draw_background_1: {
       Restore<uint8_t **> map_y_pos{mapYPos};
-      Restore<intptr_t> map_x_bp_pos{mapXbpPos};
-      Restore<uint16_t> map_x_pos{mapXPos}, back_pos{backPos};
+      Restore<intptr_t>   map_x_bp_pos{mapXbpPos};
+      Restore<uint16_t>   map_x_pos{mapXPos}, back_pos{backPos};
       mapYPos = static_cast<uint8_t **>(const_cast<void *>(c.map));
       mapXbpPos = a[0];
       mapXPos = a[1];
@@ -372,10 +372,10 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       break;
     }
     case DrawOp::draw_background_2: {
-      BackgroundScroll scroll;
+      BackgroundScroll  scroll;
       Restore<intptr_t> map_x2_bp_pos{mapX2bpPos}, map_x_bp_pos{mapXbpPos};
       Restore<uint16_t> map_x2_pos{mapX2Pos}, map_x_pos{mapXPos};
-      Restore<bool> background_2{background2}, water{smoothies[1]};
+      Restore<bool>     background_2{background2}, water{smoothies[1]};
       mapY2Pos = static_cast<uint8_t **>(const_cast<void *>(c.map));
       mapX2bpPos = a[0];
       mapX2Pos = a[1];
@@ -388,7 +388,7 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       break;
     }
     case DrawOp::draw_background_2_blend: {
-      BackgroundScroll scroll;
+      BackgroundScroll  scroll;
       Restore<intptr_t> map_x2_bp_pos{mapX2bpPos};
       Restore<uint16_t> map_x2_pos{mapX2Pos};
       mapY2Pos = static_cast<uint8_t **>(const_cast<void *>(c.map));
@@ -399,7 +399,7 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       break;
     }
     case DrawOp::draw_background_3: {
-      BackgroundScroll scroll;
+      BackgroundScroll  scroll;
       Restore<intptr_t> map_x3_bp_pos{mapX3bpPos};
       Restore<uint16_t> map_x3_pos{mapX3Pos}, back_move3{backMove3};
       mapY3Pos = static_cast<uint8_t **>(const_cast<void *>(c.map));
@@ -411,8 +411,8 @@ void tyrx::check::draw::drawlist_replay(DrawCall const& c, unsigned char const *
       break;
     }
     case DrawOp::JE_filterScreen: {
-      Restore<bool> filter_fade{filterFade}, filter_fade_start{filterFadeStart};
-      Restore<bool> filtration_avail{filtrationAvail}, explosion_transparent{explosionTransparent};
+      Restore<bool>   filter_fade{filterFade}, filter_fade_start{filterFadeStart};
+      Restore<bool>   filtration_avail{filtrationAvail}, explosion_transparent{explosionTransparent};
       Restore<int8_t> level_brightness{levelBrightness}, level_brightness_chg{levelBrightnessChg};
       Restore<int8_t> level_filter{levelFilter};
       filtrationAvail = a[2];

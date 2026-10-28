@@ -131,9 +131,9 @@ void edit_ship(State& state, DrawRecord& record, int i, bool& edited) {
 }  // namespace
 
 void main_keyboard_input(State& state, DrawRecord& record, Host& host) {
-  Game& game = state.game;
+  Game&   game = state.game;
   Cheats& cheats = state.cheats;
-  auto& players = state.players.slots;
+  auto&   players = state.players.slots;
 
   JE_gammaCheck();
 

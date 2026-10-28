@@ -75,18 +75,19 @@ inline constexpr size_t kDrawOps = 0
 char const *op_name(DrawOp op);
 
 struct DrawCall {
-  DrawOp op;
-  SDL_Surface *dst = nullptr;
-  SDL_Surface *src = nullptr;  // copies and filters
-  Sprite2_array sheet = {};    // sprite2 primitives
-  void const *map = nullptr;   // background map position (into megaData1-3)
-  intptr_t args[8] = {};
-  uint32_t blob = 0, blob_size = 0;  // extra inputs, in DrawList::blob
+  DrawOp        op;
+  SDL_Surface  *dst = nullptr;
+  SDL_Surface  *src = nullptr;  // copies and filters
+  Sprite2_array sheet = {};     // sprite2 primitives
+  void const   *map = nullptr;  // background map position (into megaData1-3)
+  intptr_t      args[8] = {};
+  uint32_t      blob = 0, blob_size = 0;  // extra inputs, in DrawList::blob
 };
 
 struct DrawList {
   uint64_t tick = 0;
-  std::vector<DrawCall> calls;
+
+  std::vector<DrawCall>      calls;
   std::vector<unsigned char> blob;
 
   // Adds a call, copying its extra inputs into the list.

@@ -202,11 +202,11 @@ class InputDriver {
   // as the setup menu would set it, and so does the difficulty (Wimp to
   // Nortaneous).
   void push_cheats(uint64_t next_tick) {
-    uint64_t const t = next_tick - level_first_tick_;
-    bool const debug = t == 30 || t == 230;
-    bool const smoothie = t < 500 && t % 100 == 60;
-    bool const skip = t >= 500 && t < 503;
-    bool const nort = t == 20 && mix(seed_ ^ mix(level_first_tick_)) % 4 == 0;
+    uint64_t const     t = next_tick - level_first_tick_;
+    bool const         debug = t == 30 || t == 230;
+    bool const         smoothie = t < 500 && t % 100 == 60;
+    bool const         skip = t >= 500 && t < 503;
+    bool const         nort = t == 20 && mix(seed_ ^ mix(level_first_tick_)) % 4 == 0;
     SDL_Scancode const digit =
         kSmoothieKeys[mix(seed_ ^ mix(level_first_tick_ + t)) % std::size(kSmoothieKeys)];
     bool const command = press_commands_ && next_tick % 300 == 150;  // as above
@@ -292,7 +292,7 @@ class InputDriver {
   }
 
   static constexpr size_t kJoystickInputs = 7;  // the stick's four directions and three buttons
-  static constexpr int kMouseStep = 8;
+  static constexpr int    kMouseStep = 8;
 
   static int16_t axis_value(bool negative, bool positive) {
     return static_cast<int16_t>((positive - negative) * SDL_JOYSTICK_AXIS_MAX);
@@ -332,8 +332,8 @@ class InputDriver {
     if (!in_item_screen) {
       return SDL_SCANCODE_RETURN;
     }
-    int16_t const menu = curMenu;
-    uint8_t const sel = curSel[menu];
+    int16_t const     menu = curMenu;
+    uint8_t const     sel = curSel[menu];
     constexpr int16_t kFullGame = 0, kPlayNextLevel = 3, k2PlayerArcade = 9,
                       k1PlayerArcade = 10;  // game_menu.c
     if (menu == kFullGame) {
@@ -398,24 +398,24 @@ class InputDriver {
     }
   }
 
-  uint64_t seed_;
-  bool press_rewind_;
-  bool press_commands_;
-  bool press_cheats_;
-  bool move_mouse_;
-  bool midtick_;
-  bool press_screens_;
-  bool wants_joystick_;
+  uint64_t      seed_;
+  bool          press_rewind_;
+  bool          press_commands_;
+  bool          press_cheats_;
+  bool          move_mouse_;
+  bool          midtick_;
+  bool          press_screens_;
+  bool          wants_joystick_;
   SDL_Joystick *joystick_ = nullptr;
-  bool joystick_stale_ = false;
-  bool between_levels_ = true;
-  bool level_ended_ = false;
-  bool screen_open_ = false;  // the pause screen or the in-game menu
-  uint64_t level_first_tick_ = 0;
-  uint64_t pushed_tick_ = UINT64_MAX;
-  bool focused_ = false;
-  bool tick_ms_valid_ = false;
-  uint32_t last_tick_ms_ = 0;
+  bool          joystick_stale_ = false;
+  bool          between_levels_ = true;
+  bool          level_ended_ = false;
+  bool          screen_open_ = false;  // the pause screen or the in-game menu
+  uint64_t      level_first_tick_ = 0;
+  uint64_t      pushed_tick_ = UINT64_MAX;
+  bool          focused_ = false;
+  bool          tick_ms_valid_ = false;
+  uint32_t      last_tick_ms_ = 0;
 };
 
 InputDriver *input_driver() {

@@ -200,8 +200,8 @@ void in_game_displays_draw(sim::State const& state, SDL_Surface *screen) {
   auto const& galagaMode = state.game.galaga_mode;
   auto const& youAreCheating = state.cheats.you_are_cheating;
   auto const& player = state.players.slots;
-  char stemp[21];
-  char tempstr[256];
+  char        stemp[21];
+  char        tempstr[256];
 
   for (unsigned i = 0; i < ((twoPlayerMode && !galagaMode) ? 2 : 1); ++i) {
     std::snprintf(tempstr, sizeof(tempstr), "%lu", player[i].cash);
@@ -219,7 +219,7 @@ void in_game_displays_draw(sim::State const& state, SDL_Surface *screen) {
       unsigned const extra_lives = *player[temp].lives - 1;
 
       int const y = (temp == 0 && player[0].items.special > 0) ? 35 : 15;
-      uint16_t x = (temp == 0) ? 30 : 270;  // tempW in the C code
+      uint16_t  x = (temp == 0) ? 30 : 270;  // tempW in the C code
 
       if (extra_lives >= 5) {
         draw::blit_sprite2(screen, x, y, spriteSheet9, 285);

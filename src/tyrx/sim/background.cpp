@@ -76,7 +76,7 @@ void background_3(State& state, DrawRecord& record, std::optional<Background3Dra
 
 void check_smoothies(State& state) {
   uint8_t const processor = state.game.processor_type;
-  auto const& smoothies = state.display.smoothies;
+  auto const&   smoothies = state.display.smoothies;
   state.display.any_smoothies = (processor > 2 && (smoothies[1 - 1] || smoothies[2 - 1])) ||
                                 (processor > 1 && (smoothies[3 - 1] || smoothies[4 - 1] || smoothies[5 - 1]));
 }

@@ -83,7 +83,7 @@ struct Runtime {
 
   uint64_t tick = 0;
   unsigned level_count = 0;
-  long demo_count = 0;
+  long     demo_count = 0;
 
   Runtime() {
     exit_after_demos = env_long("TYRX_EXIT_AFTER_DEMOS", -1);

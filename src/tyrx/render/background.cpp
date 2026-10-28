@@ -52,7 +52,7 @@ TileRows tile_rows(int y) {
 // A row of 12 opaque 24x28 tiles (port of blitBackground1Row).
 void blit_background_1_row(Canvas dst, int x, int y, uint8_t **map) {
   TileRows const r = tile_rows(y);
-  size_t di = (size_t)r.y * dst.pitch + x;
+  size_t         di = (size_t)r.y * dst.pitch + x;
   for (int ty = r.first; ty < r.end; ++ty) {
     for (int ti = 0; ti < 12; ++ti) {
       std::memcpy(&dst.pixels[di], map[ti] + ty * 24, 24);
@@ -67,7 +67,7 @@ void blit_background_1_row(Canvas dst, int x, int y, uint8_t **map) {
 template <bool kBlend>
 void blit_background_row(Canvas dst, int x, int y, uint8_t **map) {
   TileRows const r = tile_rows(y);
-  size_t di = (size_t)r.y * dst.pitch + x;
+  size_t         di = (size_t)r.y * dst.pitch + x;
   for (int ty = r.first; ty < r.end; ++ty) {
     for (int ti = 0; ti < 12; ++ti) {
       if (map[ti] == nullptr) {
@@ -106,7 +106,7 @@ void draw_background(Row row, uint8_t **map, intptr_t map_x_bp_pos, uint16_t map
 // The value (low nibble) of a pixel plus brightness, or 0xF if the sum is
 // 0x10..0x1E and 0x0 if it is negative or larger (port of filterScreenValue).
 uint8_t adjust_value(uint8_t pixel, int8_t brightness) {
-  int const sum = (pixel & 0x0F) + brightness;
+  int const     sum = (pixel & 0x0F) + brightness;
   uint8_t const value = sum < 0 || sum >= 0x1F ? 0x0 : sum >= 0x10 ? 0xF : sum;
   return (pixel & 0xF0) | value;
 }
@@ -206,7 +206,7 @@ void lava_filter(Canvas dst, Canvas src) {
   for (int y = 184; y >= 0; --y) {
     for (int x0 = 320 - 8; x0 >= 0; x0 -= 8) {
       unsigned const diw = y * 320 + x0 + 8;
-      int const wavey = std::abs((int)((diw >> 9) & 0xF) - 8) - 1;  // -1..7
+      int const      wavey = std::abs((int)((diw >> 9) & 0xF) - 8) - 1;  // -1..7
       filter_words(x0, [&](int x, bool write, uint8_t pixel = 0) -> uint8_t {
         size_t const di = (size_t)y * dst.pitch + x, si = (size_t)y * src.pitch + x;
         if (write) {
@@ -231,7 +231,7 @@ void water_filter(Canvas dst, Canvas src, uint8_t hue_index) {
   for (int y = 184; y >= 0; --y) {
     for (int x0 = 320 - 8; x0 >= 0; x0 -= 8) {
       unsigned const diw = y * 320 + x0 + 8;
-      int const wavey = std::abs((int)((diw >> 10) & 0x7) - 4) - 1;  // -1..3
+      int const      wavey = std::abs((int)((diw >> 10) & 0x7) - 4) - 1;  // -1..3
       filter_words(x0, [&](int x, bool write, uint8_t pixel = 0) -> uint8_t {
         size_t const di = (size_t)y * dst.pitch + x, si = (size_t)y * src.pitch + x;
         if (write) {
@@ -256,7 +256,7 @@ void water_filter(Canvas dst, Canvas src, uint8_t hue_index) {
 void iced_blur_filter(Canvas dst, Canvas src) {
   for (int y = 0; y < 184; ++y) {
     for (int x = 0; x < 320; ++x) {
-      uint8_t& d = dst.pixels[(size_t)y * dst.pitch + x];
+      uint8_t&      d = dst.pixels[(size_t)y * dst.pitch + x];
       uint8_t const s = src.pixels[(size_t)y * src.pitch + x];
       d = 0x80 | (((s & 0x0F) + (d & 0x0F)) >> 1);
     }
@@ -268,7 +268,7 @@ void iced_blur_filter(Canvas dst, Canvas src) {
 void blur_filter(Canvas dst, Canvas src) {
   for (int y = 0; y < 184; ++y) {
     for (int x = 0; x < 320; ++x) {
-      uint8_t& d = dst.pixels[(size_t)y * dst.pitch + x];
+      uint8_t&      d = dst.pixels[(size_t)y * dst.pitch + x];
       uint8_t const s = src.pixels[(size_t)y * src.pitch + x];
       d = (s & 0xF0) | (((s & 0x0F) + (d & 0x0F)) >> 1);
     }
@@ -281,10 +281,10 @@ void show_headlight(Canvas dst, Canvas src, int16_t player_x, int16_t player_y) 
   int lx = (player_x - 17) - (player_y + 12) + 1;  // light starting at X
   int rx = (player_x - 17) + (player_y + 12);      // light until X
   for (int row = 0; row < 184; ++row) {
-    uint8_t *d = dst.pixels + (size_t)row * dst.pitch;
+    uint8_t       *d = dst.pixels + (size_t)row * dst.pitch;
     uint8_t const *s = src.pixels + (size_t)row * src.pitch + 24;
-    auto const at = [](int x) { return 264 - x; };  // column of x
-    int x = 264;
+    auto const     at = [](int x) { return 264 - x; };  // column of x
+    int            x = 264;
     if (lx <= rx + 1) {
       int const x1 = 264 - std::max(0, lx - 5);
       int const x2 = 264 - std::max(0, lx);
@@ -298,7 +298,7 @@ void show_headlight(Canvas dst, Canvas src, int16_t player_x, int16_t player_y) 
       }
       // gradient left side
       for (; x > x2; --x) {
-        int const light = 3 * (6 - (x - x2));
+        int const     light = 3 * (6 - (x - x2));
         uint8_t const pixel = s[at(x)];
         d[at(x)] = (pixel & 0xF0) | (((pixel & 0xF) + light) >> 2);
       }
@@ -310,7 +310,7 @@ void show_headlight(Canvas dst, Canvas src, int16_t player_x, int16_t player_y) 
       }
       // gradient right side
       for (; x > x4; --x) {
-        int const light = 3 * (x - x4);
+        int const     light = 3 * (x - x4);
         uint8_t const pixel = s[at(x)];
         d[at(x)] = (pixel & 0xF0) | (((pixel & 0xF) + light) >> 2);
       }
@@ -335,7 +335,7 @@ void show_normal(Canvas dst, Canvas src) {
 }
 
 void update_and_draw_starfield(Canvas dst, StarfieldStar (&stars)[MAX_STARS], int move_speed) {
-  constexpr int kHue = 0x90;  // STARFIELD_HUE
+  constexpr int  kHue = 0x90;  // STARFIELD_HUE
   uint8_t *const p = dst.pixels;
   for (int i = MAX_STARS - 1; i >= 0; --i) {
     StarfieldStar& star = stars[i];

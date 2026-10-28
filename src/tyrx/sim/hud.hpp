@@ -36,37 +36,37 @@ namespace hud {
 
 struct MessageBarErased {};  // the message timed out
 struct TextWindow {          // JE_drawTextWindow
-  bool erase;                // a message was showing
+  bool        erase;         // a message was showing
   std::string text;
 };
 struct Shield {  // JE_drawShield
-  bool two;      // two-player HUD
+  bool     two;  // two-player HUD
   unsigned shield[2];
   unsigned shield_max;
 };
 struct Armor {  // JE_drawArmor
-  bool two;
+  bool     two;
   unsigned armor[2];
 };
 struct WipeShieldArmor {  // JE_wipeShieldArmorBars
-  bool one;               // one-player HUD
+  bool     one;           // one-player HUD
   unsigned shield, armor;
 };
 struct WeaponPower {
-  int x, y;
+  int      x, y;
   unsigned item_power;
 };
 struct PowerBar {
-  uint8_t temp;        // power / 10
+  uint8_t  temp;       // power / 10
   unsigned lastPower;  // before
 };
 struct PortConfig {  // JE_drawPortConfigButtons
   unsigned weapon_mode;
 };
 struct Sidekick {  // JE_drawOptions, for one sidekick
-  int y;
+  int     y;
   uint8_t icongr;
-  int ammo_max, ammo;
+  int     ammo_max, ammo;
 };
 struct OptionLevel {  // JE_drawOptionLevel
   uint8_t sidekick_level;
@@ -75,7 +75,7 @@ struct ChargeLevel {
   uint8_t chargeLevel, color;
 };
 struct SidekickAmmo {
-  int y, ammo_max, ammo;
+  int  y, ammo_max, ammo;
   bool discharged;  // after firing; otherwise after a refill
 };
 

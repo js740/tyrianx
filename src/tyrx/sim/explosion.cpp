@@ -29,7 +29,7 @@ namespace {
 
 struct ExplosionData {
   uint16_t sprite;
-  uint8_t ttl;
+  uint8_t  ttl;
 };
 
 // Indexed directly by explosion type (types are effectively 0-based here,

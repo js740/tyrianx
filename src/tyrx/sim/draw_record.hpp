@@ -46,57 +46,60 @@ struct Copy {
 
 // The scroll positions a background was drawn at.
 struct Background1Drawn {
-  Surface screen;
-  bool clr;  // JE_clr256 instead (astral zone)
+  Surface   screen;
+  bool      clr;  // JE_clr256 instead (astral zone)
   uint8_t **mapYPos;
-  intptr_t mapXbpPos;
-  uint16_t mapXPos, backPos;
+  intptr_t  mapXbpPos;
+  uint16_t  mapXPos, backPos;
 };
 struct Background2Drawn {
-  Surface screen;
-  bool blend;
+  Surface   screen;
+  bool      blend;
   uint8_t **mapY2Pos;
-  intptr_t mapX2bpPos;
-  uint16_t mapX2Pos, backPos2;
-  bool background2, smoothies_1;  // smoothies[1] draws it at background 1's x position
-  intptr_t mapXbpPos;
-  uint16_t mapXPos;
+  intptr_t  mapX2bpPos;
+  uint16_t  mapX2Pos, backPos2;
+  bool      background2, smoothies_1;  // smoothies[1] draws it at background 1's x position
+  intptr_t  mapXbpPos;
+  uint16_t  mapXPos;
 };
 struct Background3Drawn {  // before the scroll that comes first
-  Surface screen;
+  Surface   screen;
   uint8_t **mapY3Pos;
-  intptr_t mapX3bpPos;
-  uint16_t mapX3Pos, backPos3, backMove3;
+  intptr_t  mapX3bpPos;
+  uint16_t  mapX3Pos, backPos3, backMove3;
 };
 
 struct Darkened {
-  Surface screen;
+  Surface  screen;
   uint16_t neat;
 };
 
 struct EnemiesDrawn {  // by one JE_drawEnemy
-  Surface screen;
+  Surface  screen;
   uint16_t mapXOfs;
+
   std::vector<VisibleEnemy> drawn;
 };
 
 struct PlayerShotsDrawn {
   Surface screen;
+
   std::vector<VisiblePlayerShot> drawn;
 };
 
 struct EnemyShotsDrawn {  // drawn shots stay in their slots for the rest of the tick
   Surface screen;
+
   std::bitset<ENEMY_SHOT_MAX> drawn;
 };
 
 struct ExplosionsDrawn {
-  Surface screen;
+  Surface           screen;
   VisibleExplosions visible;
 };
 
 struct DebugDrawn {
-  Surface screen;
+  Surface     screen;
   std::string text[4];
 };
 
@@ -107,20 +110,21 @@ struct MessageDrawn {  // displayTime
 
 struct SuperpixelsDrawn {  // the ones that were active, before moving
   Surface screen;
+
   std::bitset<MAX_SUPERPIXELS> active;
 };
 
 struct FilterDrawn {  // before the fade moves on
   Surface screen;
-  int8_t col, brightness;
+  int8_t  col, brightness;
 };
 
 struct BossBarsDrawn {
-  Surface screen;
+  Surface  screen;
   unsigned bars;
   struct Bar {
     unsigned x;
-    uint8_t armor, color;
+    uint8_t  armor, color;
   };
   Bar bar[2];
 };
@@ -133,37 +137,38 @@ struct DrawRecord {
 
   // The playing area, in the C code's order.
   std::optional<Background1Drawn> background_1;
-  std::optional<Surface> starfield;
-  std::optional<Copy> iced_blur_1;  // smoothie 5
+  std::optional<Surface>          starfield;
+  std::optional<Copy>             iced_blur_1;  // smoothie 5
   std::optional<Background2Drawn> background_2_under;
-  std::optional<Copy> lava_1;  // smoothie 1, without data
-  std::optional<Copy> water;   // smoothie 2
-  std::optional<EnemiesDrawn> ground_enemies, ground_enemies_2;
-  std::optional<Copy> lava_2;  // smoothie 1, with data
-  std::optional<Darkened> darken_1;
+  std::optional<Copy>             lava_1;  // smoothie 1, without data
+  std::optional<Copy>             water;   // smoothie 2
+  std::optional<EnemiesDrawn>     ground_enemies, ground_enemies_2;
+  std::optional<Copy>             lava_2;  // smoothie 1, with data
+  std::optional<Darkened>         darken_1;
   std::optional<Background2Drawn> background_2_over_1;
-  std::optional<Darkened> darken_2;
+  std::optional<Darkened>         darken_2;
   std::optional<Background3Drawn> background_3_over_2;
-  std::optional<Copy> iced_blur_2, blur;  // smoothies 3 and 4
-  std::optional<EnemiesDrawn> sky_enemies_under;
+  std::optional<Copy>             iced_blur_2, blur;  // smoothies 3 and 4
+  std::optional<EnemiesDrawn>     sky_enemies_under;
   std::optional<Background3Drawn> background_3_over_0;
-  std::optional<EnemiesDrawn> top_enemies_under;
+  std::optional<EnemiesDrawn>     top_enemies_under;
   std::optional<PlayerShotsDrawn> player_shots;
-  std::vector<VisiblePlayer> players;
-  std::optional<EnemyShotsDrawn> enemy_shots;
+  std::vector<VisiblePlayer>      players;
+  std::optional<EnemyShotsDrawn>  enemy_shots;
   std::optional<Background3Drawn> background_3_over_1;
-  std::optional<EnemiesDrawn> top_enemies_over, sky_enemies_over;
-  std::optional<ExplosionsDrawn> explosions;
+  std::optional<EnemiesDrawn>     top_enemies_over, sky_enemies_over;
+  std::optional<ExplosionsDrawn>  explosions;
   std::optional<Background2Drawn> background_2_over_2;
-  std::optional<Surface> warning;
-  std::optional<DebugDrawn> debug;
-  std::optional<MessageDrawn> message;
-  std::optional<Surface> level_timer;
-  std::optional<Surface> game_over;
+  std::optional<Surface>          warning;
+  std::optional<DebugDrawn>       debug;
+  std::optional<MessageDrawn>     message;
+  std::optional<Surface>          level_timer;
+  std::optional<Surface>          game_over;
   std::optional<SuperpixelsDrawn> superpixels;
-  std::optional<FilterDrawn> filter;
-  std::optional<BossBarsDrawn> boss_bars;
-  std::optional<Surface> in_game_displays;
+  std::optional<FilterDrawn>      filter;
+  std::optional<BossBarsDrawn>    boss_bars;
+  std::optional<Surface>          in_game_displays;
+
   bool show = false;  // the playing area copied to the screen (JE_starShowVGA)
 };
 

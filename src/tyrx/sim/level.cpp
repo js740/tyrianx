@@ -45,7 +45,7 @@ bool all_players_dead(State const& state) {
 // with smoothies that draw it themselves.
 bool background_2_drawn(State const& state) {
   uint8_t const processor = state.game.processor_type;
-  auto const& smoothies = state.display.smoothies;
+  auto const&   smoothies = state.display.smoothies;
   return !(smoothies[2 - 1] && processor < 4) && !(smoothies[1 - 1] && processor == 3);
 }
 
@@ -71,12 +71,12 @@ void enemies(State& state, DrawRecord& record, int end, uint16_t map_x_ofs, uint
 // The start of the tick: the smoothie screen code, background wrapping, and
 // music.
 void tick_start(State& state) {
-  Game& game = state.game;
-  Sound& sound = state.sound;
-  Map& map = state.map;
+  Game&   game = state.game;
+  Sound&  sound = state.sound;
+  Map&    map = state.map;
   Ending& ending = state.ending;
-  auto& players = state.players.slots;
-  auto& smoothies = state.display.smoothies;
+  auto&   players = state.players.slots;
+  auto&   smoothies = state.display.smoothies;
   // tempScreenSeg = game_screen; // side-effect of game_screen
 
   if (isNetworkGame) {
@@ -127,10 +127,10 @@ void tick_start(State& state) {
 // The HUD at the top of the tick: message bar, shield generator, weapon power
 // and power bar.
 void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
-  Game& game = state.game;
+  Game&    game = state.game;
   Players& players = state.players;
-  auto& slots = players.slots;
-  HudLog& hud = record.hud;
+  auto&    slots = players.slots;
+  HudLog&  hud = record.hud;
 
   if (state.ending.end_level) {
     return;
@@ -248,10 +248,10 @@ void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
 // Smoothies, background 1, the starfield and background 2 under the enemies.
 void backgrounds_under(State& state, DrawRecord& record, Host& host) {
   uint8_t const processor = state.game.processor_type;
-  auto const& smoothies = state.display.smoothies;
-  auto const& smoothie_data = state.display.smoothie_data;
-  Map& map = state.map;
-  Level& level = state.level;
+  auto const&   smoothies = state.display.smoothies;
+  auto const&   smoothie_data = state.display.smoothie_data;
+  Map&          map = state.map;
+  Level&        level = state.level;
   uint8_t const astral_duration = state.specials.astral_duration;
 
   // SMOOTHIES!
@@ -321,12 +321,12 @@ void backgrounds_under(State& state, DrawRecord& record, Host& host) {
 // smoothie filters between them, and new random enemies.
 void enemies_under(State& state, DrawRecord& record) {
   uint8_t const processor = state.game.processor_type;
-  auto const& smoothies = state.display.smoothies;
-  auto const& smoothie_data = state.display.smoothie_data;
-  Map& map = state.map;
-  Level& level = state.level;
-  uint16_t& on_screen = state.enemies.on_screen;
-  MtState& mt = state.random.mt;
+  auto const&   smoothies = state.display.smoothies;
+  auto const&   smoothie_data = state.display.smoothie_data;
+  Map&          map = state.map;
+  Level&        level = state.level;
+  uint16_t&     on_screen = state.enemies.on_screen;
+  MtState&      mt = state.random.mt;
 
   // -----------------------Ground Enemy------------------------
   uint16_t last_on_screen = on_screen;
@@ -402,7 +402,7 @@ void enemies_under(State& state, DrawRecord& record) {
 
 // The enemy shots, and background 3 and the enemies over them.
 void enemy_shots_and_over(State& state, DrawRecord& record) {
-  Map& map = state.map;
+  Map&      map = state.map;
   uint16_t& on_screen = state.enemies.on_screen;
 
   // MAIN DRAWING IS STOPPED STARTING HERE
@@ -453,9 +453,9 @@ void explosions(State& state, DrawRecord& record) {
 // Background 2 over everything, the low armor warning, and random explosions.
 void warning(State& state, DrawRecord& record) {
   Game const& game = state.game;
-  Display& display = state.display;
-  auto& players = state.players.slots;
-  MtState& mt = state.random.mt;
+  Display&    display = state.display;
+  auto&       players = state.players.slots;
+  MtState&    mt = state.random.mt;
 
   // -----------------------BACKGROUNDS------------------------
   // -----------------------BACKGROUND 2------------------------
@@ -533,7 +533,7 @@ void sound(State& state) {
       }
 
       uint8_t const sample = queue[temp2];
-      uint8_t volume;
+      uint8_t       volume;
       if (temp2 == 3) {
         volume = fxPlayVol;
       }
@@ -559,10 +559,10 @@ void sound(State& state) {
 
 // The debug display, the bonus message, the speed mode and the level timer.
 void texts(State& state, DrawRecord& record) {
-  Display& display = state.display;
-  Level& level = state.level;
+  Display&    display = state.display;
+  Level&      level = state.level;
   auto const& players = state.players.slots;
-  char buffer[256];
+  char        buffer[256];
 
   // -------      DEbug      ---------
   debugTime = SDL_GetTicks();
@@ -637,8 +637,8 @@ void texts(State& state, DrawRecord& record) {
 // without a frame (the C code jumps back to level_loop).
 bool game_over_and_input(State& state, DrawRecord& record, Host& host) {
   Game const& game = state.game;
-  Ending& ending = state.ending;
-  auto& players = state.players.slots;
+  Ending&     ending = state.ending;
+  auto&       players = state.players.slots;
 
   // GAME OVER
   if (!state.cheats.constant_play && !state.cheats.constant_die && ending.all_players_gone) {
@@ -767,7 +767,7 @@ void filter_screen(State& state, DrawRecord& record) {
 // draw_boss_bar: the bars follow the most damaged enemy of their link group,
 // and flash after a hit; the drawing gets where they are and how they look.
 void boss_bars(State& state, DrawRecord& record) {
-  auto& bars = state.display.boss_bars;
+  auto&       bars = state.display.boss_bars;
   auto const& enemies = state.enemies;
 
   for (boss_bar_t& bar : bars) {
@@ -819,7 +819,7 @@ void boss_bars(State& state, DrawRecord& record) {
 // and draw nothing: start the backgrounds again if no enemies are on screen,
 // and end the level when it is ready to.
 void level_end_checks(State& state) {
-  Map& map = state.map;
+  Map&    map = state.map;
   Ending& ending = state.ending;
 
   // Start backgrounds if no enemies on screen
