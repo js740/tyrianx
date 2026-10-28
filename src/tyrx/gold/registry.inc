@@ -58,9 +58,9 @@
   X(smallEnemyAdjust) X(smoothie_data) X(smoothies) X(specialWait) X(specialWeaponFilter) \
   X(specialWeaponFreq) X(specialWeaponWpn) X(spraySpecial) X(starShowVGASpecialCode) X(stopBackgroundNum) \
   X(stopBackgrounds) X(stoppedDemo) X(superArcadeMode) X(superArcadePowerUp) X(superEnemy254Jump) \
-  X(superPause) X(superTyrian) X(superWild) X(tempBackMove) X(tempMapXOfs) X(topEnemyOver) X(totalEnemy) \
-  X(trentWin) X(twoPlayerLinked) X(twoPlayerMode) X(useLastBank) X(waitToEndLevel) X(wild) X(xmas) \
-  X(youAreCheating) X(zinglonDuration)
+  X(superPause) X(superTyrian) X(superWild) X(temp2) X(tempBackMove) X(tempMapXOfs) X(topEnemyOver) \
+  X(totalEnemy) X(trentWin) X(twoPlayerLinked) X(twoPlayerMode) X(useLastBank) X(waitToEndLevel) X(wild) \
+  X(xmas) X(youAreCheating) X(zinglonDuration)
 
 // State that changes during play but only affects what is shown or heard.
 #define TYRX_PRESENT(X) \

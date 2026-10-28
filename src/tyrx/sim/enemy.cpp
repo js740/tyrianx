@@ -130,6 +130,10 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, JE_byte weapon_id, J
 
     int const pos = e.eshotmultipos[j - 1] - 1;
 
+    if (j == 1) {
+      state.scratch.temp2 = 4;
+    }
+
     EnemyShotType& shot = shots.slots[b];
     shot.sx = x + weapon.bx[pos] + layer.map_x_ofs;
     shot.sy = y + weapon.by[pos];

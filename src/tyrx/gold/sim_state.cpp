@@ -274,6 +274,7 @@ void for_each_binding(State& s, F f) {
   f(s.player_shots.ttl, ::shotAvail);
   f(s.enemy_shots.slots, ::enemyShot);
   f(s.enemy_shots.available, ::enemyShotAvail);
+  f(s.scratch.temp2, ::temp2);
 }
 
 // Copies between a member and its global, which must have the same type, or

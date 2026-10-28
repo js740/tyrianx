@@ -59,6 +59,7 @@ void special_complete(JE_byte playerNum, JE_byte specialType) {
   auto& enemyAvail = state().enemies.status;
   auto& enemyShot = state().enemy_shots.slots;
   auto& enemyShotAvail = state().enemy_shots.available;
+  auto& temp2 = state().scratch.temp2;
   nextSpecialWait = 0;
   switch (special[specialType].stype) {
     // Weapon
@@ -266,6 +267,7 @@ void do_special_shot(JE_byte playerNum, uint *armor, uint *shield, PlayerDrawn& 
   auto& player = state().players.slots;
   auto& playerShotData = state().player_shots.slots;
   auto& shotAvail = state().player_shots.ttl;
+  auto& temp2 = state().scratch.temp2;
   if (player[0].items.special > 0) {
     bool const ready =
         shotRepeat[SHOT_SPECIAL] == 0 && specialWait == 0 && flareDuration < 2 && zinglonDuration < 2;
@@ -1734,6 +1736,7 @@ void player_collide(Player *this_player, JE_byte playerNum_) {
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
   auto& shotAvail = state().player_shots.ttl;
+  auto& temp2 = state().scratch.temp2;
   char tempStr[256];
 
   for (int z = 0; z < 100; z++) {

@@ -104,6 +104,7 @@ void event_system() {
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
+  auto& temp2 = state().scratch.temp2;
   switch (eventRec[eventLoc - 1].eventtype) {
     case 1:
       state().starfield.speed = eventRec[eventLoc - 1].eventdat;

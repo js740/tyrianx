@@ -285,6 +285,17 @@ struct EnemyShots {
   std::array<JE_boolean, ENEMY_SHOT_MAX> available;  // whether each slot is free
 };
 
+// The C code's scratch global temp2, which most code writes before reading
+// it, but which carries a value between functions, and between ticks:
+// JE_specialComplete reads it as the special's power when the fire button
+// sets the special off, so it gets whatever code last wrote there.  That is
+// most often a player shot's blast filter (player_shot_move_and_draw), or 100
+// after a destruction, which counts the enemies in it; the sound routine
+// leaves it at 8 at the end of the tick.
+struct Scratch {
+  JE_byte temp2;
+};
+
 struct State {
   Game game;
   Cheats cheats;
@@ -304,6 +315,7 @@ struct State {
   Enemies enemies;
   PlayerShots player_shots;
   EnemyShots enemy_shots;
+  Scratch scratch;
 };
 
 }  // namespace tyrx::sim

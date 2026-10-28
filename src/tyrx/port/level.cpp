@@ -708,6 +708,7 @@ void sound_tick() {
   auto& firstGameOver = state().ending.first_game_over;
   auto& returnActive = state().level.return_active;
   auto& enemyOnScreen = state().enemies.on_screen;
+  auto& temp2 = state().scratch.temp2;
   // =================================
   // =======The Sound Routine=========
   // =================================
