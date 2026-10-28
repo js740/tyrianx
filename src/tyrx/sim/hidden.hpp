@@ -70,6 +70,7 @@ inline constexpr InSimState specialWait, nextSpecialWait, SFCurrentCode, SFExecu
 inline constexpr InSimState enemy, enemyAvail, enemyOnScreen, totalEnemy, enemyKilled, enemyOffset;
 inline constexpr InSimState playerShotData, shotAvail;
 inline constexpr InSimState enemyShot, enemyShotAvail;
+inline constexpr InSimState temp2;
 
 // mtrand.h's functions, which draw from mt_global.
 inline constexpr InSimState mt_rand, mt_rand_1, mt_rand_lt1;

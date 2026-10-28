@@ -38,12 +38,13 @@ constexpr JE_word link_sonic_gr[17] = {85,  242, 131, 303, 47,  284, 150, 223, 6
 constexpr JE_word link_mult2_gr[17] = {78,  299, 295, 297, 2,   278, 276, 280, 59,  // [0..16]
                                        279, 275, 277, 40,  296, 294, 298, 78};
 
-// What a shot's move leaves for its hits on enemies.
+// What a shot's move leaves for its hits on enemies.  Its blast filter is in
+// the C code's temp2 (Scratch), which the hits use and can change.
 struct MovedShot {
   bool is_special = false;
   int x = 0, y = 0;
   JE_integer damage = 0;
-  JE_byte filter = 0, chain = 0;
+  JE_byte chain = 0;
   JE_word radius_w = 0, radius_h = 0;  // a special shot's
 };
 
@@ -160,7 +161,7 @@ bool move_shot(State& state, int shot_id, MovedShot& moved, JE_byte& player_num,
   }
 
   moved.damage = shot.shotDmg;
-  moved.filter = shot.shotBlastFilter;
+  state.scratch.temp2 = shot.shotBlastFilter;
   moved.chain = shot.chainReaction;
   player_num = shot.playerNumber;
 
@@ -200,7 +201,7 @@ void hit_enemies(State& state, int z, MovedShot& shot, JE_byte player_num) {
     if (zinglon) {
       JE_byte const reach = 25 - abs(state.specials.zinglon_duration - 25);
       collided = abs(e.ex + e.mapoffset - (players[0].x + 7)) < reach;
-      shot.filter = 9;
+      state.scratch.temp2 = 9;
       shot.chain = 0;
       shot.damage = 10;
     }
@@ -230,7 +231,8 @@ void hit_enemies(State& state, int z, MovedShot& shot, JE_byte player_num) {
       return;
     }
 
-    int const armorleft = hit_enemy(state, b, shot.damage, shot.filter, zinglon, shot.x, shot.y, player_num);
+    int const armorleft =
+        hit_enemy(state, b, shot.damage, state.scratch.temp2, zinglon, shot.x, shot.y, player_num);
 
     if (state.cheats.infinite_shot || zinglon) {
       continue;
