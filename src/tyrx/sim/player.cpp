@@ -77,7 +77,7 @@ uint16_t s_gr(uint16_t ship, Sprite2_array *& ptr) {
 void calc_purple_balls_needed(Player& player) {
   static unsigned const purple_balls_required[12] = {1, 1, 2, 4, 8, 12, 16, 20, 25, 30, 40, 50};
 
-  player.purple_balls_needed = purple_balls_required[*player.lives];
+  player.purple_balls_needed = purple_balls_required[player.lives()];
 }
 
 bool power_up_weapon(State& state, Player& player, unsigned port) {
@@ -174,7 +174,7 @@ void Movement::run() {
     moveOk = true;
 
     // Street-Fighter codes
-    sf_codes(state, num, player.x, player.y, player.mouseX, player.mouseY);
+    sf_codes(state, num, player.x, player.y, player.mouse_x, player.mouse_y);
 
     if (moveOk) {
       link();
@@ -248,8 +248,8 @@ bool Movement::update_dead() {
     // as if instant death weren't enough, player also gets infinite lives in order to enjoy an infinite
     // number of deaths -_-
     Player& player1 = state.players.slots[0];
-    if (*player1.lives < 11) {
-      ++(*player1.lives);
+    if (player1.lives() < 11) {
+      ++player1.lives();
     }
     return false;
   }
@@ -287,7 +287,7 @@ bool Movement::update_dead() {
   }
 
   // respawn if any extra lives
-  if (*player.lives <= 1) {
+  if (player.lives() <= 1) {
     if (game.galaga_mode) {
       game.two_player_mode = false;
     }
@@ -297,7 +297,7 @@ bool Movement::update_dead() {
     return false;
   }
 
-  --(*player.lives);
+  --player.lives();
 
   ending.really_end_level = false;
   state.players.shot_multi_pos[num - 1] = 0;
@@ -339,8 +339,8 @@ void Movement::read_input() {
   auto& game = state.game;
   auto& button = state.input.button;
 
-  player.mouseX = player.x;
-  player.mouseY = player.y;
+  player.mouse_x = player.x;
+  player.mouse_y = player.y;
   button[1 - 1] = false;
   button[2 - 1] = false;
   button[3 - 1] = false;
@@ -441,12 +441,12 @@ void Movement::read_input() {
   }
 
   if (state.display.smoothies[9 - 1]) {
-    player.mouseY = player.y - (player.mouseY - player.y);
+    player.mouse_y = player.y - (player.mouse_y - player.y);
     mouse_yc = -mouse_yc;
   }
 
-  accel_xc += player.x - player.mouseX;
-  accel_yc += player.y - player.mouseY;
+  accel_xc += player.x - player.mouse_x;
+  accel_yc += player.y - player.mouse_y;
 
   mouse_xc = std::clamp<int16_t>(mouse_xc, -30, 30);
   mouse_yc = std::clamp<int16_t>(mouse_yc, -30, 30);
@@ -488,7 +488,7 @@ void Movement::link() {
   bool&       linked = state.players.two_player_linked;
   float&      direction = state.players.link_gun_direction;
 
-  if (state.game.two_player_mode && !linked && player.x == player.mouseX && player.y == player.mouseY &&
+  if (state.game.two_player_mode && !linked && player.x == player.mouse_x && player.y == player.mouse_y &&
       abs(players[0].x - players[1].x) < 8 && abs(players[0].y - players[1].y) < 8 && players[0].is_alive &&
       players[1].is_alive && !galaga)
   {
@@ -500,7 +500,7 @@ void Movement::link() {
   }
 
   if (!(state.game.two_player_mode && linked && num == 2 &&
-        (player.x != player.mouseX || player.y != player.mouseY)))
+        (player.x != player.mouse_x || player.y != player.mouse_y)))
   {
     return;
   }
@@ -518,11 +518,11 @@ void Movement::link() {
   else {
     float target;
 
-    if (abs(player.x - player.mouseX) > abs(player.y - player.mouseY)) {
-      target = (player.x - player.mouseX > 0) ? M_PI_2 : (M_PI + M_PI_2);
+    if (abs(player.x - player.mouse_x) > abs(player.y - player.mouse_y)) {
+      target = (player.x - player.mouse_x > 0) ? M_PI_2 : (M_PI + M_PI_2);
     }
     else {
-      target = (player.y - player.mouseY > 0) ? 0 : M_PI;
+      target = (player.y - player.mouse_y > 0) ? 0 : M_PI;
     }
 
     if (fabsf(direction - target) < 0.3f) {
@@ -598,13 +598,13 @@ void Movement::move() {
   // if not dragonwing
   if (!state.game.two_player_mode || state.players.ship_gr2 != 0) {
     if (player.sidekick[LEFT_SIDEKICK].style == 0) {
-      player.sidekick[LEFT_SIDEKICK].x = player.mouseX - 14;
-      player.sidekick[LEFT_SIDEKICK].y = player.mouseY;
+      player.sidekick[LEFT_SIDEKICK].x = player.mouse_x - 14;
+      player.sidekick[LEFT_SIDEKICK].y = player.mouse_y;
     }
 
     if (player.sidekick[RIGHT_SIDEKICK].style == 0) {
-      player.sidekick[RIGHT_SIDEKICK].x = player.mouseX + 16;
-      player.sidekick[RIGHT_SIDEKICK].y = player.mouseY;
+      player.sidekick[RIGHT_SIDEKICK].x = player.mouse_x + 16;
+      player.sidekick[RIGHT_SIDEKICK].y = player.mouse_y;
     }
   }
 
@@ -646,7 +646,7 @@ void Movement::move() {
   player.y += player.y_velocity;
 
   // if player moved, add new ship x, y history entry
-  if (player.x - player.mouseX == 0 && player.y - player.mouseY == 0) {
+  if (player.x - player.mouse_x == 0 && player.y - player.mouse_y == 0) {
     return;
   }
 
@@ -681,13 +681,15 @@ void Movement::follow_linked() {
   // turret direction marker/shield
   shot_multi_pos[SHOT_MISC] = 0;
   create_player_shot(state, 0, SHOT_MISC, player.x + 1 + roundf(sinf(direction + 0.2f) * 26),
-                     player.y + roundf(cosf(direction + 0.2f) * 26), player.mouseX, player.mouseY, 148, num);
+                     player.y + roundf(cosf(direction + 0.2f) * 26), player.mouse_x, player.mouse_y, 148,
+                     num);
   shot_multi_pos[SHOT_MISC] = 0;
   create_player_shot(state, 0, SHOT_MISC, player.x + 1 + roundf(sinf(direction - 0.2f) * 26),
-                     player.y + roundf(cosf(direction - 0.2f) * 26), player.mouseX, player.mouseY, 148, num);
+                     player.y + roundf(cosf(direction - 0.2f) * 26), player.mouse_x, player.mouse_y, 148,
+                     num);
   shot_multi_pos[SHOT_MISC] = 0;
   create_player_shot(state, 0, SHOT_MISC, player.x + 1 + roundf(sinf(direction) * 26),
-                     player.y + roundf(cosf(direction) * 26), player.mouseX, player.mouseY, 147, num);
+                     player.y + roundf(cosf(direction) * 26), player.mouse_x, player.mouse_y, 147, num);
 
   if (shot_repeat[SHOT_REAR] > 0) {
     --shot_repeat[SHOT_REAR];
@@ -699,9 +701,10 @@ void Movement::follow_linked() {
   }
 
   shot_multi_pos[SHOT_REAR] = 0;
-  int16_t const b = create_player_shot(state, 0, SHOT_REAR, player.x + 1 + roundf(sinf(direction) * 20),
-                                       player.y + roundf(cosf(direction) * 20), player.mouseX, player.mouseY,
-                                       linkGunWeapons[player.items.weapon[REAR_WEAPON].id - 1], num);
+  int16_t const b =
+      create_player_shot(state, 0, SHOT_REAR, player.x + 1 + roundf(sinf(direction) * 20),
+                         player.y + roundf(cosf(direction) * 20), player.mouse_x, player.mouse_y,
+                         linkGunWeapons[player.items.weapon[REAR_WEAPON].id - 1], num);
   set_player_shot_direction(state.player_shots.slots[b], player.items.weapon[REAR_WEAPON].id, direction);
 }
 
@@ -736,7 +739,7 @@ void Movement::place() {
   }
 
   // Determines the ship banking sprite to display, depending on horizontal velocity and acceleration
-  int ship_banking = player.x_velocity / 2 + (player.x - player.mouseX) / 6;
+  int ship_banking = player.x_velocity / 2 + (player.x - player.mouse_x) / 6;
   ship_banking = std::max(-2, std::min(ship_banking, 2));
 
   int const ship_sprite = ship_banking * 2 + ship_gr;
@@ -793,7 +796,7 @@ void Movement::place() {
       else {
         MtState& mt = state.random.mt;
         create_player_shot(state, 0, SHOT_NORTSPARKS, sparks_x + (mt_rand_r(&mt) % 8) - 4,
-                           player.y + (mt_rand_r(&mt) % 8) - 4, player.mouseX, player.mouseY, 671, 1);
+                           player.y + (mt_rand_r(&mt) % 8) - 4, player.mouse_x, player.mouse_y, 671, 1);
         shot_repeat[SHOT_NORTSPARKS] = abs(sparks_banking) - 1;
       }
     }
@@ -879,7 +882,7 @@ void Movement::fire() {
         unsigned const item_power = game.galaga_mode ? 0 : player.items.weapon[i].power - 1,
                        item_mode = (i == REAR_WEAPON) ? player.weapon_mode - 1 : 0;
 
-        create_player_shot(state, item, i, player.x, player.y, player.mouseX, player.mouseY,
+        create_player_shot(state, item, i, player.x, player.y, player.mouse_x, player.mouse_y,
                            weaponPort[item].op[item_mode][item_power], num);
       }
     }
@@ -931,7 +934,7 @@ void Movement::fire() {
     else if (button[1 - 1] && (!players.two_player_linked || players.charge_level > 0)) {
       shot_multi_pos[SHOT_P2_CHARGE] = 0;
       create_player_shot(
-          state, 16, SHOT_P2_CHARGE, player.x, player.y, player.mouseX, player.mouseY,
+          state, 16, SHOT_P2_CHARGE, player.x, player.y, player.mouse_x, player.mouse_y,
           chargeGunWeapons[players.slots[1].items.weapon[REAR_WEAPON].id - 1] + players.charge_level, num);
 
       if (players.charge_level > 0) {
@@ -954,8 +957,8 @@ void Movement::fire() {
     else if (button[3 - 1] || button[2 - 1]) {
       --bomber_player.superbombs;
       shot_multi_pos[SHOT_P1_SUPERBOMB + bomber - 1] = 0;
-      create_player_shot(state, 16, SHOT_P1_SUPERBOMB + bomber - 1, player.x, player.y, player.mouseX,
-                         player.mouseY, 535, num);
+      create_player_shot(state, 16, SHOT_P1_SUPERBOMB + bomber - 1, player.x, player.y, player.mouse_x,
+                         player.mouse_y, 535, num);
     }
   }
 
@@ -1117,8 +1120,8 @@ void Movement::fire_sidekicks() {
     // has infinite ammo
     if (ammo_max <= 0) {
       if (button[0] || button[1 + i]) {
-        create_player_shot(state, option.wport, shot_i, sidekick.x, sidekick.y, player.mouseX, player.mouseY,
-                           option.wpnum + sidekick.charge, num);
+        create_player_shot(state, option.wport, shot_i, sidekick.x, sidekick.y, player.mouse_x,
+                           player.mouse_y, option.wpnum + sidekick.charge, num);
 
         if (sidekick.charge > 0) {
           shot_multi_pos[shot_i] = 0;
@@ -1147,7 +1150,7 @@ void Movement::fire_sidekicks() {
     }
 
     if (button[1 + i] && sidekick.ammo > 0) {
-      create_player_shot(state, option.wport, shot_i, sidekick.x, sidekick.y, player.mouseX, player.mouseY,
+      create_player_shot(state, option.wport, shot_i, sidekick.x, sidekick.y, player.mouse_x, player.mouse_y,
                          option.wpnum + sidekick.charge, num);
 
       --sidekick.ammo;
@@ -1545,8 +1548,8 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
       else if (evalue == -3) {
         // picked up orbiting asteroid killer
         shot_multi_pos[SHOT_MISC] = 0;
-        create_player_shot(state, 0, SHOT_MISC, player.x, player.y, players[0].mouseX, players[0].mouseY, 104,
-                           num);
+        create_player_shot(state, 0, SHOT_MISC, player.x, player.y, players[0].mouse_x, players[0].mouse_y,
+                           104, num);
         state.player_shots.ttl[z] = 0;
       }
       else if (evalue == -4) {

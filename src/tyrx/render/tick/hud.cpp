@@ -216,7 +216,7 @@ void in_game_displays_draw(sim::State const& state, SDL_Surface *screen) {
   // Lives Left
   if (onePlayerAction || twoPlayerMode) {
     for (int temp = 0; temp < (onePlayerAction ? 1 : 2); temp++) {
-      unsigned const extra_lives = *player[temp].lives - 1;
+      unsigned const extra_lives = player[temp].lives() - 1;
 
       int const y = (temp == 0 && player[0].items.special > 0) ? 35 : 15;
       uint16_t  x = (temp == 0) ? 30 : 270;  // tempW in the C code

@@ -289,8 +289,9 @@ struct Relocation {
 };
 
 // Points the pointers in v that point into one of the relocations' from
-// objects into its to object instead.  Copied state can point into itself (a
-// player's lives point into its items), and must point into the copy.
+// objects into its to object instead.  Copied state that pointed into itself
+// would have to point into the copy (none does: a player's lives, which the C
+// struct points to, are an index in the C++ struct).
 template <typename T>
 void relocate_pointers(T& v, std::span<Relocation const> relocations) {
   using U = std::remove_cv_t<T>;

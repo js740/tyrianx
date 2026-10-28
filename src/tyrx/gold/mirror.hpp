@@ -29,12 +29,18 @@
 #include "state.hpp"
 
 #include <stddef.h>
+#include <cstdio>
+#include <cstdlib>
+#include <iterator>
 #include <type_traits>
 
 namespace tyrx::gold {
 
 // Mirror<T>::C is the C struct that the C++ struct T stands for, and
-// Mirror<T>::members(cxx, c, f) calls f(cxx member, c member) for each pair.
+// Mirror<T>::members(cxx, c, f) calls f(cxx member, c member) for each pair
+// that copies as it is, and f(cxx member, c member, Convert{}) for each that
+// doesn't: Convert::to_cxx(cxx, c) and Convert::to_c(c, cxx) convert it,
+// given the whole structs.
 template <typename T>
 struct Mirror;
 
@@ -233,6 +239,111 @@ struct Mirror<sim::Enemy> {
   }
 };
 
+template <>
+struct Mirror<sim::PlayerItems::Weapon> {
+  using C = std::remove_extent_t<decltype(::PlayerItems::weapon)>;
+  static constexpr void members(auto& cxx, auto& c, auto f) {
+    f(cxx.id, c.id);
+    f(cxx.power, c.power);
+  }
+};
+
+template <>
+struct Mirror<sim::PlayerItems> {
+  using C = ::PlayerItems;
+  static constexpr void members(auto& cxx, auto& c, auto f) {
+    f(cxx.ship, c.ship);
+    f(cxx.generator, c.generator);
+    f(cxx.shield, c.shield);
+    f(cxx.weapon, c.weapon);
+    f(cxx.sidekick, c.sidekick);
+    f(cxx.special, c.special);
+    f(cxx.sidekick_series, c.sidekick_series);
+    f(cxx.sidekick_level, c.sidekick_level);
+    f(cxx.super_arcade_mode, c.super_arcade_mode);
+  }
+};
+
+template <>
+struct Mirror<sim::Player::Sidekick> {
+  using C = std::remove_extent_t<decltype(::Player::sidekick)>;
+  static constexpr void members(auto& cxx, auto& c, auto f) {
+    f(cxx.ammo_max, c.ammo_max);
+    f(cxx.ammo_refill_ticks_max, c.ammo_refill_ticks_max);
+    f(cxx.style, c.style);
+    f(cxx.x, c.x);
+    f(cxx.y, c.y);
+    f(cxx.ammo, c.ammo);
+    f(cxx.ammo_refill_ticks, c.ammo_refill_ticks);
+    f(cxx.animation_enabled, c.animation_enabled);
+    f(cxx.animation_frame, c.animation_frame);
+    f(cxx.charge, c.charge);
+    f(cxx.charge_ticks, c.charge_ticks);
+  }
+};
+
+// A player's lives are the power of one of its item weapons, which the C
+// struct points to and the C++ struct has the index of.
+struct PlayerLives {
+  static void to_cxx(sim::Player& to, ::Player const& from) {
+    to.lives_weapon = sim::Player::no_lives;
+    for (uint8_t i = 0; i < std::size(from.items.weapon); ++i) {
+      if (from.lives == &from.items.weapon[i].power) {
+        to.lives_weapon = i;
+      }
+    }
+    if (from.lives != nullptr && to.lives_weapon == sim::Player::no_lives) {
+      std::fprintf(stderr, "tyrx: a player's lives point outside its items\n");
+      std::abort();
+    }
+  }
+  static void to_c(::Player& to, sim::Player const& from) {
+    to.lives =
+        from.lives_weapon == sim::Player::no_lives ? nullptr : &to.items.weapon[from.lives_weapon].power;
+  }
+};
+
+template <>
+struct Mirror<sim::Player> {
+  using C = ::Player;
+  static constexpr void members(auto& cxx, auto& c, auto f) {
+    f(cxx.cash, c.cash);
+    f(cxx.items, c.items);
+    f(cxx.last_items, c.last_items);
+    f(cxx.is_dragonwing, c.is_dragonwing);
+    f(cxx.lives_weapon, c.lives, PlayerLives{});
+    f(cxx.shield_max, c.shield_max);
+    f(cxx.initial_armor, c.initial_armor);
+    f(cxx.shot_hit_area_x, c.shot_hit_area_x);
+    f(cxx.shot_hit_area_y, c.shot_hit_area_y);
+    f(cxx.is_alive, c.is_alive);
+    f(cxx.invulnerable_ticks, c.invulnerable_ticks);
+    f(cxx.exploding_ticks, c.exploding_ticks);
+    f(cxx.shield, c.shield);
+    f(cxx.armor, c.armor);
+    f(cxx.weapon_mode, c.weapon_mode);
+    f(cxx.superbombs, c.superbombs);
+    f(cxx.purple_balls_needed, c.purple_balls_needed);
+    f(cxx.mouse_x, c.mouseX);
+    f(cxx.mouse_y, c.mouseY);
+    f(cxx.x, c.x);
+    f(cxx.y, c.y);
+    f(cxx.old_x, c.old_x);
+    f(cxx.old_y, c.old_y);
+    f(cxx.x_velocity, c.x_velocity);
+    f(cxx.y_velocity, c.y_velocity);
+    f(cxx.x_friction_ticks, c.x_friction_ticks);
+    f(cxx.y_friction_ticks, c.y_friction_ticks);
+    f(cxx.delta_x_shot_move, c.delta_x_shot_move);
+    f(cxx.delta_y_shot_move, c.delta_y_shot_move);
+    f(cxx.last_x_shot_move, c.last_x_shot_move);
+    f(cxx.last_y_shot_move, c.last_y_shot_move);
+    f(cxx.last_x_explosion_follow, c.last_x_explosion_follow);
+    f(cxx.last_y_explosion_follow, c.last_y_explosion_follow);
+    f(cxx.sidekick, c.sidekick);
+  }
+};
+
 template <typename T>
 concept Mirrored = requires { typename Mirror<T>::C; };
 
@@ -247,7 +358,7 @@ consteval bool mirror_complete() {
   void  *cxx_members[64] = {}, *c_members[64] = {};
   size_t n = 0;
   bool   distinct = true;
-  Mirror<T>::members(cxx, c, [&](auto& a, auto& b) {
+  Mirror<T>::members(cxx, c, [&](auto& a, auto& b, auto...) {
     for (size_t i = 0; i < n; ++i) {
       distinct = distinct && cxx_members[i] != &a && c_members[i] != &b;
     }
@@ -269,6 +380,10 @@ static_assert(detail::mirror_complete<sim::BossBar>());
 static_assert(detail::mirror_complete<sim::EnemyShot>());
 static_assert(detail::mirror_complete<sim::PlayerShot>());
 static_assert(detail::mirror_complete<sim::Enemy>());
+static_assert(detail::mirror_complete<sim::PlayerItems::Weapon>());
+static_assert(detail::mirror_complete<sim::PlayerItems>());
+static_assert(detail::mirror_complete<sim::Player::Sidekick>());
+static_assert(detail::mirror_complete<sim::Player>());
 
 // Copies between a State's member and the C global that holds it, which must
 // have the same type, be arrays of the same size whose elements copy so, or
@@ -292,12 +407,26 @@ void copy(T& to, T const& from) {
 
 template <Mirrored T>
 void copy(T& to, typename Mirror<T>::C const& from) {
-  Mirror<T>::members(to, from, [](auto& a, auto const& b) { copy(a, b); });
+  Mirror<T>::members(to, from, [&](auto& a, auto const& b, auto... convert) {
+    if constexpr (sizeof...(convert) == 0) {
+      copy(a, b);
+    }
+    else {
+      (decltype(convert)::to_cxx(to, from), ...);
+    }
+  });
 }
 
 template <Mirrored T>
 void copy(typename Mirror<T>::C& to, T const& from) {
-  Mirror<T>::members(from, to, [](auto const& a, auto& b) { copy(b, a); });
+  Mirror<T>::members(from, to, [&](auto const& a, auto& b, auto... convert) {
+    if constexpr (sizeof...(convert) == 0) {
+      copy(b, a);
+    }
+    else {
+      (decltype(convert)::to_c(to, from), ...);
+    }
+  });
 }
 
 template <typename T, typename U, size_t N>

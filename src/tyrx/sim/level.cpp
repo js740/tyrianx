@@ -100,9 +100,9 @@ void tick_start(State& state) {
 
   ending.all_players_gone =
       all_players_dead(state) &&
-      ((*players[0].lives == 1 && players[0].exploding_ticks == 0) ||
+      ((players[0].lives() == 1 && players[0].exploding_ticks == 0) ||
        (!game.one_player_action && !game.two_player_mode)) &&
-      ((*players[1].lives == 1 && players[1].exploding_ticks == 0) || !game.two_player_mode);
+      ((players[1].lives() == 1 && players[1].exploding_ticks == 0) || !game.two_player_mode);
 
   // -----MUSIC FADE------
   if (sound.music_fade) {
@@ -151,7 +151,7 @@ void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
     }
 
     // spawned dragonwing died :(
-    if (*slots[1].lives == 0 || slots[1].armor == 0) {
+    if (slots[1].lives() == 0 || slots[1].armor == 0) {
       game.two_player_mode = false;
     }
 
@@ -160,8 +160,8 @@ void hud_update(State& state, LevelLocals& locals, DrawRecord& record) {
       state.sound.queue[6] = S_EXPLOSION_11;
       state.sound.queue[7] = S_SOUL_OF_ZINGLON;
 
-      if (*slots[0].lives < 11) {
-        ++(*slots[0].lives);
+      if (slots[0].lives() < 11) {
+        ++slots[0].lives();
       }
       else {
         slots[0].cash += 1000;

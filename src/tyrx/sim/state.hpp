@@ -230,6 +230,99 @@ struct Enemy {
   uint8_t c_fill[3];   // fill
 };
 
+// What a player has: the ship, its parts and weapons, and the sidekicks
+// (PlayerItems).
+struct PlayerItems {
+  struct Weapon {
+    uint8_t id;
+    uint8_t power;
+  };
+
+  uint8_t ship;
+  uint8_t generator;
+  uint8_t shield;
+  Weapon  weapon[2];  // front and rear
+  uint8_t sidekick[2];
+  uint8_t special;
+
+  // Dragonwing only: collecting the same powerup again gives a series of
+  // sidekick upgrades.
+  uint8_t sidekick_series;
+  uint8_t sidekick_level;
+
+  uint8_t super_arcade_mode;  // single-player only, stored as an item for compatibility
+};
+
+// A player (Player).
+struct Player {
+  // A sidekick's state.
+  struct Sidekick {
+    int32_t  ammo_max;
+    uint32_t ammo_refill_ticks_max;
+    uint32_t style;  // affects movement and size
+
+    int32_t  x;
+    int32_t  y;
+    int32_t  ammo;
+    uint32_t ammo_refill_ticks;
+
+    bool     animation_enabled;
+    uint32_t animation_frame;
+
+    uint32_t charge;
+    uint32_t charge_ticks;
+  };
+
+  static constexpr uint8_t no_lives = 255;
+
+  uint64_t    cash;
+  PlayerItems items;
+  PlayerItems last_items;
+  bool        is_dragonwing;  // i.e., is player 2
+  uint8_t     lives_weapon;   // the item weapon whose power is the lives, or no_lives (lives)
+
+  // Calculated from the items.
+  uint32_t shield_max;
+  uint32_t initial_armor;
+  uint32_t shot_hit_area_x;
+  uint32_t shot_hit_area_y;
+
+  bool     is_alive;
+  uint32_t invulnerable_ticks;  // ticks until the ship can be damaged
+  uint32_t exploding_ticks;     // ticks until the ship is done exploding
+  uint32_t shield;
+  uint32_t armor;
+  uint32_t weapon_mode;
+  uint32_t superbombs;
+  uint32_t purple_balls_needed;
+
+  uint16_t mouse_x;
+  uint16_t mouse_y;
+
+  int32_t  x;
+  int32_t  y;
+  int32_t  old_x[20];
+  int32_t  old_y[20];
+  int32_t  x_velocity;
+  int32_t  y_velocity;
+  uint32_t x_friction_ticks;  // ticks until friction is applied
+  uint32_t y_friction_ticks;
+
+  // Where the player was, and how far it moved since, for the shots and
+  // explosions that follow it.
+  int32_t delta_x_shot_move;
+  int32_t delta_y_shot_move;
+  int32_t last_x_shot_move;
+  int32_t last_y_shot_move;
+  int32_t last_x_explosion_follow;
+  int32_t last_y_explosion_follow;
+
+  Sidekick sidekick[2];
+
+  uint8_t& lives() { return items.weapon[lives_weapon].power; }
+  uint8_t  lives() const { return items.weapon[lives_weapon].power; }
+};
+
 struct Explosions {
   Explosion slots[MAX_EXPLOSIONS];  // explosions
   uint16_t  move;                   // how far explosions that aren't fixed move down each tick (explodeMove)
