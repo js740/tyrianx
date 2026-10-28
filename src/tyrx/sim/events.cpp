@@ -585,7 +585,7 @@ void event_system(State& state, HudLog& hud) {
         }
       }
       else if (!game.super_tyrian) {
-        uint8_t const lives = *players.slots[0].lives;
+        uint8_t const lives = players.slots[0].lives();
 
         if (ev.dat == 533 && (lives == 11 || (mt_rand_r(&mt) % 15) < lives)) {
           // enemy will drop random special weapon
@@ -684,7 +684,7 @@ void event_system(State& state, HudLog& hud) {
         break;
       }
 
-      if (uint8_t const lives = *players.slots[0].lives;
+      if (uint8_t const lives = players.slots[0].lives();
           ev.dat == 533 && (lives == 11 || (mt_rand_r(&mt) % 15) < lives))
       {
         ev.dat = 829 + (mt_rand_r(&mt) % 6);

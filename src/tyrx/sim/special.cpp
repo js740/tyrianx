@@ -46,12 +46,12 @@ void special_complete(State& state, HudLog& hud, uint8_t player_num, uint8_t spe
     // Weapon
     case 1:
       if (player_num == 1) {
-        create_player_shot(state, 0, SHOT_SPECIAL2, players[0].x, players[0].y, players[0].mouseX,
-                           players[0].mouseY, special_data.wpn, player_num);
+        create_player_shot(state, 0, SHOT_SPECIAL2, players[0].x, players[0].y, players[0].mouse_x,
+                           players[0].mouse_y, special_data.wpn, player_num);
       }
       else {
-        create_player_shot(state, 0, SHOT_SPECIAL2, players[1].x, players[1].y, players[0].mouseX,
-                           players[0].mouseY, special_data.wpn, player_num);
+        create_player_shot(state, 0, SHOT_SPECIAL2, players[1].x, players[1].y, players[0].mouse_x,
+                           players[0].mouse_y, special_data.wpn, player_num);
       }
 
       shot_repeat[SHOT_SPECIAL] = shot_repeat[SHOT_SPECIAL2];
@@ -184,8 +184,8 @@ void special_complete(State& state, HudLog& hud, uint8_t player_num, uint8_t spe
 
       if (state.game.super_arcade_mode > 0 && state.game.super_arcade_mode <= SA) {
         shot_repeat[SHOT_SPECIAL] = 250;
-        create_player_shot(state, 0, SHOT_SPECIAL2, players[0].x, players[0].y, players[0].mouseX,
-                           players[0].mouseY, 707, 1);
+        create_player_shot(state, 0, SHOT_SPECIAL2, players[0].x, players[0].y, players[0].mouse_x,
+                           players[0].mouse_y, 707, 1);
         players[0].invulnerable_ticks = 100;
       }
       break;
@@ -312,13 +312,13 @@ void update_flare(State& state, uint8_t player_num) {
 
       if (specials.link_to_player) {
         if (shot_repeat[SHOT_SPECIAL] == 0) {
-          b = create_player_shot(state, 0, SHOT_SPECIAL, players[0].x, players[0].y, players[0].mouseX,
-                                 players[0].mouseY, specials.weapon_wpn, player_num);
+          b = create_player_shot(state, 0, SHOT_SPECIAL, players[0].x, players[0].y, players[0].mouse_x,
+                                 players[0].mouse_y, specials.weapon_wpn, player_num);
         }
       }
       else {
         b = create_player_shot(state, 0, SHOT_SPECIAL, mt_rand_r(&mt) % 280, mt_rand_r(&mt) % 180,
-                               players[0].mouseX, players[0].mouseY, specials.weapon_wpn, player_num);
+                               players[0].mouse_x, players[0].mouse_y, specials.weapon_wpn, player_num);
       }
 
       if (specials.spray && b != MAX_PWEAPON) {

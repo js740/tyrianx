@@ -226,7 +226,7 @@ void hit_enemies(State& state, int z, MovedShot& shot, uint8_t player_num) {
 
     if (shot.chain > 0) {
       state.players.shot_multi_pos[SHOT_MISC] = 0;
-      create_player_shot(state, 0, SHOT_MISC, shot.x, shot.y, players[0].mouseX, players[0].mouseY,
+      create_player_shot(state, 0, SHOT_MISC, shot.x, shot.y, players[0].mouse_x, players[0].mouse_y,
                          shot.chain, player_num);
       state.player_shots.ttl[z] = 0;
       return;
