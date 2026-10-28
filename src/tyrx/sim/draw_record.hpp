@@ -41,7 +41,8 @@ namespace tyrx::sim {
 
 // A copy or filter from one surface to another.
 struct Copy {
-  Surface dst, src;
+  Surface dst;
+  Surface src;
 };
 
 // The scroll positions a background was drawn at.
@@ -50,15 +51,18 @@ struct Background1Drawn {
   bool      clr;  // JE_clr256 instead (astral zone)
   uint8_t **mapYPos;
   intptr_t  mapXbpPos;
-  uint16_t  mapXPos, backPos;
+  uint16_t  mapXPos;
+  uint16_t  backPos;
 };
 struct Background2Drawn {
   Surface   screen;
   bool      blend;
   uint8_t **mapY2Pos;
   intptr_t  mapX2bpPos;
-  uint16_t  mapX2Pos, backPos2;
-  bool      background2, smoothies_1;  // smoothies[1] draws it at background 1's x position
+  uint16_t  mapX2Pos;
+  uint16_t  backPos2;
+  bool      background2;
+  bool      smoothies_1;  // smoothies[1] draws it at background 1's x position
   intptr_t  mapXbpPos;
   uint16_t  mapXPos;
 };
@@ -66,7 +70,9 @@ struct Background3Drawn {  // before the scroll that comes first
   Surface   screen;
   uint8_t **mapY3Pos;
   intptr_t  mapX3bpPos;
-  uint16_t  mapX3Pos, backPos3, backMove3;
+  uint16_t  mapX3Pos;
+  uint16_t  backPos3;
+  uint16_t  backMove3;
 };
 
 struct Darkened {
@@ -116,15 +122,17 @@ struct SuperpixelsDrawn {  // the ones that were active, before moving
 
 struct FilterDrawn {  // before the fade moves on
   Surface screen;
-  int8_t  col, brightness;
+  int8_t  col;
+  int8_t  brightness;
 };
 
 struct BossBarsDrawn {
   Surface  screen;
-  unsigned bars;
+  uint32_t bars;
   struct Bar {
-    unsigned x;
-    uint8_t  armor, color;
+    uint32_t x;
+    uint8_t  armor;
+    uint8_t  color;
   };
   Bar bar[2];
 };
@@ -142,13 +150,15 @@ struct DrawRecord {
   std::optional<Background2Drawn> background_2_under;
   std::optional<Copy>             lava_1;  // smoothie 1, without data
   std::optional<Copy>             water;   // smoothie 2
-  std::optional<EnemiesDrawn>     ground_enemies, ground_enemies_2;
+  std::optional<EnemiesDrawn>     ground_enemies;
+  std::optional<EnemiesDrawn>     ground_enemies_2;
   std::optional<Copy>             lava_2;  // smoothie 1, with data
   std::optional<Darkened>         darken_1;
   std::optional<Background2Drawn> background_2_over_1;
   std::optional<Darkened>         darken_2;
   std::optional<Background3Drawn> background_3_over_2;
-  std::optional<Copy>             iced_blur_2, blur;  // smoothies 3 and 4
+  std::optional<Copy>             iced_blur_2;  // smoothie 3
+  std::optional<Copy>             blur;         // smoothie 4
   std::optional<EnemiesDrawn>     sky_enemies_under;
   std::optional<Background3Drawn> background_3_over_0;
   std::optional<EnemiesDrawn>     top_enemies_under;
@@ -156,7 +166,8 @@ struct DrawRecord {
   std::vector<VisiblePlayer>      players;
   std::optional<EnemyShotsDrawn>  enemy_shots;
   std::optional<Background3Drawn> background_3_over_1;
-  std::optional<EnemiesDrawn>     top_enemies_over, sky_enemies_over;
+  std::optional<EnemiesDrawn>     top_enemies_over;
+  std::optional<EnemiesDrawn>     sky_enemies_over;
   std::optional<ExplosionsDrawn>  explosions;
   std::optional<Background2Drawn> background_2_over_2;
   std::optional<Surface>          warning;

@@ -81,7 +81,8 @@ struct DrawCall {
   Sprite2_array sheet = {};     // sprite2 primitives
   void const   *map = nullptr;  // background map position (into megaData1-3)
   intptr_t      args[8] = {};
-  uint32_t      blob = 0, blob_size = 0;  // extra inputs, in DrawList::blob
+  uint32_t      blob = 0;       // extra inputs, in DrawList::blob
+  uint32_t      blob_size = 0;  // and their size
 };
 
 struct DrawList {
