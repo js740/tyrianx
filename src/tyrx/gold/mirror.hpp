@@ -164,6 +164,75 @@ struct Mirror<sim::PlayerShot> {
   }
 };
 
+template <>
+struct Mirror<sim::Enemy> {
+  using C = JE_SingleEnemyType;
+  static constexpr void members(auto& cxx, auto& c, auto f) {
+    f(cxx.type, c.enemytype);
+    f(cxx.dat, c.enemydatofs);
+    f(cxx.sprite_sheet, c.sprite2s);
+    f(cxx.size, c.size);
+    f(cxx.ground, c.enemyground);
+    f(cxx.explosion, c.explonum);
+    f(cxx.value, c.evalue);
+    f(cxx.score_item, c.scoreitem);
+    f(cxx.dies_into, c.enemydie);
+    f(cxx.x, c.ex);
+    f(cxx.y, c.ey);
+    f(cxx.map_offset, c.mapoffset);
+    f(cxx.fixed_move_y, c.fixedmovey);
+    f(cxx.x_speed, c.exc);
+    f(cxx.y_speed, c.eyc);
+    f(cxx.x_homing, c.xaccel);
+    f(cxx.y_homing, c.yaccel);
+    f(cxx.x_homing_dir, c.exca);
+    f(cxx.y_homing_dir, c.eyca);
+    f(cxx.x_accel, c.excc);
+    f(cxx.y_accel, c.eycc);
+    f(cxx.x_accel_wait, c.exccw);
+    f(cxx.y_accel_wait, c.eyccw);
+    f(cxx.x_accel_wait_max, c.exccwmax);
+    f(cxx.y_accel_wait_max, c.eyccwmax);
+    f(cxx.x_accel_step, c.exccadd);
+    f(cxx.y_accel_step, c.eyccadd);
+    f(cxx.x_reverse_speed, c.exrev);
+    f(cxx.y_reverse_speed, c.eyrev);
+    f(cxx.x_min_bounce, c.xminbounce);
+    f(cxx.x_max_bounce, c.xmaxbounce);
+    f(cxx.y_min_bounce, c.yminbounce);
+    f(cxx.y_max_bounce, c.ymaxbounce);
+    f(cxx.sprites, c.egr);
+    f(cxx.frame, c.enemycycle);
+    f(cxx.first_frame, c.animin);
+    f(cxx.last_frame, c.ani);
+    f(cxx.animation, c.aniactive);
+    f(cxx.stop_frame, c.animax);
+    f(cxx.animation_at_stop, c.aniwhenfire);
+    f(cxx.filter, c.filter);
+    f(cxx.armor, c.armorleft);
+    f(cxx.link_num, c.linknum);
+    f(cxx.iced, c.iced);
+    f(cxx.damaged, c.edamaged);
+    f(cxx.damaged_armor, c.edlevel);
+    f(cxx.damaged_sprite, c.edgr);
+    f(cxx.damaged_frames, c.edani);
+    f(cxx.sets_flag, c.special);
+    f(cxx.flag_num, c.flagnum);
+    f(cxx.flag_value, c.setto);
+    f(cxx.turrets, c.tur);
+    f(cxx.shot_freq, c.freq);
+    f(cxx.shot_wait, c.eshotwait);
+    f(cxx.shot_pos, c.eshotmultipos);
+    f(cxx.launch_type, c.launchtype);
+    f(cxx.launch_freq, c.launchfreq);
+    f(cxx.launch_wait, c.launchwait);
+    f(cxx.launch_special, c.launchspecial);
+    f(cxx.c_fillbyte, c.fillbyte);
+    f(cxx.c_fill1, c.fill1);
+    f(cxx.c_fill, c.fill);
+  }
+};
+
 template <typename T>
 concept Mirrored = requires { typename Mirror<T>::C; };
 
@@ -199,6 +268,7 @@ static_assert(detail::mirror_complete<sim::Star>());
 static_assert(detail::mirror_complete<sim::BossBar>());
 static_assert(detail::mirror_complete<sim::EnemyShot>());
 static_assert(detail::mirror_complete<sim::PlayerShot>());
+static_assert(detail::mirror_complete<sim::Enemy>());
 
 // Copies between a State's member and the C global that holds it, which must
 // have the same type, be arrays of the same size whose elements copy so, or

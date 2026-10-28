@@ -34,7 +34,7 @@ namespace {
 // Port of blit_enemy.
 void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, uint16_t mapXOfs, signed int x_offset,
                 signed int y_offset, signed int sprite_offset) {
-  if (e.sprite2s == nullptr) {
+  if (e.sprite_sheet == nullptr) {
     return;
   }
 
@@ -42,10 +42,10 @@ void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, uint16_t mapXO
   unsigned int const index = e.sprite + sprite_offset;
 
   if (e.filter != 0) {
-    draw::blit_sprite2_filter(surface, x, y, *e.sprite2s, index, e.filter);
+    draw::blit_sprite2_filter(surface, x, y, *e.sprite_sheet, index, e.filter);
   }
   else {
-    draw::blit_sprite2(surface, x, y, *e.sprite2s, index);
+    draw::blit_sprite2(surface, x, y, *e.sprite_sheet, index);
   }
 }
 

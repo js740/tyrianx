@@ -77,7 +77,7 @@ std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels);
 // tyrian2.c: JE_makeEnemy, which makes enemy one of type e_dat_i (enemyDat),
 // with the sprites of shape table unique_shape_table_i if that is over 0.
 // Returns the slot's status (Enemies::status) for the enemy.
-uint8_t make_enemy(State& state, JE_SingleEnemyType& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i);
+uint8_t make_enemy(State& state, Enemy& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i);
 
 // tyrian2.c: JE_newEnemy, which makes an enemy (make_enemy) in the first free
 // slot of the 25 from first.  Returns the slot + 1, or 0 if none was free.

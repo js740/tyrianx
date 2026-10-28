@@ -88,23 +88,23 @@ void special_complete(State& state, HudLog& hud, uint8_t player_num, uint8_t spe
     // Attractor
     case 4:
       for (int i = 0; i < 100; i++) {
-        JE_SingleEnemyType& e = state.enemies.slots[i];
-        if (!(state.enemies.status[i] != 1 && e.scoreitem && e.evalue != 0)) {
+        Enemy& e = state.enemies.slots[i];
+        if (!(state.enemies.status[i] != 1 && e.score_item && e.value != 0)) {
           continue;
         }
 
-        if (players[0].x > e.ex) {
-          e.exc++;
+        if (players[0].x > e.x) {
+          e.x_speed++;
         }
-        else if (players[0].x < e.ex) {
-          e.exc--;
+        else if (players[0].x < e.x) {
+          e.x_speed--;
         }
 
-        if (players[0].y > e.ey) {
-          e.eyc++;
+        if (players[0].y > e.y) {
+          e.y_speed++;
         }
-        else if (players[0].y < e.ey) {
-          e.eyc--;
+        else if (players[0].y < e.y) {
+          e.y_speed--;
         }
       }
       break;
