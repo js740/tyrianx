@@ -90,7 +90,7 @@ The ports:
 - `events.cpp`: `event_jump` (`JE_eventJump`) jumps to a position in the level.
 - `enemy_shot.cpp`: `update_enemy_shots` moves the enemy shots and ends those
   that time out, leave the screen or hit a player. It returns the shots it
-  drew, and the damage it did to the players, for the HUD.
+  drew.
 - `player_shot.cpp`: `create_player_shot` (`player_shot_create`) fires a
   weapon, and `set_player_shot_direction` (`player_shot_set_direction`) turns
   a linked weapon's shot. `update_player_shots` moves the player shots
@@ -98,9 +98,16 @@ The ports:
   with (`hit_enemy`) or set off chain reactions. It returns the shots it
   drew, for the tick's drawing.
 - `player.cpp`: `damage_player` (`JE_playerDamage`) damages a player's shield
-  and armor. It also limits the players' armor, which the C code does in
-  `JE_drawArmor`, and returns the shields and armor that the C code draws in
-  the HUD.
+  and armor.
+- `hud.cpp`: the HUD's gauges and messages (`JE_drawShield`, `JE_drawArmor`
+  and so on), which the game logic logs as it changes them (`hud.hpp`), for
+  the tick's drawing. Some do game logic too: `hud_armor` (`JE_drawArmor`)
+  limits the players' armor, `hud_text_window` (`JE_drawTextWindow`) sets when
+  the message is erased, and `hud_options` (`JE_drawOptions`) sets up the
+  sidekicks. The C code draws the shields and armor with `VGAScreen` set to
+  the HUD's surface and leaves it at `game_screen` after, where the rest of
+  the tick then draws; the log records where it does that, and the code
+  running the tick applies it.
 
 The rest of the level tick, in `../port/`, works on the `State` and the C
 globals with the C code's names, so that it can be compared with it line by

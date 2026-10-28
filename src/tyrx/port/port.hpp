@@ -36,6 +36,7 @@
 #include "draw_record.hpp"
 
 #include <iterator>
+#include <utility>
 #include <vector>
 
 // COUNTOF counts the State's std::arrays too.
@@ -108,6 +109,15 @@ inline void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte
   temp = num;
 }
 
+// The HUD's "side-effect of game_screen" (sim::HudLog::game_screen), which
+// code here applies after calling code in sim/ that can draw the shields and
+// armor.
+inline void apply_hud_screen() {
+  if (std::exchange(draw_record().hud.game_screen, false)) {
+    VGAScreen = game_screen;
+  }
+}
+
 // JE_eventJump, in sim/events.cpp
 inline void event_jump(JE_word jump) { sim::event_jump(state().level, jump); }
 
@@ -122,20 +132,15 @@ void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset,
                             Sint16 uniqueShapeTableI);  // JE_createNewEventEnemy
 bool search_for(JE_byte PLType, JE_byte *out_index);    // JE_searchFor
 
-// hud.cpp
-void draw_shield_tick();                             // JE_drawShield
-void draw_armor_tick();                              // JE_drawArmor
-void wipe_shield_armor_bars_tick();                  // JE_wipeShieldArmorBars
-void player_damage_hud(sim::PlayerDamage const& d);  // JE_playerDamage's
-void draw_port_config_buttons_tick();                // JE_drawPortConfigButtons
-void draw_text_window_tick(char const *text);        // JE_drawTextWindow
-void draw_options_tick();                            // JE_drawOptions
-void draw_option_level_tick();                       // JE_drawOptionLevel
+// hud.cpp; the HUD's log is in ../sim/hud.cpp
+void draw_shield_tick();                       // JE_drawShield
+void draw_armor_tick();                        // JE_drawArmor
+void wipe_shield_armor_bars_tick();            // JE_wipeShieldArmorBars
+void draw_text_window_tick(char const *text);  // JE_drawTextWindow
+void draw_options_tick();                      // JE_drawOptions
 void message_bar_erased_tick();
 void weapon_power_tick(int x, int y, uint item_power);
 void power_bar_tick(JE_byte temp, uint lastPower);
-void charge_level_tick(JE_byte color);
-void sidekick_ammo_tick(int y, int ammo_max, int ammo, bool discharged);
 void hud_draw(hud::Draw const& draw);
 void boss_bar_tick();  // draw_boss_bar
 void boss_bar_draw(BossBarsDrawn const& d);

@@ -1276,7 +1276,7 @@ redo:
               this_player->weapon_mode = 1;
             }
 
-            draw_port_config_buttons_tick();
+            sim::hud_port_config(state(), draw_record().hud);
             portConfigDone = false;
           }
         }
@@ -1338,7 +1338,7 @@ redo:
           }
 
           if (chargeLevel > 0) {
-            charge_level_tick(193);
+            sim::hud_charge_level(state(), draw_record().hud, 193);
           }
 
           if (chargeWait > 0) {
@@ -1356,7 +1356,7 @@ redo:
           }
 
           if (chargeLevel > 0) {
-            charge_level_tick(204);
+            sim::hud_charge_level(state(), draw_record().hud, 204);
           }
 
           if (shotRepeat[SHOT_P2_CHARGE] > 0) {
@@ -1369,7 +1369,7 @@ redo:
                 chargeGunWeapons[player[1].items.weapon[REAR_WEAPON].id - 1] + chargeLevel, playerNum_);
 
             if (chargeLevel > 0) {
-              charge_level_tick(193);
+              sim::hud_charge_level(state(), draw_record().hud, 193);
             }
 
             chargeLevel = 0;
@@ -1553,7 +1553,8 @@ redo:
 
                   // draw sidekick refill ammo gauge
                   int const y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
-                  sidekick_ammo_tick(y, ammo_max, this_player->sidekick[i].ammo, false);
+                  sim::hud_sidekick_ammo(draw_record().hud, y, ammo_max, this_player->sidekick[i].ammo,
+                                         false);
                 }
 
                 if (button[1 + i] && this_player->sidekick[i].ammo > 0) {
@@ -1571,7 +1572,7 @@ redo:
 
                   // draw sidekick discharge ammo gauge
                   int const y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i] + 13;
-                  sidekick_ammo_tick(y, ammo_max, this_player->sidekick[i].ammo, true);
+                  sim::hud_sidekick_ammo(draw_record().hud, y, ammo_max, this_player->sidekick[i].ammo, true);
                 }
               }
               // has infinite ammo
@@ -1711,10 +1712,9 @@ void main_game_player_functions() {
 
 // JE_playerDamage, in sim/player.cpp, and its HUD.
 JE_byte player_damage(JE_byte temp, Player *this_player) {
-  sim::PlayerDamage const d = sim::damage_player(state(), *this_player, temp);
-  player_damage_hud(d);
-  VGAScreen = game_screen;  // side-effect of game_screen
-  return d.through;
+  JE_byte const through = sim::damage_player(state(), draw_record().hud, *this_player, temp);
+  apply_hud_screen();
+  return through;
 }
 
 // Port of JE_playerCollide.
