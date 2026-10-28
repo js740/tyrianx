@@ -108,6 +108,21 @@ struct VisibleEnemy {
 // and launches enemies.  Returns those on screen, as they were drawn.
 std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_ofs, JE_word back_move);
 
+// tyrian2.c: a player shot's hit on the enemy in slot b, in JE_main's level
+// loop ("Player Shot Images"), with the shot's damage and blast filter.  A
+// damage of 99 ices the enemy, and 250 or more passes through enemies
+// (Cheats::infinite_shot); the hit takes 99 to 0.  It damages or destroys
+// the enemy and the enemies linked to it, and a destruction leaves the
+// filter at 100.  The Zinglon's shot neither explodes nor makes sparks.
+// Returns the enemy's armor before the hit.
+int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zinglon, int shot_x, int shot_y,
+              JE_byte player_num);
+
+// tyrian2.c: JE_eventJump, which jumps to the level position jump, or back
+// to where the last jump came from if jump is 65535, and to the first event
+// at or after it.
+void event_jump(Level& level, JE_word jump);
+
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.
 void update_starfield(Starfield& starfield, int pitch);

@@ -506,23 +506,12 @@ void enemies_under_tick() {
 
 // The player shots, and what they hit.
 void player_shots_tick() {
-  auto& galagaMode = state().game.galaga_mode;
-  auto& superArcadeMode = state().game.super_arcade_mode;
-  auto& superArcadePowerUp = state().game.super_arcade_power_up;
-  auto& doIced = state().cheats.do_iced;
   auto& infiniteShot = state().cheats.infinite_shot;
-  auto& globalFlags = state().cheats.global_flags;
-  auto& cubeMax = state().progress.cube_max;
-  auto& soundQueue = state().sound.queue;
-  auto& boss_bar = state().display.boss_bars;
-  auto& enemyContinualDamage = state().level.enemy_continual_damage;
-  auto& superEnemy254Jump = state().level.super_enemy_254_jump;
   auto& zinglonDuration = state().specials.zinglon_duration;
   auto& shotMultiPos = state().players.shot_multi_pos;
   auto& player = state().players.slots;
   auto& enemy = state().enemies.slots;
   auto& enemyAvail = state().enemies.status;
-  auto& enemyKilled = state().enemies.killed;
   auto& playerShotData = state().player_shots.slots;
   auto& shotAvail = state().player_shots.ttl;
   DrawRecord& r = draw_record();
@@ -541,13 +530,16 @@ void player_shots_tick() {
     JE_word tempX2, tempY2;
     JE_integer damage;
 
-    if (!player_shot_move(z, &is_special, &tempShotX, &tempShotY, &damage, &temp2, &chain, &playerNum,
+    // The shot's blast filter, which the C code keeps in the global temp2.
+    JE_byte filter;
+
+    if (!player_shot_move(z, &is_special, &tempShotX, &tempShotY, &damage, &filter, &chain, &playerNum,
                           &tempX2, &tempY2, r.player_shots->drawn))
     {
       goto draw_player_shot_loop_end;
     }
 
-    for (b = 0; b < 100; b++) {
+    for (int b = 0; b < 100; b++) {
       if (enemyAvail[b] != 0) {
         continue;
       }
@@ -555,9 +547,9 @@ void player_shots_tick() {
       bool collided;
 
       if (z == MAX_PWEAPON - 1) {
-        temp = 25 - abs(zinglonDuration - 25);
-        collided = abs(enemy[b].ex + enemy[b].mapoffset - (player[0].x + 7)) < temp;
-        temp2 = 9;
+        JE_byte const reach = 25 - abs(zinglonDuration - 25);
+        collided = abs(enemy[b].ex + enemy[b].mapoffset - (player[0].x + 7)) < reach;
+        filter = 9;
         chain = 0;
         damage = 10;
       }
@@ -582,234 +574,25 @@ void player_shots_tick() {
 
       if (chain > 0) {
         shotMultiPos[SHOT_MISC] = 0;
-        b = port::player_shot_create(0, SHOT_MISC, tempShotX, tempShotY, player[0].mouseX, player[0].mouseY,
-                                     chain, playerNum);
+        port::player_shot_create(0, SHOT_MISC, tempShotX, tempShotY, player[0].mouseX, player[0].mouseY,
+                                 chain, playerNum);
         shotAvail[z] = 0;
         goto draw_player_shot_loop_end;
       }
 
-      infiniteShot = false;
+      int const armorleft =
+          sim::hit_enemy(state(), b, damage, filter, z == MAX_PWEAPON - 1, tempShotX, tempShotY, playerNum);
 
-      if (damage == 99) {
-        damage = 0;
-        doIced = 40;
-        enemy[b].iced = 40;
-      }
-      else {
-        doIced = 0;
-        if (damage >= 250) {
-          damage = damage - 250;
-          infiniteShot = true;
-        }
+      if (infiniteShot || z == MAX_PWEAPON - 1) {
+        continue;
       }
 
-      int armorleft = enemy[b].armorleft;
-
-      temp = enemy[b].linknum;
-      if (temp == 0) {
-        temp = 255;
+      if (damage <= armorleft) {
+        shotAvail[z] = 0;
+        goto draw_player_shot_loop_end;
       }
 
-      if (enemy[b].armorleft < 255) {
-        for (unsigned int i = 0; i < COUNTOF(boss_bar); i++) {
-          if (temp == boss_bar[i].link_num) {
-            boss_bar[i].color = 6;
-          }
-        }
-
-        if (enemy[b].enemyground) {
-          enemy[b].filter = temp2;
-        }
-
-        for (unsigned int e = 0; e < COUNTOF(enemy); e++) {
-          if (!(enemy[e].linknum == temp && enemyAvail[e] != 1 && enemy[e].enemyground != 0)) {
-            continue;
-          }
-
-          if (doIced) {
-            enemy[e].iced = doIced;
-          }
-          enemy[e].filter = temp2;
-        }
-      }
-
-      if (armorleft > damage) {
-        if (z != MAX_PWEAPON - 1) {
-          if (enemy[b].armorleft != 255) {
-            enemy[b].armorleft -= damage;
-            setup_explosion(tempShotX, tempShotY, 0, 0, false, false);
-          }
-          else {
-            do_sp(tempShotX + 6, tempShotY + 6, damage / 2 + 3, damage / 4 + 2, temp2);
-          }
-        }
-
-        soundQueue[5] = S_ENEMY_HIT;
-
-        if ((armorleft - damage <= enemy[b].edlevel) && ((!enemy[b].edamaged) ^ (enemy[b].edani < 0))) {
-          for (temp3 = 0; temp3 < 100; temp3++) {
-            if (enemyAvail[temp3] == 1) {
-              continue;
-            }
-
-            int linknum = enemy[temp3].linknum;
-            if (!((temp3 == b) || ((temp != 255) &&
-                                   (((enemy[temp3].edlevel > 0) && (linknum == temp)) ||
-                                    ((enemyContinualDamage && (temp - 100 == linknum)) ||
-                                     ((linknum > 40) && (linknum / 20 == temp / 20) && (linknum <= temp)))))))
-            {
-              continue;
-            }
-
-            enemy[temp3].enemycycle = 1;
-
-            enemy[temp3].edamaged = !enemy[temp3].edamaged;
-
-            if (enemy[temp3].edani != 0) {
-              enemy[temp3].ani = abs(enemy[temp3].edani);
-              enemy[temp3].aniactive = 1;
-              enemy[temp3].animax = 0;
-              enemy[temp3].animin = enemy[temp3].edgr;
-              enemy[temp3].enemycycle = enemy[temp3].animin - 1;
-            }
-            else if (enemy[temp3].edgr > 0) {
-              enemy[temp3].egr[1 - 1] = enemy[temp3].edgr;
-              enemy[temp3].ani = 1;
-              enemy[temp3].aniactive = 0;
-              enemy[temp3].animax = 0;
-              enemy[temp3].animin = 1;
-            }
-            else {
-              enemyAvail[temp3] = 1;
-              enemyKilled++;
-            }
-
-            enemy[temp3].aniwhenfire = 0;
-
-            if (enemy[temp3].armorleft > (unsigned char)enemy[temp3].edlevel) {
-              enemy[temp3].armorleft = enemy[temp3].edlevel;
-            }
-
-            JE_integer tempX = enemy[temp3].ex + enemy[temp3].mapoffset;
-            JE_integer tempY = enemy[temp3].ey;
-
-            if (enemyDat[enemy[temp3].enemytype].esize != 1) {
-              setup_explosion(tempX, tempY - 6, 0, 1, false, false);
-            }
-            else {
-              setup_explosion_large(enemy[temp3].enemyground, enemy[temp3].explonum / 2, tempX, tempY);
-            }
-          }
-        }
-      }
-      else {
-        if ((temp == 254) && (superEnemy254Jump > 0)) {
-          event_jump(superEnemy254Jump);
-        }
-
-        for (temp2 = 0; temp2 < 100; temp2++) {
-          if (enemyAvail[temp2] == 1) {
-            continue;
-          }
-
-          temp3 = enemy[temp2].linknum;
-          if (!((temp2 == b) || (temp == 254) ||
-                ((temp != 255) && ((temp == temp3) || (temp - 100 == temp3) ||
-                                   ((temp3 > 40) && (temp3 / 20 == temp / 20) && (temp3 <= temp))))))
-          {
-            continue;
-          }
-
-          int enemy_screen_x = enemy[temp2].ex + enemy[temp2].mapoffset;
-
-          if (enemy[temp2].special) {
-            assert((unsigned int)enemy[temp2].flagnum - 1 < COUNTOF(globalFlags));
-            globalFlags[enemy[temp2].flagnum - 1] = enemy[temp2].setto;
-          }
-
-          if ((enemy[temp2].enemydie > 0) &&
-              !((superArcadeMode != SA_NONE) && (enemyDat[enemy[temp2].enemydie].value == 30000)))
-          {
-            int temp_b = b;
-            tempW = enemy[temp2].enemydie;
-            int enemy_offset = temp2 - (temp2 % 25);
-            if (enemyDat[tempW].value > 30000) {
-              enemy_offset = 0;
-            }
-            b = sim::new_enemy(state(), enemy_offset, tempW, 0);
-            if (b != 0) {
-              if ((superArcadeMode != SA_NONE) && (enemy[b - 1].evalue > 30000)) {
-                superArcadePowerUp++;
-                if (superArcadePowerUp > 5) {
-                  superArcadePowerUp = 1;
-                }
-                enemy[b - 1].egr[1 - 1] = 5 + superArcadePowerUp * 2;
-                enemy[b - 1].evalue = 30000 + superArcadePowerUp;
-              }
-
-              if (enemy[b - 1].evalue != 0) {
-                enemy[b - 1].scoreitem = true;
-              }
-              else {
-                enemy[b - 1].scoreitem = false;
-              }
-
-              enemy[b - 1].ex = enemy[temp2].ex;
-              enemy[b - 1].ey = enemy[temp2].ey;
-            }
-            b = temp_b;
-          }
-
-          if ((enemy[temp2].evalue > 0) && (enemy[temp2].evalue < 10000)) {
-            if (enemy[temp2].evalue == 1) {
-              cubeMax++;
-            }
-            else {
-              // in galaga mode player 2 is sidekick, so give cash to player 1
-              player[galagaMode ? 0 : playerNum - 1].cash += enemy[temp2].evalue;
-            }
-          }
-
-          if ((enemy[temp2].edlevel == -1) && (temp == temp3)) {
-            enemy[temp2].edlevel = 0;
-            enemyAvail[temp2] = 2;
-            enemy[temp2].egr[1 - 1] = enemy[temp2].edgr;
-            enemy[temp2].ani = 1;
-            enemy[temp2].aniactive = 0;
-            enemy[temp2].animax = 0;
-            enemy[temp2].animin = 1;
-            enemy[temp2].edamaged = true;
-            enemy[temp2].enemycycle = 1;
-          }
-          else {
-            enemyAvail[temp2] = 1;
-            enemyKilled++;
-          }
-
-          if (enemyDat[enemy[temp2].enemytype].esize == 1) {
-            setup_explosion_large(enemy[temp2].enemyground, enemy[temp2].explonum, enemy_screen_x,
-                                  enemy[temp2].ey);
-            soundQueue[6] = S_EXPLOSION_9;
-          }
-          else {
-            setup_explosion(enemy_screen_x, enemy[temp2].ey, 0, 1, false, false);
-            soundQueue[6] = S_EXPLOSION_8;
-          }
-        }
-      }
-
-      if (infiniteShot) {
-        damage += 250;
-      }
-      else if (z != MAX_PWEAPON - 1) {
-        if (damage <= armorleft) {
-          shotAvail[z] = 0;
-          goto draw_player_shot_loop_end;
-        }
-        else {
-          playerShotData[z].shotDmg -= armorleft;
-        }
-      }
+      playerShotData[z].shotDmg -= armorleft;
     }
 
   draw_player_shot_loop_end:;

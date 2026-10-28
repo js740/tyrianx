@@ -18,15 +18,17 @@
 //------------------------------------------------------------------------------
 
 // The enemies: ports of JE_drawEnemy (which "actually does a whole lot more
-// than just drawing"), JE_newEnemy and JE_makeEnemy (tyrian2.c).  The
-// enemies' and weapons' data, which the level's files load, are still in the
-// C globals enemyDat and weapons.
+// than just drawing"), JE_newEnemy and JE_makeEnemy, and of player shots'
+// hits on enemies in JE_main's level loop (tyrian2.c).  The enemies' and
+// weapons' data, which the level's files load, are still in the C globals
+// enemyDat and weapons.
 
 #include "sim.hpp"
 
 #include "../../logging.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdlib>
 #include <iterator>
@@ -472,6 +474,188 @@ void update_enemy(State& state, int i, int player_x, Layer const& layer, std::ve
   launch(state, e, x, y, layer);
 }
 
+// A hit that leaves the enemy (slot b, with armorleft armor before the hit)
+// some armor: the damage, and the enemies that the damage changes, linked to
+// it by link.
+void damage_enemy(State& state, int b, int armorleft, JE_integer damage, JE_byte filter, JE_byte link,
+                  bool zinglon, int shot_x, int shot_y) {
+  auto& slots = state.enemies.slots;
+  auto& status = state.enemies.status;
+  JE_SingleEnemyType& hit = slots[b];
+
+  if (!zinglon) {
+    if (hit.armorleft != 255) {
+      hit.armorleft -= damage;
+      setup_explosion(state.explosions.slots, shot_x, shot_y, 0, 0, false, false);
+    }
+    else {
+      JE_word const num = damage / 2 + 3;
+      do_sp(state.superpixels, state.random.mt, shot_x + 6, shot_y + 6, num, damage / 4 + 2, filter);
+      // JE_doSP counts in the global temp, which holds the link here
+      link = static_cast<JE_byte>(num);
+    }
+  }
+
+  state.sound.queue[5] = S_ENEMY_HIT;
+
+  if (!((armorleft - damage <= hit.edlevel) && ((!hit.edamaged) ^ (hit.edani < 0)))) {
+    return;
+  }
+
+  for (int i = 0; i < 100; i++) {
+    if (status[i] == 1) {
+      continue;
+    }
+
+    JE_SingleEnemyType& e = slots[i];
+    int const linknum = e.linknum;
+    bool const linked = link != 255 && ((e.edlevel > 0 && linknum == link) ||
+                                        (state.level.enemy_continual_damage && link - 100 == linknum) ||
+                                        (linknum > 40 && linknum / 20 == link / 20 && linknum <= link));
+    if (i != b && !linked) {
+      continue;
+    }
+
+    e.enemycycle = 1;
+
+    e.edamaged = !e.edamaged;
+
+    if (e.edani != 0) {
+      e.ani = abs(e.edani);
+      e.aniactive = 1;
+      e.animax = 0;
+      e.animin = e.edgr;
+      e.enemycycle = e.animin - 1;
+    }
+    else if (e.edgr > 0) {
+      e.egr[1 - 1] = e.edgr;
+      e.ani = 1;
+      e.aniactive = 0;
+      e.animax = 0;
+      e.animin = 1;
+    }
+    else {
+      status[i] = 1;
+      state.enemies.killed++;
+    }
+
+    e.aniwhenfire = 0;
+
+    if (e.armorleft > (unsigned char)e.edlevel) {
+      e.armorleft = e.edlevel;
+    }
+
+    JE_integer const x = e.ex + e.mapoffset;
+    JE_integer const y = e.ey;
+
+    if (enemyDat[e.enemytype].esize != 1) {
+      setup_explosion(state.explosions.slots, x, y - 6, 0, 1, false, false);
+    }
+    else {
+      setup_explosion_large(state.explosions, e.enemyground, e.explonum / 2, x, y);
+    }
+  }
+}
+
+// A hit that takes all the enemy's (slot b's) armor: the enemies destroyed
+// with it, linked to it by link, and what they leave.
+void destroy_enemy(State& state, int b, JE_byte link, JE_byte player_num) {
+  auto& slots = state.enemies.slots;
+  auto& status = state.enemies.status;
+  Game& game = state.game;
+
+  if ((link == 254) && (state.level.super_enemy_254_jump > 0)) {
+    event_jump(state.level, state.level.super_enemy_254_jump);
+  }
+
+  for (int i = 0; i < 100; i++) {
+    if (status[i] == 1) {
+      continue;
+    }
+
+    JE_SingleEnemyType& e = slots[i];
+    JE_byte const linknum = e.linknum;
+    bool const linked =
+        link == 254 || (link != 255 && (link == linknum || link - 100 == linknum ||
+                                        (linknum > 40 && linknum / 20 == link / 20 && linknum <= link)));
+    if (i != b && !linked) {
+      continue;
+    }
+
+    int enemy_screen_x = e.ex + e.mapoffset;
+
+    if (e.special) {
+      assert((unsigned int)e.flagnum - 1 < std::size(state.cheats.global_flags));
+      state.cheats.global_flags[e.flagnum - 1] = e.setto;
+    }
+
+    if ((e.enemydie > 0) && !((game.super_arcade_mode != SA_NONE) && (enemyDat[e.enemydie].value == 30000))) {
+      JE_word const die = e.enemydie;
+      int first = i - (i % 25);
+      if (enemyDat[die].value > 30000) {
+        first = 0;
+      }
+      int const made = new_enemy(state, first, die, 0);
+      if (made != 0) {
+        JE_SingleEnemyType& m = slots[made - 1];
+        if ((game.super_arcade_mode != SA_NONE) && (m.evalue > 30000)) {
+          game.super_arcade_power_up++;
+          if (game.super_arcade_power_up > 5) {
+            game.super_arcade_power_up = 1;
+          }
+          m.egr[1 - 1] = 5 + game.super_arcade_power_up * 2;
+          m.evalue = 30000 + game.super_arcade_power_up;
+        }
+
+        if (m.evalue != 0) {
+          m.scoreitem = true;
+        }
+        else {
+          m.scoreitem = false;
+        }
+
+        m.ex = e.ex;
+        m.ey = e.ey;
+      }
+    }
+
+    if ((e.evalue > 0) && (e.evalue < 10000)) {
+      if (e.evalue == 1) {
+        state.progress.cube_max++;
+      }
+      else {
+        // in galaga mode player 2 is sidekick, so give cash to player 1
+        state.players.slots[game.galaga_mode ? 0 : player_num - 1].cash += e.evalue;
+      }
+    }
+
+    if ((e.edlevel == -1) && (link == linknum)) {
+      e.edlevel = 0;
+      status[i] = 2;
+      e.egr[1 - 1] = e.edgr;
+      e.ani = 1;
+      e.aniactive = 0;
+      e.animax = 0;
+      e.animin = 1;
+      e.edamaged = true;
+      e.enemycycle = 1;
+    }
+    else {
+      status[i] = 1;
+      state.enemies.killed++;
+    }
+
+    if (enemyDat[e.enemytype].esize == 1) {
+      setup_explosion_large(state.explosions, e.enemyground, e.explonum, enemy_screen_x, e.ey);
+      state.sound.queue[6] = S_EXPLOSION_9;
+    }
+    else {
+      setup_explosion(state.explosions.slots, enemy_screen_x, e.ey, 0, 1, false, false);
+      state.sound.queue[6] = S_EXPLOSION_8;
+    }
+  }
+}
+
 }  // namespace
 
 std::vector<VisibleEnemy> update_enemies(State& state, int end, JE_word map_x_ofs, JE_word back_move) {
@@ -784,6 +968,73 @@ JE_byte make_enemy(State& state, JE_SingleEnemyType& enemy, JE_word e_dat_i, Sin
 
   // indicates what to set ENEMYAVAIL to
   return avail;
+}
+
+int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zinglon, int shot_x, int shot_y,
+              JE_byte player_num) {
+  auto& slots = state.enemies.slots;
+  Cheats& cheats = state.cheats;
+  JE_SingleEnemyType& hit = slots[b];
+
+  cheats.infinite_shot = false;
+
+  if (damage == 99) {
+    damage = 0;
+    cheats.do_iced = 40;
+    hit.iced = 40;
+  }
+  else {
+    cheats.do_iced = 0;
+    if (damage >= 250) {
+      damage = damage - 250;
+      cheats.infinite_shot = true;
+    }
+  }
+
+  int const armorleft = hit.armorleft;
+
+  JE_byte link = hit.linknum;
+  if (link == 0) {
+    link = 255;
+  }
+
+  if (hit.armorleft < 255) {
+    for (boss_bar_t& bar : state.display.boss_bars) {
+      if (link == bar.link_num) {
+        bar.color = 6;
+      }
+    }
+
+    if (hit.enemyground) {
+      hit.filter = filter;
+    }
+
+    for (size_t e = 0; e < slots.size(); e++) {
+      if (!(slots[e].linknum == link && state.enemies.status[e] != 1 && slots[e].enemyground != 0)) {
+        continue;
+      }
+
+      if (cheats.do_iced) {
+        slots[e].iced = cheats.do_iced;
+      }
+      slots[e].filter = filter;
+    }
+  }
+
+  if (armorleft > damage) {
+    damage_enemy(state, b, armorleft, damage, filter, link, zinglon, shot_x, shot_y);
+  }
+  else {
+    destroy_enemy(state, b, link, player_num);
+    // The C code counts the enemies in temp2, which holds the shot's blast
+    // filter, so the shot's later hits in the tick have the filter 100.
+    filter = 100;
+  }
+
+  if (cheats.infinite_shot) {
+    damage += 250;
+  }
+  return armorleft;
 }
 
 }  // namespace tyrx::sim

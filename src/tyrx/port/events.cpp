@@ -1052,28 +1052,6 @@ void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset, Sint16 un
   enemy[b - 1].fixedmovey = eventRec[eventLoc - 1].eventdat6;
 }
 
-// Port of JE_eventJump (tyrian2.c).
-void event_jump(JE_word jump) {
-  auto& eventRec = state().level.events;
-  auto& eventLoc = state().level.event_loc;
-  auto& curLoc = state().level.cur_loc;
-  auto& returnLoc = state().level.return_loc;
-  JE_word tempW;
-
-  if (jump == 65535) {
-    curLoc = returnLoc;
-  }
-  else {
-    returnLoc = curLoc + 1;
-    curLoc = jump;
-  }
-  tempW = 0;
-  do {
-    tempW++;
-  } while (!(eventRec[tempW - 1].eventtime >= curLoc));
-  eventLoc = tempW - 1;
-}
-
 // Port of JE_searchFor (tyrian2.c).
 bool search_for(JE_byte PLType, JE_byte *out_index) {
   auto& galagaMode = state().game.galaga_mode;
