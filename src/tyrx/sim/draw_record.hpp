@@ -32,7 +32,6 @@
 #include "visible.hpp"
 
 #include <stdint.h>
-#include <array>
 #include <bitset>
 #include <optional>
 #include <string>
@@ -98,7 +97,7 @@ struct ExplosionsDrawn {
 
 struct DebugDrawn {
   Surface screen;
-  std::array<std::string, 4> text;
+  std::string text[4];
 };
 
 struct MessageDrawn {  // displayTime
@@ -123,7 +122,7 @@ struct BossBarsDrawn {
     unsigned x;
     uint8_t armor, color;
   };
-  std::array<Bar, 2> bar;
+  Bar bar[2];
 };
 
 struct DrawRecord {

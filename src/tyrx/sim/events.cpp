@@ -27,6 +27,8 @@
 
 #include "sim.hpp"
 
+#include <algorithm>
+
 #include "../../logging.h"
 
 #include <cassert>
@@ -649,7 +651,7 @@ void event_system(State& state, HudLog& hud) {
 
     case 41:
       if (ev.eventdat == 0) {
-        enemy_avail.fill(1);
+        std::ranges::fill(enemy_avail, 1);
       }
       else {
         for (int i = 0; i <= 24; i++) {

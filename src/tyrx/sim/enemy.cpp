@@ -108,10 +108,10 @@ bool fire_shots(State& state, JE_SingleEnemyType& e, int j, uint8_t weapon_id, i
 
   for (int n = weapon.multi; n > 0; n--) {
     auto const free = std::ranges::find(shots.available, 1);
-    if (free == shots.available.end()) {
+    if (free == std::end(shots.available)) {
       return false;
     }
-    int const b = free - shots.available.begin();
+    int const b = free - std::begin(shots.available);
     shots.available[b] = false;
 
     if (weapon.sound > 0) {
@@ -1012,7 +1012,7 @@ int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglo
       hit.filter = filter;
     }
 
-    for (size_t e = 0; e < slots.size(); e++) {
+    for (size_t e = 0; e < std::size(slots); e++) {
       if (!(slots[e].linknum == link && state.enemies.status[e] != 1 && slots[e].enemyground != 0)) {
         continue;
       }

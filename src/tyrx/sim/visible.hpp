@@ -25,7 +25,6 @@
 #include "../gold/api.hpp"
 
 #include <stdint.h>
-#include <array>
 #include <bitset>
 #include <optional>
 #include <vector>
@@ -115,7 +114,7 @@ struct VisiblePlayer {
     unsigned sprite;
     unsigned style;
   };
-  std::array<std::optional<Sidekick>, 2> sidekicks;
+  std::optional<Sidekick> sidekicks[2];
 };
 
 }  // namespace tyrx::sim

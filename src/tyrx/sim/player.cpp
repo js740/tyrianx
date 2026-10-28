@@ -55,7 +55,7 @@ bool play_demo_keys(State& state) {
   bool const more = playDemoKeys();
   players[0].x = ::player[0].x;
   players[0].y = ::player[0].y;
-  std::ranges::copy(::button, button.begin());
+  std::ranges::copy(::button, std::begin(button));
   return more;
 }
 
@@ -1210,7 +1210,7 @@ void main_game_player_functions(State& state, DrawRecord& record, std::vector<Vi
   }
 
   // Reset Street-Fighter commands
-  state.specials.sf_executed.fill(0);
+  std::ranges::fill(state.specials.sf_executed, 0);
 
   state.display.port_config_change = false;
 
@@ -1562,7 +1562,7 @@ void collide(State& state, DrawRecord& record, Player& player, uint8_t num) {
           p.weapon_mode = 1;
         }
 
-        shot_multi_pos.fill(0);
+        std::ranges::fill(shot_multi_pos, 0);
       }
       else if (state.players.two_player_linked) {
         // players get equal share of pick-up cash when linked
