@@ -809,7 +809,7 @@ void event_system(State& state, HudLog& hud) {
       break;
 
     case 61:  // if specific flag set to specific value, skip events
-      if (state.cheats.global_flags[ev.eventdat - 1] == ev.eventdat2) {
+      if (state.level.global_flags[ev.eventdat - 1] == ev.eventdat2) {
         level.event_loc += ev.eventdat3;
       }
       break;
