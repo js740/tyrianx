@@ -112,7 +112,7 @@ void draw_tick(DrawRecord const& r) {
   auto& player = state().players.slots;
   // The HUD, on its own surface, whose drawing commutes with the playing
   // area's until the playing area is copied onto it at the end.
-  for (hud::Draw const& d : r.hud) {
+  for (hud::Draw const& d : r.hud.draws) {
     hud_draw(d);
   }
 

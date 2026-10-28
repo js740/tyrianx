@@ -29,6 +29,7 @@
 
 #include "../gold/api.hpp"
 #include "hidden.hpp"
+#include "hud.hpp"
 #include "state.hpp"
 
 #include <array>
@@ -124,30 +125,28 @@ int hit_enemy(State& state, int b, JE_integer& damage, JE_byte& filter, bool zin
 // at or after it.
 void event_jump(Level& level, JE_word jump);
 
-// What JE_playerDamage did: the damage that got through the shield, and the
-// shields and armor that it drew in the HUD (JE_wipeShieldArmorBars,
-// JE_drawShield and JE_drawArmor).
-struct PlayerDamage {
-  JE_byte through;
-  uint armor_before_limit;            // player 1's, as JE_wipeShieldArmorBars drew it
-  std::array<uint, 2> shield, armor;  // both players', the armor after JE_drawArmor limited it to 28
-};
+// The HUD's gauges and messages (hud.cpp), which log them in the HUD's log.
+void hud_shield(State const& state, HudLog& hud);             // JE_drawShield
+void hud_armor(State& state, HudLog& hud);                    // JE_drawArmor, which limits the armor to 28
+void hud_wipe_shield_armor(State const& state, HudLog& hud);  // JE_wipeShieldArmorBars
+void hud_port_config(State const& state, HudLog& hud);        // JE_drawPortConfigButtons
+void hud_text_window(State& state, HudLog& hud,
+                     char const *text);                  // JE_drawTextWindow, which sets textErase
+void hud_options(State& state, HudLog& hud);             // JE_drawOptions, which sets up the sidekicks
+void hud_option_level(State const& state, HudLog& hud);  // JE_drawOptionLevel
+void hud_charge_level(State const& state, HudLog& hud, JE_byte color);
+void hud_sidekick_ammo(HudLog& hud, int y, int ammo_max, int ammo, bool discharged);
 
 // varz.c: JE_playerDamage, which damages the player's shield, and its armor
-// if the damage gets through, and limits both players' armor to 28 (in
-// JE_drawArmor).
-PlayerDamage damage_player(State& state, Player& player, JE_byte damage);
-
-// The enemy shots visible in a tick, and the damage they did to the players.
-struct EnemyShotsUpdate {
-  std::bitset<ENEMY_SHOT_MAX> visible;  // which stay in their slots for the rest of the tick
-  std::vector<PlayerDamage> damage;     // in order, for the HUD
-};
+// if the damage gets through, and draws them in the HUD (which limits both
+// players' armor to 28).  Returns the damage if it got through the shield.
+JE_byte damage_player(State& state, HudLog& hud, Player& player, JE_byte damage);
 
 // tyrian2.c: the enemy shots' update in JE_main's level loop ("Draw Enemy
 // Shots"), which moves them and ends those that time out, leave the screen or
-// hit a player.
-EnemyShotsUpdate update_enemy_shots(State& state);
+// hit a player.  Returns those drawn, which stay in their slots for the rest
+// of the tick.
+std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, HudLog& hud);
 
 // A player shot as it was drawn.
 struct VisiblePlayerShot {

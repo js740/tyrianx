@@ -23,14 +23,14 @@
 
 namespace tyrx::sim {
 
-PlayerDamage damage_player(State& state, Player& player, JE_byte damage) {
+JE_byte damage_player(State& state, HudLog& hud, Player& player, JE_byte damage) {
   auto& sound_queue = state.sound.queue;
-  PlayerDamage result{};
+  JE_byte through = 0;
   sound_queue[7] = S_SHIELD_HIT;
 
   // Player Damage Routines
   if (player.shield < damage) {
-    result.through = damage;
+    through = damage;
     damage -= player.shield;
     player.shield = 0;
 
@@ -72,18 +72,12 @@ PlayerDamage damage_player(State& state, Player& player, JE_byte damage) {
     setup_explosion(slots, player.x + 7, player.y + 16, 0, 22, false, follow);
   }
 
-  // The HUD's gauges, which JE_drawArmor draws after limiting the armor.
-  auto& players = state.players.slots;
-  result.armor_before_limit = players[0].armor;
-  for (Player& p : players) {
-    if (p.armor > 28) {
-      p.armor = 28;
-    }
-  }
-  result.shield = {players[0].shield, players[1].shield};
-  result.armor = {players[0].armor, players[1].armor};
+  hud_wipe_shield_armor(state, hud);
+  hud_shield(state, hud);
+  hud_armor(state, hud);
+  hud.game_screen = true;
 
-  return result;
+  return through;
 }
 
 }  // namespace tyrx::sim

@@ -558,12 +558,9 @@ void enemy_shots_tick() {
   // MAIN DRAWING IS STOPPED STARTING HERE
   if (!endLevel) {
     // Draw Enemy Shots
-    sim::EnemyShotsUpdate const update = sim::update_enemy_shots(state());
-    r.enemy_shots = EnemyShotsDrawn{VGAScreen, update.visible};
-    for (sim::PlayerDamage const& d : update.damage) {
-      player_damage_hud(d);
-      VGAScreen = game_screen;  // side-effect of game_screen
-    }
+    SDL_Surface *const screen = VGAScreen;
+    r.enemy_shots = EnemyShotsDrawn{screen, sim::update_enemy_shots(state(), r.hud)};
+    apply_hud_screen();
   }
 
   if (background3over == 1) {

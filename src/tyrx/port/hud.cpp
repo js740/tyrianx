@@ -61,129 +61,24 @@ void dbar3(SDL_Surface *surface, JE_integer x, JE_integer y, JE_integer num, JE_
   }
 }
 
-void log(hud::Draw draw) { draw_record().hud.push_back(std::move(draw)); }
+void log(hud::Draw draw) { draw_record().hud.draws.push_back(std::move(draw)); }
 
 }  // namespace
 
-// JE_drawShield, with the shields as they are now: damage later in the tick
-// can change them.
-void draw_shield_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& galagaMode = state().game.galaga_mode;
-  auto& player = state().players.slots;
-  log(hud::Shield{twoPlayerMode && !galagaMode, {player[0].shield, player[1].shield}, player[0].shield_max});
-}
+// The HUD's gauges and messages that the level tick, events and key commands
+// still in port/ draw, in ../sim/hud.cpp.
+void draw_shield_tick() { sim::hud_shield(state(), draw_record().hud); }
+void draw_armor_tick() { sim::hud_armor(state(), draw_record().hud); }
+void wipe_shield_armor_bars_tick() { sim::hud_wipe_shield_armor(state(), draw_record().hud); }
+void draw_text_window_tick(char const *text) { sim::hud_text_window(state(), draw_record().hud, text); }
+void draw_options_tick() { sim::hud_options(state(), draw_record().hud); }
 
-// JE_drawArmor, which also limits the armor.
-void draw_armor_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& galagaMode = state().game.galaga_mode;
-  auto& player = state().players.slots;
-  for (uint i = 0; i < COUNTOF(player); ++i) {
-    if (player[i].armor > 28) {
-      player[i].armor = 28;
-    }
-  }
-
-  log(hud::Armor{twoPlayerMode && !galagaMode, {player[0].armor, player[1].armor}});
-}
-
-// JE_wipeShieldArmorBars
-void wipe_shield_armor_bars_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& galagaMode = state().game.galaga_mode;
-  auto& player = state().players.slots;
-  log(hud::WipeShieldArmor{!twoPlayerMode || galagaMode, player[0].shield, player[0].armor});
-}
-
-// JE_playerDamage's HUD: JE_wipeShieldArmorBars, JE_drawShield and
-// JE_drawArmor, with the shields and armor that the damage left.
-void player_damage_hud(sim::PlayerDamage const& d) {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& galagaMode = state().game.galaga_mode;
-  auto& player = state().players.slots;
-  log(hud::WipeShieldArmor{!twoPlayerMode || galagaMode, d.shield[0], d.armor_before_limit});
-  log(hud::Shield{twoPlayerMode && !galagaMode, d.shield, player[0].shield_max});
-  log(hud::Armor{twoPlayerMode && !galagaMode, d.armor});
-}
-
-// JE_drawPortConfigButtons (rear weapon pattern indicator)
-void draw_port_config_buttons_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& player = state().players.slots;
-  if (twoPlayerMode) {
-    return;
-  }
-
-  log(hud::PortConfig{player[0].weapon_mode});
-}
-
-// JE_drawTextWindow: a message in the message bar, which the HUD erases when
-// textErase runs out.
-void draw_text_window_tick(char const *text) {
-  auto& textErase = state().display.text_erase;
-  bool const erase = textErase > 0;  // erase current text
-
-  textErase = 100;
-  log(hud::TextWindow{erase, text});
-}
-
-// JE_drawOptions: sets up the sidekicks, and draws their HUD.
-void draw_options_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& player = state().players.slots;
-  Player *this_player = &player[twoPlayerMode ? 1 : 0];
-
-  for (uint i = 0; i < COUNTOF(this_player->sidekick); ++i) {
-    JE_OptionType *this_option = &options[this_player->items.sidekick[i]];
-
-    this_player->sidekick[i].ammo = this_player->sidekick[i].ammo_max = this_option->ammo;
-
-    this_player->sidekick[i].ammo_refill_ticks = this_player->sidekick[i].ammo_refill_ticks_max =
-        (105 - this_player->sidekick[i].ammo) * 4;
-
-    this_player->sidekick[i].style = this_option->tr;
-
-    this_player->sidekick[i].animation_enabled = (this_option->option == 1);
-    this_player->sidekick[i].animation_frame = 0;
-
-    this_player->sidekick[i].charge = 0;
-    this_player->sidekick[i].charge_ticks = 20;
-
-    // draw initial sidekick HUD
-    int const y = hud_sidekick_y[twoPlayerMode ? 1 : 0][i];
-    log(hud::Sidekick{y, this_option->icongr, this_player->sidekick[i].ammo_max,
-                      this_player->sidekick[i].ammo});
-  }
-
-  draw_option_level_tick();
-}
-
-// JE_drawOptionLevel
-void draw_option_level_tick() {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& player = state().players.slots;
-  if (twoPlayerMode) {
-    temp = 4;  // the C code counts the levels with temp, from 1 to 3
-    log(hud::OptionLevel{player[1].items.sidekick_level});
-  }
-}
-
-// The parts of the HUD that the level tick and the player functions draw.
+// The parts of the HUD that the level tick draws.
 void message_bar_erased_tick() { log(hud::MessageBarErased{}); }
 
 void weapon_power_tick(int x, int y, uint item_power) { log(hud::WeaponPower{x, y, item_power}); }
 
 void power_bar_tick(JE_byte temp, uint lastPower) { log(hud::PowerBar{temp, lastPower}); }
-
-void charge_level_tick(JE_byte color) {
-  auto& chargeLevel = state().players.charge_level;
-  log(hud::ChargeLevel{chargeLevel, color});
-}
-
-void sidekick_ammo_tick(int y, int ammo_max, int ammo, bool discharged) {
-  log(hud::SidekickAmmo{y, ammo_max, ammo, discharged});
-}
 
 void hud_draw(hud::Draw const& draw) {
   SDL_Surface *const screen = VGAScreenSeg;

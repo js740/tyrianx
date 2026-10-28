@@ -41,58 +41,8 @@
 
 namespace tyrx::port {
 
-// The HUD (on VGAScreenSeg), as it changes.
-namespace hud {
-
-struct MessageBarErased {};  // the message timed out
-struct TextWindow {          // JE_drawTextWindow
-  bool erase;                // a message was showing
-  std::string text;
-};
-struct Shield {  // JE_drawShield
-  bool two;      // two-player HUD
-  std::array<uint, 2> shield;
-  uint shield_max;
-};
-struct Armor {  // JE_drawArmor
-  bool two;
-  std::array<uint, 2> armor;
-};
-struct WipeShieldArmor {  // JE_wipeShieldArmorBars
-  bool one;               // one-player HUD
-  uint shield, armor;
-};
-struct WeaponPower {
-  int x, y;
-  uint item_power;
-};
-struct PowerBar {
-  JE_byte temp;    // power / 10
-  uint lastPower;  // before
-};
-struct PortConfig {  // JE_drawPortConfigButtons
-  uint weapon_mode;
-};
-struct Sidekick {  // JE_drawOptions, for one sidekick
-  int y;
-  JE_byte icongr;
-  int ammo_max, ammo;
-};
-struct OptionLevel {  // JE_drawOptionLevel
-  Uint8 sidekick_level;
-};
-struct ChargeLevel {
-  JE_byte chargeLevel, color;
-};
-struct SidekickAmmo {
-  int y, ammo_max, ammo;
-  bool discharged;  // after firing; otherwise after a refill
-};
-
-using Draw = std::variant<MessageBarErased, TextWindow, Shield, Armor, WipeShieldArmor, WeaponPower, PowerBar,
-                          PortConfig, Sidekick, OptionLevel, ChargeLevel, SidekickAmmo>;
-
-}  // namespace hud
+// The HUD's log, kept by ../sim/ (hud.hpp).
+namespace hud = sim::hud;
 
 // A copy or filter from one surface to another.
 struct Copy {
@@ -225,7 +175,7 @@ struct BossBarsDrawn {
 };
 
 struct DrawRecord {
-  std::vector<hud::Draw> hud;
+  sim::HudLog hud;
 
   // The playing area, in the C code's order.
   std::optional<Background1Drawn> background_1;

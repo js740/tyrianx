@@ -45,10 +45,10 @@ void track(JE_byte limit, JE_integer pos, int player_pos, JE_integer& speed) {
 
 }  // namespace
 
-EnemyShotsUpdate update_enemy_shots(State& state) {
+std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, HudLog& hud) {
   auto& players = state.players.slots;
   auto& shots = state.enemy_shots;
-  EnemyShotsUpdate update;
+  std::bitset<ENEMY_SHOT_MAX> visible;
 
   for (int z = 0; z < ENEMY_SHOT_MAX; z++) {
     if (shots.available[z] != 0) {
@@ -86,10 +86,10 @@ EnemyShotsUpdate update_enemy_shots(State& state) {
       setup_explosion(state.explosions.slots, shot.sx, shot.sy, 0, 0, false, false);
 
       if (player.invulnerable_ticks == 0) {
-        PlayerDamage const& damage = update.damage.emplace_back(damage_player(state, player, shot.sdmg));
-        if (damage.through > 0) {
-          player.x_velocity += (shot.sxm * damage.through) / 2;
-          player.y_velocity += (shot.sym * damage.through) / 2;
+        JE_byte const through = damage_player(state, hud, player, shot.sdmg);
+        if (through > 0) {
+          player.x_velocity += (shot.sxm * through) / 2;
+          player.y_velocity += (shot.sym * through) / 2;
         }
       }
 
@@ -104,9 +104,9 @@ EnemyShotsUpdate update_enemy_shots(State& state) {
       shot.animate = 0;
     }
 
-    update.visible[z] = true;
+    visible[z] = true;
   }
-  return update;
+  return visible;
 }
 
 }  // namespace tyrx::sim

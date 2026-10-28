@@ -92,7 +92,7 @@ copied onto at the end of the tick, so `draw_tick` draws the logged HUD first.
 | Screen filter | The filter and brightness before the fade moves on |
 | Smoothie filters, darkening | The surfaces, and the darkening's level |
 | Warning, level timer, game over, in-game displays | Nothing but the surface; for the debug display and the bonus message, the texts and the flash |
-| HUD (`hud.cpp`) | A log of the shield, armor, weapon power, power bar, sidekick, charge and ammo gauges and messages as drawn, from the level tick, the player functions, collisions and damage (`JE_playerCollide`, `JE_playerDamage`), events (`events.cpp`, `JE_eventSystem`) and key commands (`keyboard.cpp`, `JE_mainKeyboardInput`) |
+| HUD (`hud.cpp`; the log is `../sim/hud.hpp`'s) | A log of the shield, armor, weapon power, power bar, sidekick, charge and ammo gauges and messages as drawn, from the level tick, the player functions, collisions and damage (`JE_playerCollide`, `JE_playerDamage`), events (`events.cpp`, `JE_eventSystem`) and key commands (`keyboard.cpp`, `JE_mainKeyboardInput`) |
 
 To see which C++ lines the checks reach, build a copy with coverage and run
 gcov on `port/`:
