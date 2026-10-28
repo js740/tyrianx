@@ -40,7 +40,7 @@ void superpixels_draw(SuperpixelsDrawn const& d) {
       before[i].z++;
     }
   }
-  draw::JE_drawSP(d.screen, before);
+  draw::JE_drawSP(surface(d.screen), before);
 }
 
 // The filter is drawn with the filter and brightness from before the fade
@@ -52,7 +52,7 @@ void filter_screen_tick() {
   auto& levelBrightnessChg = state().display.brightness_chg;
   auto& filterFade = state().display.filter_fade;
   auto& filterFadeStart = state().display.filter_fade_start;
-  draw_record().filter = FilterDrawn{VGAScreen, levelFilter, levelBrightness};
+  draw_record().filter = FilterDrawn{draw_record().screen, levelFilter, levelBrightness};
 
   if (!filterFade) {
     return;
@@ -73,7 +73,7 @@ void filter_screen_tick() {
 void filter_screen_draw(FilterDrawn const& d) {
   auto& filtrationAvail = state().display.filtration_avail;
   auto& explosionTransparent = state().display.explosion_transparent;
-  draw::JE_filterScreen(d.screen, d.col, d.brightness, filtrationAvail, explosionTransparent);
+  draw::JE_filterScreen(surface(d.screen), d.col, d.brightness, filtrationAvail, explosionTransparent);
 }
 
 }  // namespace tyrx::port

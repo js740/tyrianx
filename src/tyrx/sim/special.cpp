@@ -354,8 +354,9 @@ void update_flare(State& state, JE_byte player_num) {
 
 }  // namespace
 
-void do_special_shot(State& state, HudLog& hud, JE_byte player_num, uint& armor, uint& shield,
+void do_special_shot(State& state, DrawRecord& record, JE_byte player_num, uint& armor, uint& shield,
                      VisiblePlayer& visible) {
+  HudLog& hud = record.hud;
   auto& players = state.players.slots;
   auto& shot_repeat = state.players.shot_repeat;
   auto& shot_multi_pos = state.players.shot_multi_pos;
@@ -365,7 +366,7 @@ void do_special_shot(State& state, HudLog& hud, JE_byte player_num, uint& armor,
   if (players[0].items.special > 0) {
     bool const ready = shot_repeat[SHOT_SPECIAL] == 0 && specials.wait == 0 && specials.flare_duration < 2 &&
                        specials.zinglon_duration < 2;
-    visible.special_icon = VisiblePlayer::SpecialIcon{hud.game_screen, ready};
+    visible.special_icon = VisiblePlayer::SpecialIcon{record.screen, ready};
   }
 
   if (shot_repeat[SHOT_SPECIAL] > 0) {
@@ -395,7 +396,7 @@ void do_special_shot(State& state, HudLog& hud, JE_byte player_num, uint& armor,
     hud_wipe_shield_armor(state, hud);
     hud_shield(state, hud);
     hud_armor(state, hud);
-    hud.game_screen = true;
+    record.screen = Surface::game_screen;  // side-effect of game_screen
   }
 
   // Main Begin: the fire button's special
@@ -428,7 +429,7 @@ void do_special_shot(State& state, HudLog& hud, JE_byte player_num, uint& armor,
 
   JE_byte const width = 25 - abs(specials.zinglon_duration - 25);
 
-  visible.zinglon = VisiblePlayer::Zinglon{hud.game_screen, players[0].x, width};
+  visible.zinglon = VisiblePlayer::Zinglon{record.screen, players[0].x, width};
 
   specials.zinglon_duration--;
   if (specials.zinglon_duration % 5 == 0) {

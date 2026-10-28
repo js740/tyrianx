@@ -29,7 +29,7 @@
 namespace tyrx::port {
 
 // draw_background_1 (the scrolling is in the level loop), or JE_clr256.
-void background_1_tick(SDL_Surface *screen, bool clr) {
+void background_1_tick(Surface screen, bool clr) {
   auto& backPos = state().map.back_pos;
   auto& mapYPos = state().map.map_y_pos;
   auto& mapXPos = state().map.map_x_pos;
@@ -39,15 +39,15 @@ void background_1_tick(SDL_Surface *screen, bool clr) {
 
 void background_1_draw(Background1Drawn const& d) {
   if (d.clr) {
-    draw::JE_clr256(d.screen);
+    draw::JE_clr256(surface(d.screen));
   }
   else {
-    draw::draw_background_1(d.screen, d.mapYPos, d.mapXbpPos, d.mapXPos, d.backPos);
+    draw::draw_background_1(surface(d.screen), d.mapYPos, d.mapXbpPos, d.mapXPos, d.backPos);
   }
 }
 
 // draw_background_2, or draw_background_2_blend.
-void background_2_tick(SDL_Surface *screen, bool blend, std::optional<Background2Drawn>& drawn) {
+void background_2_tick(Surface screen, bool blend, std::optional<Background2Drawn>& drawn) {
   auto& smoothies = state().display.smoothies;
   auto& backPos2 = state().map.back_pos2;
   auto& backMove2 = state().map.back_move2;
@@ -86,16 +86,16 @@ void background_2_tick(SDL_Surface *screen, bool blend, std::optional<Background
 
 void background_2_draw(Background2Drawn const& d) {
   if (d.blend) {
-    draw::draw_background_2_blend(d.screen, d.mapY2Pos, d.mapX2bpPos, d.mapX2Pos, d.backPos2);
+    draw::draw_background_2_blend(surface(d.screen), d.mapY2Pos, d.mapX2bpPos, d.mapX2Pos, d.backPos2);
   }
   else {
-    draw::draw_background_2(d.screen, d.mapY2Pos, d.mapX2bpPos, d.mapX2Pos, d.backPos2, d.background2,
-                            d.smoothies_1, d.mapXbpPos, d.mapXPos);
+    draw::draw_background_2(surface(d.screen), d.mapY2Pos, d.mapX2bpPos, d.mapX2Pos, d.backPos2,
+                            d.background2, d.smoothies_1, d.mapXbpPos, d.mapXPos);
   }
 }
 
 // draw_background_3, which scrolls before drawing.
-void background_3_tick(SDL_Surface *screen, std::optional<Background3Drawn>& drawn) {
+void background_3_tick(Surface screen, std::optional<Background3Drawn>& drawn) {
   auto& backPos3 = state().map.back_pos3;
   auto& backMove3 = state().map.back_move3;
   auto& mapY3 = state().map.map_y3;
@@ -115,7 +115,7 @@ void background_3_tick(SDL_Surface *screen, std::optional<Background3Drawn>& dra
 }
 
 void background_3_draw(Background3Drawn const& d) {
-  draw::draw_background_3(d.screen, d.mapY3Pos, d.mapX3bpPos, d.mapX3Pos, d.backPos3, d.backMove3);
+  draw::draw_background_3(surface(d.screen), d.mapY3Pos, d.mapX3bpPos, d.mapX3Pos, d.backPos3, d.backMove3);
 }
 
 // Port of JE_checkSmoothies.

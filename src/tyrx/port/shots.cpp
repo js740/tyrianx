@@ -29,24 +29,24 @@
 namespace tyrx::port {
 
 void player_shots_draw(PlayerShotsDrawn const& d) {
-  SDL_Surface *const surface = d.screen;
+  SDL_Surface *const screen = surface(d.screen);
   for (sim::VisiblePlayerShot const& shot : d.drawn) {
     JE_word const sprite_frame = shot.sprite_frame;
     int const x = shot.x + 1, y = shot.y;
     if (sprite_frame > 60000) {
-      draw::blit_sprite_blend(surface, x, y, OPTION_SHAPES, sprite_frame - 60001);
+      draw::blit_sprite_blend(screen, x, y, OPTION_SHAPES, sprite_frame - 60001);
     }
     else if (sprite_frame > 500) {
       if (shot.shadow) {
-        draw::blit_sprite2_darken(surface, x, y + shadowYDist, spriteSheet12, sprite_frame - 500);
+        draw::blit_sprite2_darken(screen, x, y + shadowYDist, spriteSheet12, sprite_frame - 500);
       }
-      draw::blit_sprite2(surface, x, y, spriteSheet12, sprite_frame - 500);
+      draw::blit_sprite2(screen, x, y, spriteSheet12, sprite_frame - 500);
     }
     else {
       if (shot.shadow) {
-        draw::blit_sprite2_darken(surface, x, y + shadowYDist, spriteSheet8, sprite_frame);
+        draw::blit_sprite2_darken(screen, x, y + shadowYDist, spriteSheet8, sprite_frame);
       }
-      draw::blit_sprite2(surface, x, y, spriteSheet8, sprite_frame);
+      draw::blit_sprite2(screen, x, y, spriteSheet8, sprite_frame);
     }
   }
 }

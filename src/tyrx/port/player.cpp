@@ -127,45 +127,38 @@ void draw_ship(SDL_Surface *screen, JE_word shipGr_, Sprite2_array *shipGrPtr_,
 
 }  // namespace
 
-// The player's parts, in the order JE_playerMovement draws them, on the
-// surface the tick drew on, or on game_screen where the HUD's drawing had
-// left VGAScreen there.
-void player_draw(PlayerDrawn const& d) {
-  sim::VisiblePlayer const& p = d.player;
-  auto const surface = [&](bool on_game_screen) { return on_game_screen ? game_screen : d.screen; };
-
+// The player's parts, in the order JE_playerMovement draws them.
+void player_draw(sim::VisiblePlayer const& p) {
   if (p.trail) {
     for (int trail_y : p.trail->trail_y) {
-      draw_ship_trail(surface(p.trail->game_screen), p.ship_gr, p.ship_gr_ptr, p.trail->x, trail_y);
+      draw_ship_trail(surface(p.trail->screen), p.ship_gr, p.ship_gr_ptr, p.trail->x, trail_y);
     }
   }
   if (p.insert_coin) {
-    draw::JE_dString(surface(p.insert_coin->game_screen), 115, 10, miscText[7],
+    draw::JE_dString(surface(p.insert_coin->screen), 115, 10, miscText[7],
                      SMALL_FONT_SHAPES);  // insert coin
   }
   if (p.ship) {
-    draw_ship(surface(p.ship->game_screen), p.ship_gr, p.ship_gr_ptr, *p.ship);
+    draw_ship(surface(p.ship->screen), p.ship_gr, p.ship_gr_ptr, *p.ship);
   }
   if (p.special_icon) {
-    draw::blit_sprite2(surface(p.special_icon->game_screen), 47, 4, spriteSheet9,
-                       p.special_icon->ready ? 94 : 93);
+    draw::blit_sprite2(surface(p.special_icon->screen), 47, 4, spriteSheet9, p.special_icon->ready ? 94 : 93);
   }
   if (p.zinglon) {
-    SDL_Surface *const screen = surface(p.zinglon->game_screen);
+    SDL_Surface *const screen = surface(p.zinglon->screen);
     int const x = p.zinglon->x, temp = p.zinglon->width;
     draw::JE_barBright(screen, x + 7 - temp, 0, x + 7 + temp, 184);
     draw::JE_barBright(screen, x + 7 - temp - 2, 0, x + 7 + temp + 2, 184);
   }
   if (p.charge) {
-    draw::blit_sprite2(surface(p.charge->game_screen), p.charge->x, p.charge->y, spriteSheet10,
-                       p.charge->sprite);
+    draw::blit_sprite2(surface(p.charge->screen), p.charge->x, p.charge->y, spriteSheet10, p.charge->sprite);
   }
   for (std::optional<sim::VisiblePlayer::Sidekick> const& sidekick : p.sidekicks) {
     if (!sidekick) {
       continue;
     }
 
-    SDL_Surface *const screen = surface(sidekick->game_screen);
+    SDL_Surface *const screen = surface(sidekick->screen);
     if (sidekick->style == 1 || sidekick->style == 2) {
       draw::blit_sprite2x2(screen, sidekick->x - 6, sidekick->y, spriteSheet10, sidekick->sprite);
     }

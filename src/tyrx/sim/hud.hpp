@@ -88,12 +88,6 @@ using Draw = std::variant<MessageBarErased, TextWindow, Shield, Armor, WipeShiel
 // The HUD's changes in a tick, in order.
 struct HudLog {
   std::vector<hud::Draw> draws;
-
-  // The C code draws the shields and armor with VGAScreen set to the HUD's
-  // surface, and leaves it at game_screen after (its "side-effect of
-  // game_screen"), where the rest of the tick then draws.  The game logic
-  // sets this where the C code does that, and the code running it applies it.
-  bool game_screen = false;
 };
 
 }  // namespace tyrx::sim

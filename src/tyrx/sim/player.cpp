@@ -111,7 +111,7 @@ void handle_got_purple_ball(State& state, Player& player) {
 // mouseX and mouseY are where they were before they moved.
 struct Movement {
   State& state;
-  HudLog& hud;
+  DrawRecord& record;
   Player& player;
   JE_byte input_device;
   JE_byte num;  // 1 or 2
@@ -188,7 +188,7 @@ void Movement::run() {
   fade_out();
 
   if (state.game.play_demo) {
-    visible.insert_coin = VisiblePlayer::InsertCoin{hud.game_screen};
+    visible.insert_coin = VisiblePlayer::InsertCoin{record.screen};
   }
 
   if (player.is_alive && !ending.end_level) {
@@ -241,9 +241,9 @@ bool Movement::update_dead() {
       ending.countdown = 40;
     }
 
-    hud_wipe_shield_armor(state, hud);
-    hud_armor(state, hud);
-    hud.game_screen = true;
+    hud_wipe_shield_armor(state, record.hud);
+    hud_armor(state, record.hud);
+    record.screen = Surface::game_screen;  // side-effect of game_screen
 
     // as if instant death weren't enough, player also gets infinite lives in order to enjoy an infinite
     // number of deaths -_-
@@ -325,9 +325,9 @@ bool Movement::update_dead() {
     player.shield = player.shield_max / 2;
   }
 
-  hud_armor(state, hud);
-  hud_shield(state, hud);
-  hud.game_screen = true;
+  hud_armor(state, record.hud);
+  hud_shield(state, record.hud);
+  record.screen = Surface::game_screen;  // side-effect of game_screen
   return true;
 }
 
@@ -586,7 +586,7 @@ void Movement::fade_out() {
     }
 
     if (!visible.trail) {
-      visible.trail = VisiblePlayer::Trail{hud.game_screen, player.x, {}};
+      visible.trail = VisiblePlayer::Trail{record.screen, player.x, {}};
     }
     visible.trail->trail_y.push_back(trail_y);
   }
@@ -753,7 +753,7 @@ void Movement::place() {
   player.last_x_explosion_follow = player.x;
   player.last_y_explosion_follow = player.y;
 
-  visible.ship = VisiblePlayer::Ship{hud.game_screen,
+  visible.ship = VisiblePlayer::Ship{record.screen,
                                      player.x,
                                      player.y,
                                      ship_sprite,
@@ -851,14 +851,14 @@ void Movement::fire() {
         player.weapon_mode = 1;
       }
 
-      hud_port_config(state, hud);
+      hud_port_config(state, record.hud);
       display.port_config_done = false;
     }
   }
 
   // SpecialShot
   if (!game.galaga_mode) {
-    do_special_shot(state, hud, num, player.armor, player.shield, visible);
+    do_special_shot(state, record, num, player.armor, player.shield, visible);
   }
 
   // Normal Main Weapons
@@ -889,7 +889,7 @@ void Movement::fire() {
   // Super Charge Weapons
   if (num == 2) {
     if (!players.two_player_linked) {
-      visible.charge = VisiblePlayer::Charge{hud.game_screen, player.x + (ship_gr == 0) + 1, player.y - 13,
+      visible.charge = VisiblePlayer::Charge{record.screen, player.x + (ship_gr == 0) + 1, player.y - 13,
                                              77 + players.charge_level + players.charge_gr * 19};
     }
 
@@ -905,7 +905,7 @@ void Movement::fire() {
     }
 
     if (players.charge_level > 0) {
-      hud_charge_level(state, hud, 193);
+      hud_charge_level(state, record.hud, 193);
     }
 
     if (players.charge_wait > 0) {
@@ -923,7 +923,7 @@ void Movement::fire() {
     }
 
     if (players.charge_level > 0) {
-      hud_charge_level(state, hud, 204);
+      hud_charge_level(state, record.hud, 204);
     }
 
     if (shot_repeat[SHOT_P2_CHARGE] > 0) {
@@ -936,7 +936,7 @@ void Movement::fire() {
           chargeGunWeapons[players.slots[1].items.weapon[REAR_WEAPON].id - 1] + players.charge_level, num);
 
       if (players.charge_level > 0) {
-        hud_charge_level(state, hud, 193);
+        hud_charge_level(state, record.hud, 193);
       }
 
       players.charge_level = 0;
@@ -1143,7 +1143,7 @@ void Movement::fire_sidekicks() {
       }
 
       // draw sidekick refill ammo gauge
-      hud_sidekick_ammo(hud, hud_y, ammo_max, sidekick.ammo, false);
+      hud_sidekick_ammo(record.hud, hud_y, ammo_max, sidekick.ammo, false);
     }
 
     if (button[1 + i] && sidekick.ammo > 0) {
@@ -1159,7 +1159,7 @@ void Movement::fire_sidekicks() {
       sidekick.animation_enabled = true;
 
       // draw sidekick discharge ammo gauge
-      hud_sidekick_ammo(hud, hud_y, ammo_max, sidekick.ammo, true);
+      hud_sidekick_ammo(record.hud, hud_y, ammo_max, sidekick.ammo, true);
     }
   }
 }
@@ -1181,7 +1181,7 @@ void Movement::animate_sidekicks() {
       uint const sprite = option.gr[sidekick.animation_frame] + sidekick.charge;
 
       visible.sidekicks[i] =
-          VisiblePlayer::Sidekick{hud.game_screen, sidekick.x, sidekick.y, sprite, sidekick.style};
+          VisiblePlayer::Sidekick{record.screen, sidekick.x, sidekick.y, sprite, sidekick.style};
     }
 
     if (--sidekick.charge_ticks != 0) {
@@ -1197,7 +1197,7 @@ void Movement::animate_sidekicks() {
 
 // JE_mainGamePlayerFunctions: the players' movement, then the parallax map
 // scrolling, which follows them.
-void main_game_player_functions(State& state, HudLog& hud, std::vector<VisiblePlayer>& visible) {
+void main_game_player_functions(State& state, DrawRecord& record, std::vector<VisiblePlayer>& visible) {
   auto& game = state.game;
   auto& ending = state.ending;
   auto& players = state.players;
@@ -1219,7 +1219,7 @@ void main_game_player_functions(State& state, HudLog& hud, std::vector<VisiblePl
     VisiblePlayer& v = visible.emplace_back();
     v.ship_gr = ship_gr;
     v.ship_gr_ptr = ship_gr_ptr;
-    Movement{state, hud, players.slots[i], input_device, JE_byte(i + 1), ship_gr, v}.run();
+    Movement{state, record, players.slots[i], input_device, JE_byte(i + 1), ship_gr, v}.run();
   };
 
   if (game.two_player_mode) {
@@ -1268,7 +1268,7 @@ void pickup_message(State& state, HudLog& hud, char const *who, char const *what
 
 // JE_playerCollide: the player's collisions with enemies, which pick up
 // items, or damage both.
-void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
+void collide(State& state, DrawRecord& record, Player& player, JE_byte num) {
   auto& game = state.game;
   auto& players = state.players.slots;
   auto& shot_repeat = state.players.shot_repeat;
@@ -1346,13 +1346,13 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
           if (isNetworkGame) {
             snprintf(text, sizeof text, "%s %s %s", JE_getName(1), miscTextB[4 - 1],
                      special[evalue - 32100].name);
-            hud_text_window(state, hud, text);
+            hud_text_window(state, record.hud, text);
           }
           else if (game.two_player_mode) {
-            pickup_message(state, hud, miscText[43 - 1], special[evalue - 32100].name);
+            pickup_message(state, record.hud, miscText[43 - 1], special[evalue - 32100].name);
           }
           else {
-            pickup_message(state, hud, miscText[64 - 1], special[evalue - 32100].name);
+            pickup_message(state, record.hud, miscText[64 - 1], special[evalue - 32100].name);
           }
           sound_queue[7] = S_POWERUP;
           enemies.status[z] = 1;
@@ -1364,10 +1364,10 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
           if (isNetworkGame) {
             snprintf(text, sizeof text, "%s %s %s", JE_getName(2), miscTextB[4 - 1],
                      options[evalue - 32000].name);
-            hud_text_window(state, hud, text);
+            hud_text_window(state, record.hud, text);
           }
           else {
-            pickup_message(state, hud, miscText[44 - 1], options[evalue - 32000].name);
+            pickup_message(state, record.hud, miscText[44 - 1], options[evalue - 32000].name);
           }
 
           // if picked up a different sidekick than player already has, then reset sidekicks to least
@@ -1387,12 +1387,12 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
 
           shot_multi_pos[SHOT_LEFT_SIDEKICK] = 0;
           shot_multi_pos[SHOT_RIGHT_SIDEKICK] = 0;
-          hud_options(state, hud);
+          hud_options(state, record.hud);
           sound_queue[7] = S_POWERUP;
         }
         else if (game.one_player_action) {
           enemies.status[z] = 1;
-          pickup_message(state, hud, miscText[64 - 1], options[evalue - 32000].name);
+          pickup_message(state, record.hud, miscText[64 - 1], options[evalue - 32000].name);
 
           for (uint i = 0; i < std::size(players[0].items.sidekick); ++i) {
             players[0].items.sidekick[i] = evalue - 32000;
@@ -1400,7 +1400,7 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
           shot_multi_pos[SHOT_LEFT_SIDEKICK] = 0;
           shot_multi_pos[SHOT_RIGHT_SIDEKICK] = 0;
 
-          hud_options(state, hud);
+          hud_options(state, record.hud);
           sound_queue[7] = S_POWERUP;
         }
         if (enemies.status[z] == 1) {
@@ -1413,10 +1413,10 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
           if (isNetworkGame) {
             snprintf(text, sizeof text, "%s %s %s", JE_getName(2), miscTextB[4 - 1],
                      weaponPort[evalue - 31000].name);
-            hud_text_window(state, hud, text);
+            hud_text_window(state, record.hud, text);
           }
           else {
-            pickup_message(state, hud, miscText[44 - 1], weaponPort[evalue - 31000].name);
+            pickup_message(state, record.hud, miscText[44 - 1], weaponPort[evalue - 31000].name);
           }
           players[1].items.weapon[REAR_WEAPON].id = evalue - 31000;
           shot_multi_pos[SHOT_REAR] = 0;
@@ -1424,7 +1424,7 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
           sound_queue[7] = S_POWERUP;
         }
         else if (game.one_player_action) {
-          pickup_message(state, hud, miscText[64 - 1], weaponPort[evalue - 31000].name);
+          pickup_message(state, record.hud, miscText[64 - 1], weaponPort[evalue - 31000].name);
           players[0].items.weapon[REAR_WEAPON].id = evalue - 31000;
           shot_multi_pos[SHOT_REAR] = 0;
           enemies.status[z] = 1;
@@ -1441,10 +1441,10 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
           if (isNetworkGame) {
             snprintf(text, sizeof text, "%s %s %s", JE_getName(1), miscTextB[4 - 1],
                      weaponPort[evalue - 30000].name);
-            hud_text_window(state, hud, text);
+            hud_text_window(state, record.hud, text);
           }
           else {
-            pickup_message(state, hud, miscText[43 - 1], weaponPort[evalue - 30000].name);
+            pickup_message(state, record.hud, miscText[43 - 1], weaponPort[evalue - 30000].name);
           }
           players[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
           shot_multi_pos[SHOT_FRONT] = 0;
@@ -1452,7 +1452,7 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
           sound_queue[7] = S_POWERUP;
         }
         else if (game.one_player_action) {
-          pickup_message(state, hud, miscText[64 - 1], weaponPort[evalue - 30000].name);
+          pickup_message(state, record.hud, miscText[64 - 1], weaponPort[evalue - 30000].name);
           players[0].items.weapon[FRONT_WEAPON].id = evalue - 30000;
           shot_multi_pos[SHOT_FRONT] = 0;
           enemies.status[z] = 1;
@@ -1488,8 +1488,8 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
         }
       }
       enemies.status[z] = 1;
-      hud_armor(state, hud);
-      hud.game_screen = true;
+      hud_armor(state, record.hud);
+      record.screen = Surface::game_screen;  // side-effect of game_screen
       sound_queue[7] = S_POWERUP;
     }
     else if (evalue > 10000 && enemies.status[z] == 2) {
@@ -1512,13 +1512,13 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
       else if (evalue == -1) {
         if (isNetworkGame) {
           snprintf(text, sizeof text, "%s %s %s", JE_getName(1), miscTextB[4 - 1], miscText[45 - 1]);
-          hud_text_window(state, hud, text);
+          hud_text_window(state, record.hud, text);
         }
         else if (game.two_player_mode) {
-          pickup_message(state, hud, miscText[43 - 1], miscText[45 - 1]);
+          pickup_message(state, record.hud, miscText[43 - 1], miscText[45 - 1]);
         }
         else {
-          hud_text_window(state, hud, miscText[45 - 1]);
+          hud_text_window(state, record.hud, miscText[45 - 1]);
         }
 
         power_up_weapon(state, players[0], FRONT_WEAPON);
@@ -1528,13 +1528,13 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
       else if (evalue == -2) {
         if (isNetworkGame) {
           snprintf(text, sizeof text, "%s %s %s", JE_getName(2), miscTextB[4 - 1], miscText[46 - 1]);
-          hud_text_window(state, hud, text);
+          hud_text_window(state, record.hud, text);
         }
         else if (game.two_player_mode) {
-          pickup_message(state, hud, miscText[44 - 1], miscText[46 - 1]);
+          pickup_message(state, record.hud, miscText[44 - 1], miscText[46 - 1]);
         }
         else {
-          hud_text_window(state, hud, miscText[46 - 1]);
+          hud_text_window(state, record.hud, miscText[46 - 1]);
         }
 
         power_up_weapon(state, game.two_player_mode ? players[1] : players[0], REAR_WEAPON);
@@ -1586,7 +1586,7 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
         armorleft = state.players.damage_rate;
       }
 
-      damage_player(state, hud, player, armorleft);
+      damage_player(state, record, player, armorleft);
 
       // player ship gets push-back from collision
       if (e.armorleft > 0) {
@@ -1652,7 +1652,7 @@ void collide(State& state, HudLog& hud, Player& player, JE_byte num) {
 
 }  // namespace
 
-std::vector<VisiblePlayer> update_players(State& state, HudLog& hud) {
+std::vector<VisiblePlayer> update_players(State& state, DrawRecord& record) {
   auto& players = state.players.slots;
   std::vector<VisiblePlayer> visible;
 
@@ -1668,12 +1668,12 @@ std::vector<VisiblePlayer> update_players(State& state, HudLog& hud) {
 
   for (uint i = 0; i < (state.game.two_player_mode ? 2 : 1); ++i) {
     if (players[i].is_alive && !state.ending.end_level) {
-      collide(state, hud, players[i], i + 1);
+      collide(state, record, players[i], i + 1);
     }
   }
 
   if (state.ending.first_game_over) {
-    main_game_player_functions(state, hud, visible);  // --------PLAYER DRAW+MOVEMENT---------
+    main_game_player_functions(state, record, visible);  // --------PLAYER DRAW+MOVEMENT---------
   }
   return visible;
 }
@@ -1730,7 +1730,7 @@ JE_word port_configs(State const& state) {
   return weaponPort[state.players.slots[player_index].items.weapon[REAR_WEAPON].id].opnum;
 }
 
-JE_byte damage_player(State& state, HudLog& hud, Player& player, JE_byte damage) {
+JE_byte damage_player(State& state, DrawRecord& record, Player& player, JE_byte damage) {
   auto& sound_queue = state.sound.queue;
   JE_byte through = 0;
   sound_queue[7] = S_SHIELD_HIT;
@@ -1779,10 +1779,10 @@ JE_byte damage_player(State& state, HudLog& hud, Player& player, JE_byte damage)
     setup_explosion(slots, player.x + 7, player.y + 16, 0, 22, false, follow);
   }
 
-  hud_wipe_shield_armor(state, hud);
-  hud_shield(state, hud);
-  hud_armor(state, hud);
-  hud.game_screen = true;
+  hud_wipe_shield_armor(state, record.hud);
+  hud_shield(state, record.hud);
+  hud_armor(state, record.hud);
+  record.screen = Surface::game_screen;  // side-effect of game_screen
 
   return through;
 }

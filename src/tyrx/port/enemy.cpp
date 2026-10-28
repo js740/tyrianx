@@ -52,30 +52,31 @@ void blit_enemy(SDL_Surface *surface, sim::VisibleEnemy const& e, JE_word mapXOf
 }  // namespace
 
 void enemies_draw(EnemiesDrawn const& d) {
-  SDL_Surface *const surface = d.screen;
+  SDL_Surface *const screen = surface(d.screen);
   JE_word const mapXOfs = d.mapXOfs;
   for (sim::VisibleEnemy const& e : d.drawn) {
     // 2x2 enemy
     if (e.size == 1) {
       if (e.y > -13) {
-        blit_enemy(surface, e, mapXOfs, -6, -7, 0);
-        blit_enemy(surface, e, mapXOfs, 6, -7, 1);
+        blit_enemy(screen, e, mapXOfs, -6, -7, 0);
+        blit_enemy(screen, e, mapXOfs, 6, -7, 1);
       }
       if (e.y > -26 && e.y < 182) {
-        blit_enemy(surface, e, mapXOfs, -6, 7, 19);
-        blit_enemy(surface, e, mapXOfs, 6, 7, 20);
+        blit_enemy(screen, e, mapXOfs, -6, 7, 19);
+        blit_enemy(screen, e, mapXOfs, 6, 7, 20);
       }
     }
     else {
       if (e.y > -13) {
-        blit_enemy(surface, e, mapXOfs, 0, 0, 0);
+        blit_enemy(screen, e, mapXOfs, 0, 0, 0);
       }
     }
   }
 }
 
 void draw_enemy_tick(int enemyOffset, JE_word mapXOfs, JE_word backMove, std::optional<EnemiesDrawn>& drawn) {
-  drawn = EnemiesDrawn{VGAScreen, mapXOfs, sim::update_enemies(state(), enemyOffset, mapXOfs, backMove)};
+  drawn = EnemiesDrawn{draw_record().screen, mapXOfs,
+                       sim::update_enemies(state(), enemyOffset, mapXOfs, backMove)};
 }
 
 }  // namespace tyrx::port

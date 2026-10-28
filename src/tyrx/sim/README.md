@@ -121,8 +121,12 @@ The ports:
   the message is erased, and `hud_options` (`JE_drawOptions`) sets up the
   sidekicks. The C code draws the shields and armor with `VGAScreen` set to
   the HUD's surface and leaves it at `game_screen` after, where the rest of
-  the tick then draws; the log records where it does that, and the code
-  running the tick applies it.
+  the tick then draws; the game logic sets the draw record's surface there.
+- `draw_record.hpp` and `visible.hpp`: what the tick's simulation records for
+  its drawing (`DrawRecord`): which parts were drawn, on which surface, and the
+  values that the simulation goes on to change after the C code drew them.
+  The record names the surfaces (`Surface`), and keeps the one that the C
+  code's `VGAScreen` points at.
 
 The rest of the level tick, in `../port/`, works on the `State` and the C
 globals with the C code's names, so that it can be compared with it line by
