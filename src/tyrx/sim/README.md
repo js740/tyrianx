@@ -84,7 +84,10 @@ The ports:
   `update_enemies` (`JE_drawEnemy`, which "actually does a whole lot more than
   just drawing") updates a layer's enemies: each is animated, moves, fires and
   launches enemies. It returns the enemies it drew, as they were before they
-  moved, for the tick's drawing.
+  moved, for the tick's drawing. `hit_enemy` (from the level loop) is what a
+  player shot does to the enemy it hits: it damages or destroys it, with the
+  enemies linked to it.
+- `events.cpp`: `event_jump` (`JE_eventJump`) jumps to a position in the level.
 
 The rest of the level tick, in `../port/`, works on the `State` and the C
 globals with the C code's names, so that it can be compared with it line by

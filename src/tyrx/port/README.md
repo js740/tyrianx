@@ -12,9 +12,10 @@ running the tick provides (`state()`). `../sim/hidden.hpp` hides the C globals
 that held it from code here and in `../sim/`, so using one by mistake doesn't
 compile. Code here uses it in one of three ways:
 - The explosions, the repeating explosions, the superpixels and the starfield,
-  and the enemies' creation and update (`JE_makeEnemy`, `JE_newEnemy` and
-  `JE_drawEnemy`): their code has moved to `../sim/`, which code here calls with
-  `state()`.
+  the enemies' creation and update (`JE_makeEnemy`, `JE_newEnemy` and
+  `JE_drawEnemy`), what player shots do to the enemies they hit, and event
+  jumps (`JE_eventJump`): their code has moved to `../sim/`, which code here
+  calls with `state()`.
 - `port.hpp`'s `mt_rand` etc. draw from the random number generator's state.
 - Functions here bind references with the C globals' names to it, and are
   otherwise unchanged: the game's modes, cheats and progress, the sound queue

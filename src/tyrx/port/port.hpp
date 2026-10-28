@@ -108,6 +108,9 @@ inline void do_sp(JE_word x, JE_word y, JE_word num, JE_byte explowidth, JE_byte
   temp = num;
 }
 
+// JE_eventJump, in sim/events.cpp
+inline void event_jump(JE_word jump) { sim::event_jump(state().level, jump); }
+
 // enemy.cpp
 void draw_enemy_tick(int enemyOffset, JE_word mapXOfs, JE_word backMove,
                      std::optional<EnemiesDrawn>& drawn);  // JE_drawEnemy, in sim/enemy.cpp
@@ -117,7 +120,6 @@ void enemies_draw(EnemiesDrawn const& d);
 void event_system();  // JE_eventSystem
 void create_new_event_enemy(JE_byte enemyTypeOfs, JE_word enemyOffset,
                             Sint16 uniqueShapeTableI);  // JE_createNewEventEnemy
-void event_jump(JE_word jump);                          // JE_eventJump
 bool search_for(JE_byte PLType, JE_byte *out_index);    // JE_searchFor
 
 // hud.cpp
