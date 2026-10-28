@@ -26,7 +26,7 @@ namespace tyrx::sim {
 
 void update_starfield(Starfield& starfield, int pitch) {
   for (int i = MAX_STARS - 1; i >= 0; --i) {
-    StarfieldStar& star = starfield.stars[i];
+    Star& star = starfield.stars[i];
     star.position += (star.speed + starfield.speed) * pitch;
   }
 }

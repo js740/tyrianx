@@ -18,6 +18,7 @@
 //------------------------------------------------------------------------------
 
 #include "diff.hpp"
+#include "../gold/mirror.hpp"
 
 #include "../gold/api.hpp"
 #include "../sim/sim.hpp"
@@ -153,9 +154,11 @@ extern "C" void __wrap_JE_setupExplosion(int16_t x, int16_t y, int16_t deltaY, i
     return __real_JE_setupExplosion(x, y, deltaY, type, fixedPosition, followPlayer);
   }
 
+  tyrx::sim::Explosion slots[MAX_EXPLOSIONS];
+  tyrx::gold::copy(slots, explosions);
+  tyrx::sim::setup_explosion(slots, x, y, deltaY, type, fixedPosition, followPlayer);
   tyrx::check::ExplosionsState cxx;
-  std::ranges::copy(explosions, cxx.explosions);
-  tyrx::sim::setup_explosion(cxx.explosions, x, y, deltaY, type, fixedPosition, followPlayer);
+  tyrx::gold::copy(cxx.explosions, slots);
 
   __real_JE_setupExplosion(x, y, deltaY, type, fixedPosition, followPlayer);
 
@@ -172,8 +175,8 @@ extern "C" void __wrap_JE_setupExplosionLarge(bool enemyGround, uint8_t exploNum
   }
 
   tyrx::sim::Explosions e{};
-  std::ranges::copy(explosions, std::begin(e.slots));
-  std::ranges::copy(rep_explosions, std::begin(e.repeating));
+  tyrx::gold::copy(e.slots, explosions);
+  tyrx::gold::copy(e.repeating, rep_explosions);
   tyrx::sim::setup_explosion_large(e, enemyGround, exploNum, x, y);
 
   __real_JE_setupExplosionLarge(enemyGround, exploNum, x, y);
@@ -181,8 +184,8 @@ extern "C" void __wrap_JE_setupExplosionLarge(bool enemyGround, uint8_t exploNum
   tyrx::check::ExplosionsLargeState c, cxx;
   std::ranges::copy(explosions, c.explosions);
   std::ranges::copy(rep_explosions, c.rep_explosions);
-  std::ranges::copy(e.slots, cxx.explosions);
-  std::ranges::copy(e.repeating, cxx.rep_explosions);
+  tyrx::gold::copy(cxx.explosions, e.slots);
+  tyrx::gold::copy(cxx.rep_explosions, e.repeating);
   tyrx::check::diff_check("JE_setupExplosionLarge", c, cxx);
 }
 
@@ -194,7 +197,7 @@ extern "C" void __wrap_JE_doSP(uint16_t x, uint16_t y, uint16_t num, uint8_t exp
   }
 
   tyrx::sim::Superpixels sp;
-  std::ranges::copy(superpixels, std::begin(sp.slots));
+  tyrx::gold::copy(sp.slots, superpixels);
   sp.last = last_superpixel;
   MtState mt = mt_global;
   tyrx::sim::do_sp(sp, mt, x, y, num, explowidth, color);
@@ -205,7 +208,7 @@ extern "C" void __wrap_JE_doSP(uint16_t x, uint16_t y, uint16_t num, uint8_t exp
   std::ranges::copy(superpixels, c.superpixels);
   c.last_superpixel = last_superpixel;
   c.mt = mt_global;
-  std::ranges::copy(sp.slots, cxx.superpixels);
+  tyrx::gold::copy(cxx.superpixels, sp.slots);
   cxx.last_superpixel = sp.last;
   cxx.mt = mt;
   tyrx::check::diff_check("JE_doSP", c, cxx);

@@ -73,9 +73,9 @@ void setup_explosion(std::span<Explosion, MAX_EXPLOSIONS> explosions, int16_t x,
     }
     e.sprite = kExplosionData[type].sprite;
     e.ttl = kExplosionData[type].ttl;
-    e.followPlayer = follow_player;
-    e.fixedPosition = fixed_position;
-    e.deltaY = delta_y;
+    e.follow_player = follow_player;
+    e.fixed_position = fixed_position;
+    e.delta_y = delta_y;
     return;
   }
 }
@@ -108,7 +108,7 @@ void setup_explosion_large(Explosions& explosions, bool enemy_ground, uint8_t ex
     return;
   }
 
-  for (rep_explosion_type& r : explosions.repeating) {
+  for (RepeatingExplosion& r : explosions.repeating) {
     if (r.ttl != 0) {
       continue;
     }
@@ -125,7 +125,7 @@ void setup_explosion_large(Explosions& explosions, bool enemy_ground, uint8_t ex
 bool update_repeating_explosions(Explosions& explosions, MtState& mt, int16_t back_move,
                                  std::span<uint8_t, 8> sound_queue) {
   bool still_exploding = false;
-  for (rep_explosion_type& r : explosions.repeating) {
+  for (RepeatingExplosion& r : explosions.repeating) {
     if (r.ttl == 0) {
       continue;
     }
@@ -174,15 +174,15 @@ VisibleExplosions update_explosions(Explosions& explosions) {
       continue;
     }
 
-    if (!e.fixedPosition) {
+    if (!e.fixed_position) {
       e.sprite++;
       e.y += explosions.move;
     }
-    else if (e.followPlayer) {
+    else if (e.follow_player) {
       e.x += explosions.follow_x;
       e.y += explosions.follow_y;
     }
-    e.y += e.deltaY;
+    e.y += e.delta_y;
 
     if (e.y > 200 - 14) {
       e.ttl = 0;

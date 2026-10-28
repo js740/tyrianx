@@ -19,11 +19,13 @@
 
 #include "sim_state.hpp"
 
+#include "mirror.hpp"
 #include "state.hpp"
 
 #include <stdint.h>
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <set>
 #include <span>
@@ -277,22 +279,9 @@ void for_each_binding(State& s, F f) {
   f(s.scratch.temp2, ::temp2);
 }
 
-// Copies between a member and its global, which must have the same type, or
-// be arrays of the same size whose elements copy so.
-template <typename T>
-  requires(!std::is_array_v<T>)
-void copy(T& to, T const& from) {
-  to = from;
-}
-
-template <typename T, typename U, size_t N>
-void copy(T (&to)[N], U const (&from)[N]) {
-  for (size_t i = 0; i < N; ++i) {
-    copy(to[i], from[i]);
-  }
-}
-
-// Where a member or global is, and where its counterpart is.
+// Where a member or global is, and where its counterpart is: at the same
+// offsets, or nowhere (to is 0) for a C++ struct that mirrors a C struct and
+// is laid out differently, which pointers mustn't point into.
 struct Relocation {
   uintptr_t from;
   size_t    size;
@@ -311,10 +300,15 @@ void relocate_pointers(T& v, std::span<Relocation const> relocations) {
   else if constexpr (std::is_pointer_v<U>) {
     uintptr_t const p = reinterpret_cast<uintptr_t>(v);
     for (Relocation const& r : relocations) {
-      if (p - r.from < r.size) {
-        v = reinterpret_cast<U>(r.to + (p - r.from));
-        return;
+      if (p - r.from >= r.size) {
+        continue;
       }
+      if (r.to == 0) {
+        std::fprintf(stderr, "tyrx: a pointer in the state points into a mirrored struct\n");
+        std::abort();
+      }
+      v = reinterpret_cast<U>(r.to + (p - r.from));
+      return;
     }
   }
   else if constexpr (std::is_array_v<U>) {
@@ -331,9 +325,17 @@ void relocate_pointers(T& v, std::span<Relocation const> relocations) {
 std::vector<Relocation> relocations(sim::State const& state, bool to_state) {
   std::vector<Relocation> r;
   for_each_binding(state, [&](auto const& cxx, auto const& c) {
-    static_assert(sizeof cxx == sizeof c);
-    auto const cxx_at = reinterpret_cast<uintptr_t>(&cxx), c_at = reinterpret_cast<uintptr_t>(&c);
-    r.push_back(to_state ? Relocation{c_at, sizeof c, cxx_at} : Relocation{cxx_at, sizeof cxx, c_at});
+    using Cxx = std::remove_all_extents_t<std::remove_cvref_t<decltype(cxx)>>;
+    using C = std::remove_all_extents_t<std::remove_cvref_t<decltype(c)>>;
+    uintptr_t const cxx_at = reinterpret_cast<uintptr_t>(&cxx);
+    uintptr_t const c_at = reinterpret_cast<uintptr_t>(&c);
+    if constexpr (std::is_same_v<Cxx, C>) {
+      static_assert(sizeof cxx == sizeof c);
+      r.push_back(to_state ? Relocation{c_at, sizeof c, cxx_at} : Relocation{cxx_at, sizeof cxx, c_at});
+    }
+    else {
+      r.push_back(to_state ? Relocation{c_at, sizeof c, 0} : Relocation{cxx_at, sizeof cxx, 0});
+    }
   });
   return r;
 }

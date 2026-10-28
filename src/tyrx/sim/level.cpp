@@ -770,7 +770,7 @@ void boss_bars(State& state, DrawRecord& record) {
   auto&       bars = state.display.boss_bars;
   auto const& enemies = state.enemies;
 
-  for (boss_bar_t& bar : bars) {
+  for (BossBar& bar : bars) {
     if (bar.link_num == 0) {
       continue;
     }
@@ -798,7 +798,7 @@ void boss_bars(State& state, DrawRecord& record) {
 
   // if only one bar left, make it the first one
   if (count == 1 && bars[0].link_num == 0) {
-    std::memcpy(&bars[0], &bars[1], sizeof(boss_bar_t));
+    bars[0] = bars[1];
     bars[1].link_num = 0;
   }
 

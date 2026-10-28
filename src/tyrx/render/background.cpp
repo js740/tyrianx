@@ -334,11 +334,11 @@ void show_normal(Canvas dst, Canvas src) {
   }
 }
 
-void update_and_draw_starfield(Canvas dst, StarfieldStar (&stars)[MAX_STARS], int move_speed) {
+void update_and_draw_starfield(Canvas dst, ::StarfieldStar (&stars)[MAX_STARS], int move_speed) {
   constexpr int  kHue = 0x90;  // STARFIELD_HUE
   uint8_t *const p = dst.pixels;
   for (int i = MAX_STARS - 1; i >= 0; --i) {
-    StarfieldStar& star = stars[i];
+    ::StarfieldStar& star = stars[i];
     star.position += (star.speed + move_speed) * dst.pitch;
     if (star.position >= 177 * dst.pitch) {
       continue;
@@ -366,9 +366,9 @@ void update_and_draw_starfield(Canvas dst, StarfieldStar (&stars)[MAX_STARS], in
   }
 }
 
-void draw_superpixels(Canvas dst, superpixel_type (&superpixels)[MAX_SUPERPIXELS]) {
+void draw_superpixels(Canvas dst, ::superpixel_type (&superpixels)[MAX_SUPERPIXELS]) {
   for (int i = MAX_SUPERPIXELS; i--;) {
-    superpixel_type& sp = superpixels[i];
+    ::superpixel_type& sp = superpixels[i];
     if (!sp.z) {
       continue;
     }

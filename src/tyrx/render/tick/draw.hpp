@@ -164,7 +164,7 @@ inline void draw_background_3(SDL_Surface *s, uint8_t **mapY3Pos, intptr_t mapX3
 }
 
 // Draws the stars after moving them from where they are in `stars`.
-inline void update_and_draw_starfield(SDL_Surface *s, StarfieldStar const (&stars)[MAX_STARS],
+inline void update_and_draw_starfield(SDL_Surface *s, ::StarfieldStar const (&stars)[MAX_STARS],
                                       int          move_speed) {
   emit({.op = DrawOp::update_and_draw_starfield, .dst = s, .args = {move_speed}}, stars, sizeof stars);
 }
@@ -206,7 +206,7 @@ inline void showHeadlight(SDL_Surface *dst, SDL_Surface *src, int16_t player_x, 
   emit({.op = DrawOp::showHeadlight, .dst = dst, .src = src, .args = {player_x, player_y}});
 }
 
-inline void JE_drawSP(SDL_Surface *s, superpixel_type const (&sp)[MAX_SUPERPIXELS]) {
+inline void JE_drawSP(SDL_Surface *s, ::superpixel_type const (&sp)[MAX_SUPERPIXELS]) {
   emit({.op = DrawOp::JE_drawSP, .dst = s}, sp, sizeof sp);
 }
 

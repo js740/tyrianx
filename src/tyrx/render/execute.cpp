@@ -156,13 +156,13 @@ void execute(DrawCall const& c, unsigned char const *blob, Canvas dst, Canvas sr
       show_normal(dst, src);
       break;
     case DrawOp::update_and_draw_starfield: {
-      StarfieldStar stars[MAX_STARS];
+      ::StarfieldStar stars[MAX_STARS];
       std::memcpy(stars, blob, sizeof stars);
       update_and_draw_starfield(dst, stars, a[0]);
       break;
     }
     case DrawOp::JE_drawSP: {
-      superpixel_type sp[MAX_SUPERPIXELS];
+      ::superpixel_type sp[MAX_SUPERPIXELS];
       std::memcpy(sp, blob, sizeof sp);
       draw_superpixels(dst, sp);
       break;

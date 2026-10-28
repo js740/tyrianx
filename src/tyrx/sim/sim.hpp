@@ -217,7 +217,7 @@ int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint
                            uint16_t mouse_x, uint16_t mouse_y, uint16_t wp_num, uint8_t player_num);
 
 // shots.c: player_shot_set_direction, which turns a linked weapon's shot.
-void set_player_shot_direction(PlayerShotDataType& shot, unsigned weapon_id, float direction);
+void set_player_shot_direction(PlayerShot& shot, unsigned weapon_id, float direction);
 
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.

@@ -20,6 +20,7 @@
 // The drawing of the superpixels (JE_drawSP in varz.c), and the screen filter
 // (JE_filterScreen in backgrnd.c).
 
+#include "../../gold/mirror.hpp"
 #include "draw.hpp"
 #include "tick.hpp"
 
@@ -31,8 +32,8 @@ namespace tyrx::render {
 // superpixels as they were before (as the C code records them), rebuilt from
 // the ones that were active.
 void superpixels_draw(sim::State const& state, SuperpixelsDrawn const& d) {
-  superpixel_type before[MAX_SUPERPIXELS];
-  std::ranges::copy(state.superpixels.slots, before);
+  ::superpixel_type before[MAX_SUPERPIXELS];  // the draw list records the C structs
+  gold::copy(before, state.superpixels.slots);
   for (int i = 0; i < MAX_SUPERPIXELS; ++i) {
     if (d.active[i]) {
       before[i].x -= before[i].delta_x;

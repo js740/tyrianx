@@ -39,13 +39,13 @@ void enemy_shots_draw(sim::State const& state, EnemyShotsDrawn const& d) {
       continue;
     }
 
-    if (enemyShot[z].sgr >= 500) {
-      draw::blit_sprite2(surface(d.screen), enemyShot[z].sx, enemyShot[z].sy, spriteSheet12,
-                         enemyShot[z].sgr + enemyShot[z].animate - 500);
+    if (enemyShot[z].sprite >= 500) {
+      draw::blit_sprite2(surface(d.screen), enemyShot[z].x, enemyShot[z].y, spriteSheet12,
+                         enemyShot[z].sprite + enemyShot[z].frame - 500);
     }
     else {
-      draw::blit_sprite2(surface(d.screen), enemyShot[z].sx, enemyShot[z].sy, spriteSheet8,
-                         enemyShot[z].sgr + enemyShot[z].animate);
+      draw::blit_sprite2(surface(d.screen), enemyShot[z].x, enemyShot[z].y, spriteSheet8,
+                         enemyShot[z].sprite + enemyShot[z].frame);
     }
   }
 }
@@ -60,9 +60,9 @@ void explosions_draw(sim::State const& state, ExplosionsDrawn const& d) {
       continue;
     }
 
-    Explosion const& explosion = state.explosions.slots[j];
-    int16_t          x = explosion.x, y = explosion.y;
-    uint16_t         sprite = explosion.sprite;
+    sim::Explosion const& explosion = state.explosions.slots[j];
+    int16_t               x = explosion.x, y = explosion.y;
+    uint16_t              sprite = explosion.sprite;
     if (e != d.visible.ended.end() && e->slot == j) {
       x = e->x, y = e->y, sprite = e->sprite;
       ++e;

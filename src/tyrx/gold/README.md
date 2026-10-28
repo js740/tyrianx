@@ -12,6 +12,8 @@ against. This directory is how C++ code sees it:
   the C++ objects.
 - `sim_state.hpp`: the C globals that hold the state of the C++ game's
   `sim::State` (`../sim/README.md`), and copying between the two.
+- `mirror.hpp`: which member of a C struct each member of the C++ structs in
+  `sim::State` maps to, and copying between them.
 
 ## State registry
 

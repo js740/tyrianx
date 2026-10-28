@@ -37,7 +37,7 @@ void do_sp(Superpixels& superpixels, MtState& mt, uint16_t x, uint16_t y, uint16
     if (++superpixels.last >= MAX_SUPERPIXELS) {
       superpixels.last = 0;
     }
-    superpixel_type& sp = superpixels.slots[superpixels.last];
+    Superpixel& sp = superpixels.slots[superpixels.last];
     sp.x = tempx + x;
     sp.y = tempy + y;
     sp.delta_x = tempx;
@@ -50,7 +50,7 @@ void do_sp(Superpixels& superpixels, MtState& mt, uint16_t x, uint16_t y, uint16
 std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels) {
   std::bitset<MAX_SUPERPIXELS> active;
   for (int i = MAX_SUPERPIXELS; i--;) {
-    superpixel_type& sp = superpixels.slots[i];
+    Superpixel& sp = superpixels.slots[i];
     if (!sp.z) {
       continue;
     }

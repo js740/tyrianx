@@ -30,22 +30,132 @@
 
 namespace tyrx::sim {
 
+// An event of the level: when the level reaches its time, it does what its
+// type says, with data whose meaning depends on the type (JE_EventRecType).
+struct Event {
+  uint16_t time;  // eventtime
+  uint8_t  type;  // eventtype
+  int16_t  dat;   // eventdat
+  int16_t  dat2;
+  int8_t   dat3;
+  uint8_t  dat4;
+  int8_t   dat5;
+  int8_t   dat6;
+};
+
+// An explosion's sprite, for as long as it lasts (Explosion).
+struct Explosion {
+  int16_t  x;
+  int16_t  y;
+  int16_t  delta_y;  // how far it moves down each tick (deltaY)
+  uint16_t sprite;
+  uint8_t  ttl;             // ticks it has left, 0 for a free slot
+  bool     fixed_position;  // neither animates nor moves down with the others (fixedPosition)
+  bool     follow_player;   // if fixed, moves with the player (followPlayer)
+};
+
+// A big explosion that sets off explosions over several ticks
+// (rep_explosion_type).
+struct RepeatingExplosion {
+  uint32_t x;
+  uint32_t y;
+  uint32_t ttl;    // the explosions it has left to set off
+  uint32_t delay;  // ticks until the next
+  bool     big;    // sets off large explosions
+};
+
+// A spark that moves and fades (superpixel_type).
+struct Superpixel {
+  uint32_t x;
+  uint32_t y;
+  int32_t  delta_x;
+  int32_t  delta_y;
+  uint8_t  color;
+  uint32_t z;  // ticks it has left, 0 for a free slot, which it fades with
+};
+
+// A star of the starfield (StarfieldStar).
+struct Star {
+  uint16_t position;  // an offset into the screen, which relies on wrapping around
+  int32_t  speed;
+  uint8_t  color;
+};
+
+// A boss's armor bar (boss_bar_t).
+struct BossBar {
+  uint8_t link_num;  // the link number of the enemies it follows, 0 for none
+  uint8_t armor;
+  uint8_t color;  // flashes after a hit
+};
+
+// An enemy's shot (EnemyShotType).
+struct EnemyShot {
+  int16_t  x;           // sx
+  int16_t  y;           // sy
+  int16_t  x_speed;     // sxm
+  int16_t  y_speed;     // sym
+  int8_t   x_accel;     // sxc
+  int8_t   y_accel;     // syc
+  uint8_t  x_track;     // how fast it turns toward player 1, 0 if it doesn't (tx)
+  uint8_t  y_track;     // ty
+  uint8_t  damage;      // sdmg
+  uint8_t  duration;    // ticks it has left
+  uint16_t sprite;      // sgr
+  uint16_t frame;       // animate
+  uint16_t frames;      // animax, 0 if it doesn't animate
+  uint8_t  c_fill[12];  // the C struct's padding, which the C code's hash covers
+};
+
+// A player's shot (PlayerShotDataType).
+struct PlayerShot {
+  int16_t x;        // shotX
+  int16_t y;        // shotY
+  int16_t x_speed;  // shotXM
+  int16_t y_speed;  // shotYM
+  int16_t x_accel;  // shotXC
+  int16_t y_accel;  // shotYC
+
+  // Shots that circle as they move.
+  bool    circling;       // shotComplicated
+  int16_t x_circle;       // shotDevX
+  int16_t x_circle_dir;   // shotDirX
+  int16_t x_circle_size;  // shotCirSizeX
+  int16_t y_circle;       // shotDevY
+  int16_t y_circle_dir;   // shotDirY
+  int16_t y_circle_size;  // shotCirSizeY
+
+  uint8_t  trail;   // the explosions it leaves, 255 for none (shotTrail)
+  uint16_t sprite;  // shotGr
+  uint16_t frame;   // shotAni
+  uint16_t frames;  // shotAniMax
+
+  uint8_t damage;          // shotDmg
+  uint8_t blast_filter;    // shotBlastFilter
+  uint8_t chain_reaction;  // the weapon of the shots a hit sets off (chainReaction)
+  uint8_t player_num;      // playerNumber
+
+  // Guided shots.
+  uint8_t aim_at_enemy;   // the enemy's slot + 1, 0 if it isn't guided (aimAtEnemy)
+  uint8_t aim_delay;      // aimDelay
+  uint8_t aim_delay_max;  // aimDelayMax
+};
+
 struct Explosions {
   Explosion          slots[MAX_EXPLOSIONS];
-  rep_explosion_type repeating[MAX_REPEATING_EXPLOSIONS];  // which set off explosions over ticks
+  RepeatingExplosion repeating[MAX_REPEATING_EXPLOSIONS];  // which set off explosions over ticks
   uint16_t           move;      // how far explosions that aren't fixed move down each tick
   int16_t            follow_x;  // how far the player moved, for explosions that follow the player
   int16_t            follow_y;
 };
 
 struct Superpixels {
-  superpixel_type slots[MAX_SUPERPIXELS];
-  uint32_t        last;  // the slot of the last one created
+  Superpixel slots[MAX_SUPERPIXELS];
+  uint32_t   last;  // the slot of the last one created
 };
 
 struct Starfield {
-  StarfieldStar stars[MAX_STARS];  // their positions are offsets into the screen
-  int32_t       speed;             // how much faster than their own speed all stars move
+  Star    stars[MAX_STARS];  // their positions are offsets into the screen
+  int32_t speed;             // how much faster than their own speed all stars move
 };
 
 // The game's modes and settings.
@@ -175,9 +285,9 @@ struct Display {
   int8_t   flash_change;
 
   // The boss bars, and the port config buttons.
-  boss_bar_t boss_bars[2];
-  bool       port_config_change;
-  bool       port_config_done;
+  BossBar boss_bars[2];
+  bool    port_config_change;
+  bool    port_config_done;
 };
 
 // The map's three layers, and how they move.
@@ -243,15 +353,15 @@ struct Map {
 
 struct Level {
   // The level's events, which some events change, and where the level is in them.
-  JE_EventRecType events[EVENT_MAXIMUM];
-  uint16_t        max_event;   // the number of events
-  uint16_t        event_loc;   // the next one
-  uint16_t        cur_loc;     // how far the level has scrolled, which events wait for
-  uint16_t        return_loc;  // where a jump back goes, if return_active
-  bool            return_active;
-  bool            force_events;
-  bool            jump_section;
-  bool            global_flags[10];  // which destroyed enemies set and events test
+  Event    events[EVENT_MAXIMUM];
+  uint16_t max_event;   // the number of events
+  uint16_t event_loc;   // the next one
+  uint16_t cur_loc;     // how far the level has scrolled, which events wait for
+  uint16_t return_loc;  // where a jump back goes, if return_active
+  bool     return_active;
+  bool     force_events;
+  bool     jump_section;
+  bool     global_flags[10];  // which destroyed enemies set and events test
 
   // Random enemies.
   bool     enemies_active;
@@ -384,8 +494,8 @@ struct Enemies {
 };
 
 struct PlayerShots {
-  PlayerShotDataType slots[MAX_PWEAPON + 1];
-  uint8_t            ttl[MAX_PWEAPON];  // ticks each shot has left, 0 for a free slot
+  PlayerShot slots[MAX_PWEAPON + 1];
+  uint8_t    ttl[MAX_PWEAPON];  // ticks each shot has left, 0 for a free slot
 
   // The last hit on an enemy (hit_enemy).
   uint8_t do_iced;
@@ -393,8 +503,8 @@ struct PlayerShots {
 };
 
 struct EnemyShots {
-  EnemyShotType slots[ENEMY_SHOT_MAX];
-  bool          available[ENEMY_SHOT_MAX];  // whether each slot is free
+  EnemyShot slots[ENEMY_SHOT_MAX];
+  bool      available[ENEMY_SHOT_MAX];  // whether each slot is free
 };
 
 // The C code's scratch global temp2, which most code writes before reading
