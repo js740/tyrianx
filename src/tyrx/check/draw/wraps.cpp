@@ -28,8 +28,6 @@ using tyrx::check::draw::draw_call;
 using tyrx::render::DrawCall;
 using tyrx::render::DrawOp;
 
-using Args = std::array<intptr_t, 8>;
-
 extern "C" {
 
 // sprite.c
@@ -42,51 +40,51 @@ void __real_blit_sprite_hv_blend(SDL_Surface *, int, int, unsigned int, unsigned
 void __real_blit_sprite_dark(SDL_Surface *, int, int, unsigned int, unsigned int, bool);
 
 void __wrap_blit_sprite(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index) {
-  draw_call({.op = DrawOp::blit_sprite, .dst = s, .args = Args{x, y, table, index}},
+  draw_call({.op = DrawOp::blit_sprite, .dst = s, .args = {x, y, table, index}},
             [&] { __real_blit_sprite(s, x, y, table, index); });
 }
 
 void __wrap_blit_sprite_blend(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index) {
-  draw_call({.op = DrawOp::blit_sprite_blend, .dst = s, .args = Args{x, y, table, index}},
+  draw_call({.op = DrawOp::blit_sprite_blend, .dst = s, .args = {x, y, table, index}},
             [&] { __real_blit_sprite_blend(s, x, y, table, index); });
 }
 
 void __wrap_blit_sprite_hv_unsafe(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index,
                                   uint8_t hue, int8_t value) {
-  draw_call({.op = DrawOp::blit_sprite_hv_unsafe, .dst = s, .args = Args{x, y, table, index, hue, value}},
+  draw_call({.op = DrawOp::blit_sprite_hv_unsafe, .dst = s, .args = {x, y, table, index, hue, value}},
             [&] { __real_blit_sprite_hv_unsafe(s, x, y, table, index, hue, value); });
 }
 
 void __wrap_blit_sprite_hv(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index, uint8_t hue,
                            int8_t value) {
-  draw_call({.op = DrawOp::blit_sprite_hv, .dst = s, .args = Args{x, y, table, index, hue, value}},
+  draw_call({.op = DrawOp::blit_sprite_hv, .dst = s, .args = {x, y, table, index, hue, value}},
             [&] { __real_blit_sprite_hv(s, x, y, table, index, hue, value); });
 }
 
 void __wrap_blit_sprite_hv_blend(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index,
                                  uint8_t hue, int8_t value) {
-  draw_call({.op = DrawOp::blit_sprite_hv_blend, .dst = s, .args = Args{x, y, table, index, hue, value}},
+  draw_call({.op = DrawOp::blit_sprite_hv_blend, .dst = s, .args = {x, y, table, index, hue, value}},
             [&] { __real_blit_sprite_hv_blend(s, x, y, table, index, hue, value); });
 }
 
 void __wrap_blit_sprite_dark(SDL_Surface *s, int x, int y, unsigned int table, unsigned int index,
                              bool black) {
-  draw_call({.op = DrawOp::blit_sprite_dark, .dst = s, .args = Args{x, y, table, index, black}},
+  draw_call({.op = DrawOp::blit_sprite_dark, .dst = s, .args = {x, y, table, index, black}},
             [&] { __real_blit_sprite_dark(s, x, y, table, index, black); });
 }
 
 #define TYRX_WRAP_SPRITE2(name)                                                               \
   void __real_##name(SDL_Surface *, int, int, Sprite2_array, unsigned int);                   \
   void __wrap_##name(SDL_Surface *s, int x, int y, Sprite2_array sheet, unsigned int index) { \
-    draw_call({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = Args{x, y, index}},      \
+    draw_call({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = {x, y, index}},          \
               [&] { __real_##name(s, x, y, sheet, index); });                                 \
   }
-#define TYRX_WRAP_SPRITE2_FILTER(name)                                                           \
-  void __real_##name(SDL_Surface *, int, int, Sprite2_array, unsigned int, uint8_t);             \
-  void __wrap_##name(SDL_Surface *s, int x, int y, Sprite2_array sheet, unsigned int index,      \
-                     uint8_t filter) {                                                           \
-    draw_call({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = Args{x, y, index, filter}}, \
-              [&] { __real_##name(s, x, y, sheet, index, filter); });                            \
+#define TYRX_WRAP_SPRITE2_FILTER(name)                                                       \
+  void __real_##name(SDL_Surface *, int, int, Sprite2_array, unsigned int, uint8_t);         \
+  void __wrap_##name(SDL_Surface *s, int x, int y, Sprite2_array sheet, unsigned int index,  \
+                     uint8_t filter) {                                                       \
+    draw_call({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = {x, y, index, filter}}, \
+              [&] { __real_##name(s, x, y, sheet, index, filter); });                        \
   }
 
 TYRX_WRAP_SPRITE2(blit_sprite2)
@@ -116,30 +114,30 @@ void __real_JE_barBright(SDL_Surface *, int, int, int, int);
 void __real_draw_segmented_gauge(SDL_Surface *, int, int, uint8_t, unsigned, unsigned, unsigned, unsigned);
 
 void __wrap_JE_pix(SDL_Surface *s, int x, int y, uint8_t c) {
-  draw_call({.op = DrawOp::JE_pix, .dst = s, .args = Args{x, y, c}}, [&] { __real_JE_pix(s, x, y, c); });
+  draw_call({.op = DrawOp::JE_pix, .dst = s, .args = {x, y, c}}, [&] { __real_JE_pix(s, x, y, c); });
 }
 
 void __wrap_JE_pix3(SDL_Surface *s, int x, int y, uint8_t c) {
-  draw_call({.op = DrawOp::JE_pix3, .dst = s, .args = Args{x, y, c}}, [&] { __real_JE_pix3(s, x, y, c); });
+  draw_call({.op = DrawOp::JE_pix3, .dst = s, .args = {x, y, c}}, [&] { __real_JE_pix3(s, x, y, c); });
 }
 
 void __wrap_JE_rectangle(SDL_Surface *s, int a, int b, int c, int d, int e) {
-  draw_call({.op = DrawOp::JE_rectangle, .dst = s, .args = Args{a, b, c, d, e}},
+  draw_call({.op = DrawOp::JE_rectangle, .dst = s, .args = {a, b, c, d, e}},
             [&] { __real_JE_rectangle(s, a, b, c, d, e); });
 }
 
 void __wrap_fill_rectangle_xy(SDL_Surface *s, int x, int y, int x2, int y2, uint8_t color) {
-  draw_call({.op = DrawOp::fill_rectangle_xy, .dst = s, .args = Args{x, y, x2, y2, color}},
+  draw_call({.op = DrawOp::fill_rectangle_xy, .dst = s, .args = {x, y, x2, y2, color}},
             [&] { __real_fill_rectangle_xy(s, x, y, x2, y2, color); });
 }
 
 void __wrap_JE_barShade(SDL_Surface *s, int a, int b, int c, int d) {
-  draw_call({.op = DrawOp::JE_barShade, .dst = s, .args = Args{a, b, c, d}},
+  draw_call({.op = DrawOp::JE_barShade, .dst = s, .args = {a, b, c, d}},
             [&] { __real_JE_barShade(s, a, b, c, d); });
 }
 
 void __wrap_JE_barBright(SDL_Surface *s, int a, int b, int c, int d) {
-  draw_call({.op = DrawOp::JE_barBright, .dst = s, .args = Args{a, b, c, d}},
+  draw_call({.op = DrawOp::JE_barBright, .dst = s, .args = {a, b, c, d}},
             [&] { __real_JE_barBright(s, a, b, c, d); });
 }
 
@@ -147,7 +145,7 @@ void __wrap_draw_segmented_gauge(SDL_Surface *s, int x, int y, uint8_t color, un
                                  unsigned segment_height, unsigned segment_value, unsigned value) {
   draw_call({.op = DrawOp::draw_segmented_gauge,
              .dst = s,
-             .args = Args{x, y, color, segment_width, segment_height, segment_value, value}},
+             .args = {x, y, color, segment_width, segment_height, segment_value, value}},
             [&] {
               __real_draw_segmented_gauge(s, x, y, color, segment_width, segment_height, segment_value,
                                           value);
@@ -173,7 +171,7 @@ void __real_showNormal(SDL_Surface *, SDL_Surface *);
 void __real_update_and_draw_starfield(SDL_Surface *, int);
 
 void __wrap_JE_darkenBackground(uint16_t neat) {
-  draw_call({.op = DrawOp::JE_darkenBackground, .dst = VGAScreen, .args = Args{neat}},
+  draw_call({.op = DrawOp::JE_darkenBackground, .dst = VGAScreen, .args = {neat}},
             [&] { __real_JE_darkenBackground(neat); });
 }
 
@@ -183,7 +181,7 @@ void __wrap_draw_background_2(SDL_Surface *s) {
   draw_call({.op = DrawOp::draw_background_2,
              .dst = s,
              .map = mapY2Pos,
-             .args = Args{mapX2bpPos, mapX2Pos, backPos2, background2, smoothies[1], mapXbpPos, mapXPos}},
+             .args = {mapX2bpPos, mapX2Pos, backPos2, background2, smoothies[1], mapXbpPos, mapXPos}},
             [&] { __real_draw_background_2(s); });
 }
 
@@ -191,7 +189,7 @@ void __wrap_draw_background_2_blend(SDL_Surface *s) {
   draw_call({.op = DrawOp::draw_background_2_blend,
              .dst = s,
              .map = mapY2Pos,
-             .args = Args{mapX2bpPos, mapX2Pos, backPos2}},
+             .args = {mapX2bpPos, mapX2Pos, backPos2}},
             [&] { __real_draw_background_2_blend(s); });
 }
 
@@ -201,7 +199,7 @@ void __wrap_draw_background_3(SDL_Surface *s) {
   draw_call({.op = DrawOp::draw_background_3,
              .dst = s,
              .map = mapY3Pos,
-             .args = Args{mapX3bpPos, mapX3Pos, backPos3, backMove3}},
+             .args = {mapX3bpPos, mapX3Pos, backPos3, backMove3}},
             [&] { __real_draw_background_3(s); });
 }
 
@@ -210,7 +208,7 @@ void __wrap_draw_background_3(SDL_Surface *s) {
 void __wrap_JE_filterScreen(int8_t col, int8_t brightness) {
   draw_call({.op = DrawOp::JE_filterScreen,
              .dst = VGAScreen,
-             .args = Args{col, brightness, filtrationAvail, explosionTransparent}},
+             .args = {col, brightness, filtrationAvail, explosionTransparent}},
             [&] { __real_JE_filterScreen(col, brightness); });
 }
 
@@ -228,18 +226,18 @@ TYRX_WRAP_COPY(showNormal)
 #undef TYRX_WRAP_COPY
 
 void __wrap_water_filter(SDL_Surface *dst, SDL_Surface *src) {
-  draw_call({.op = DrawOp::water_filter, .dst = dst, .src = src, .args = Args{smoothie_data[1]}},
+  draw_call({.op = DrawOp::water_filter, .dst = dst, .src = src, .args = {smoothie_data[1]}},
             [&] { __real_water_filter(dst, src); });
 }
 
 void __wrap_showHeadlight(SDL_Surface *dst, SDL_Surface *src, int16_t player_x, int16_t player_y) {
-  draw_call({.op = DrawOp::showHeadlight, .dst = dst, .src = src, .args = Args{player_x, player_y}},
+  draw_call({.op = DrawOp::showHeadlight, .dst = dst, .src = src, .args = {player_x, player_y}},
             [&] { __real_showHeadlight(dst, src, player_x, player_y); });
 }
 
 void __wrap_update_and_draw_starfield(SDL_Surface *s, int move_speed) {
   draw_call(
-      {.op = DrawOp::update_and_draw_starfield, .dst = s, .args = Args{move_speed}},
+      {.op = DrawOp::update_and_draw_starfield, .dst = s, .args = {move_speed}},
       [&] { __real_update_and_draw_starfield(s, move_speed); }, starfield_stars, sizeof starfield_stars);
 }
 
@@ -262,7 +260,7 @@ void __wrap_JE_clr256(SDL_Surface *s) {
 
 void tyrx::check::draw::drawlist_background_1(SDL_Surface *s, void (*draw)(SDL_Surface *)) {
   draw_call(
-      {.op = DrawOp::draw_background_1, .dst = s, .map = mapYPos, .args = Args{mapXbpPos, mapXPos, backPos}},
+      {.op = DrawOp::draw_background_1, .dst = s, .map = mapYPos, .args = {mapXbpPos, mapXPos, backPos}},
       [&] { draw(s); });
 }
 

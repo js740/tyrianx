@@ -25,7 +25,6 @@
 #include "draw.hpp"
 #include "tick.hpp"
 
-#include <array>
 #include <cmath>
 #include <cstdio>
 #include <cstring>

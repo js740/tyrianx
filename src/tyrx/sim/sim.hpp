@@ -34,7 +34,6 @@
 #include "state.hpp"
 #include "visible.hpp"
 
-#include <array>
 #include <bitset>
 #include <optional>
 #include <span>

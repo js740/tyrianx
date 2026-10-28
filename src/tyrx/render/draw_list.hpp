@@ -35,7 +35,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <array>
 #include <string>
 #include <vector>
 
@@ -81,7 +80,7 @@ struct DrawCall {
   SDL_Surface *src = nullptr;  // copies and filters
   Sprite2_array sheet = {};    // sprite2 primitives
   void const *map = nullptr;   // background map position (into megaData1-3)
-  std::array<intptr_t, 8> args = {};
+  intptr_t args[8] = {};
   uint32_t blob = 0, blob_size = 0;  // extra inputs, in DrawList::blob
 };
 

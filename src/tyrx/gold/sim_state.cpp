@@ -280,19 +280,13 @@ void for_each_binding(State& s, F f) {
 // Copies between a member and its global, which must have the same type, or
 // be arrays of the same size whose elements copy so.
 template <typename T>
+  requires(!std::is_array_v<T>)
 void copy(T& to, T const& from) {
   to = from;
 }
 
 template <typename T, typename U, size_t N>
-void copy(std::array<T, N>& to, U const (&from)[N]) {
-  for (size_t i = 0; i < N; ++i) {
-    copy(to[i], from[i]);
-  }
-}
-
-template <typename T, typename U, size_t N>
-void copy(T (&to)[N], std::array<U, N> const& from) {
+void copy(T (&to)[N], U const (&from)[N]) {
   for (size_t i = 0; i < N; ++i) {
     copy(to[i], from[i]);
   }

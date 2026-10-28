@@ -23,8 +23,6 @@
 
 #include "sim.hpp"
 
-#include <array>
-
 namespace tyrx::sim {
 
 namespace {
@@ -37,7 +35,7 @@ struct ExplosionData {
 // Indexed directly by explosion type (types are effectively 0-based here,
 // despite the original's [1..53] comment).
 // clang-format off
-constexpr std::array<ExplosionData, 53> kExplosionData = {{
+constexpr ExplosionData kExplosionData[53] = {
     {144, 7},  {120, 12}, {190, 12}, {209, 12}, {152, 12}, {171, 12},
     {133, 7},  // white smoke
     {1, 12},   {20, 12},  {39, 12},  {58, 12},  {110, 3},  {76, 7},   {91, 3},
@@ -48,7 +46,7 @@ constexpr std::array<ExplosionData, 53> kExplosionData = {{
     {184, 8},  {203, 8},  {222, 8},  {168, 8},  {187, 8},  {206, 8},  {225, 10},
     {169, 10}, {188, 10}, {207, 20}, {226, 14}, {170, 14}, {189, 14}, {208, 14},
     {246, 14}, {227, 14}, {265, 14},
-}};
+};
 // clang-format on
 
 }  // namespace

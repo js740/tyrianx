@@ -35,8 +35,6 @@ using render::DrawCall;
 using render::DrawList;
 using render::DrawOp;
 
-using Args = std::array<intptr_t, 8>;
-
 // The list that the tick's drawing adds its calls to, set by the code running
 // the tick (the shadow tick, check/shadow.cpp).  While it is null, the calls
 // are dropped.
@@ -52,39 +50,39 @@ inline void emit(DrawCall const& call, void const *blob = nullptr, size_t blob_s
 }
 
 inline void blit_sprite(SDL_Surface *s, int x, int y, unsigned table, unsigned index) {
-  emit({.op = DrawOp::blit_sprite, .dst = s, .args = Args{x, y, table, index}});
+  emit({.op = DrawOp::blit_sprite, .dst = s, .args = {x, y, table, index}});
 }
 
 inline void blit_sprite_blend(SDL_Surface *s, int x, int y, unsigned table, unsigned index) {
-  emit({.op = DrawOp::blit_sprite_blend, .dst = s, .args = Args{x, y, table, index}});
+  emit({.op = DrawOp::blit_sprite_blend, .dst = s, .args = {x, y, table, index}});
 }
 
 inline void blit_sprite_hv_unsafe(SDL_Surface *s, int x, int y, unsigned table, unsigned index, uint8_t hue,
                                   int8_t value) {
-  emit({.op = DrawOp::blit_sprite_hv_unsafe, .dst = s, .args = Args{x, y, table, index, hue, value}});
+  emit({.op = DrawOp::blit_sprite_hv_unsafe, .dst = s, .args = {x, y, table, index, hue, value}});
 }
 
 inline void blit_sprite_hv(SDL_Surface *s, int x, int y, unsigned table, unsigned index, uint8_t hue,
                            int8_t value) {
-  emit({.op = DrawOp::blit_sprite_hv, .dst = s, .args = Args{x, y, table, index, hue, value}});
+  emit({.op = DrawOp::blit_sprite_hv, .dst = s, .args = {x, y, table, index, hue, value}});
 }
 
 inline void blit_sprite_hv_blend(SDL_Surface *s, int x, int y, unsigned table, unsigned index, uint8_t hue,
                                  int8_t value) {
-  emit({.op = DrawOp::blit_sprite_hv_blend, .dst = s, .args = Args{x, y, table, index, hue, value}});
+  emit({.op = DrawOp::blit_sprite_hv_blend, .dst = s, .args = {x, y, table, index, hue, value}});
 }
 
 inline void blit_sprite_dark(SDL_Surface *s, int x, int y, unsigned table, unsigned index, bool black) {
-  emit({.op = DrawOp::blit_sprite_dark, .dst = s, .args = Args{x, y, table, index, black}});
+  emit({.op = DrawOp::blit_sprite_dark, .dst = s, .args = {x, y, table, index, black}});
 }
 
 #define TYRX_DRAW_SPRITE2(name)                                                         \
   inline void name(SDL_Surface *s, int x, int y, Sprite2_array sheet, unsigned index) { \
-    emit({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = Args{x, y, index}});    \
+    emit({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = {x, y, index}});        \
   }
 #define TYRX_DRAW_SPRITE2_FILTER(name)                                                                  \
   inline void name(SDL_Surface *s, int x, int y, Sprite2_array sheet, unsigned index, uint8_t filter) { \
-    emit({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = Args{x, y, index, filter}});            \
+    emit({.op = DrawOp::name, .dst = s, .sheet = sheet, .args = {x, y, index, filter}});                \
   }
 TYRX_DRAW_SPRITE2(blit_sprite2)
 TYRX_DRAW_SPRITE2(blit_sprite2_clip)
@@ -102,40 +100,39 @@ TYRX_DRAW_SPRITE2_FILTER(blit_sprite2x2_filter_clip)
 #undef TYRX_DRAW_SPRITE2_FILTER
 
 inline void JE_pix(SDL_Surface *s, int x, int y, uint8_t c) {
-  emit({.op = DrawOp::JE_pix, .dst = s, .args = Args{x, y, c}});
+  emit({.op = DrawOp::JE_pix, .dst = s, .args = {x, y, c}});
 }
 
 inline void JE_rectangle(SDL_Surface *s, int a, int b, int c, int d, int e) {
-  emit({.op = DrawOp::JE_rectangle, .dst = s, .args = Args{a, b, c, d, e}});
+  emit({.op = DrawOp::JE_rectangle, .dst = s, .args = {a, b, c, d, e}});
 }
 
 inline void fill_rectangle_xy(SDL_Surface *s, int x, int y, int x2, int y2, uint8_t color) {
-  emit({.op = DrawOp::fill_rectangle_xy, .dst = s, .args = Args{x, y, x2, y2, color}});
+  emit({.op = DrawOp::fill_rectangle_xy, .dst = s, .args = {x, y, x2, y2, color}});
 }
 
 inline void JE_barShade(SDL_Surface *s, int a, int b, int c, int d) {
-  emit({.op = DrawOp::JE_barShade, .dst = s, .args = Args{a, b, c, d}});
+  emit({.op = DrawOp::JE_barShade, .dst = s, .args = {a, b, c, d}});
 }
 
 inline void JE_barBright(SDL_Surface *s, int a, int b, int c, int d) {
-  emit({.op = DrawOp::JE_barBright, .dst = s, .args = Args{a, b, c, d}});
+  emit({.op = DrawOp::JE_barBright, .dst = s, .args = {a, b, c, d}});
 }
 
 inline void draw_segmented_gauge(SDL_Surface *s, int x, int y, uint8_t color, unsigned segment_width,
                                  unsigned segment_height, unsigned segment_value, unsigned value) {
   emit({.op = DrawOp::draw_segmented_gauge,
         .dst = s,
-        .args = Args{x, y, color, segment_width, segment_height, segment_value, value}});
+        .args = {x, y, color, segment_width, segment_height, segment_value, value}});
 }
 
 inline void JE_darkenBackground(SDL_Surface *s, uint16_t neat) {
-  emit({.op = DrawOp::JE_darkenBackground, .dst = s, .args = Args{neat}});
+  emit({.op = DrawOp::JE_darkenBackground, .dst = s, .args = {neat}});
 }
 
 inline void draw_background_1(SDL_Surface *s, uint8_t **mapYPos, intptr_t mapXbpPos, uint16_t mapXPos,
                               uint16_t backPos) {
-  emit(
-      {.op = DrawOp::draw_background_1, .dst = s, .map = mapYPos, .args = Args{mapXbpPos, mapXPos, backPos}});
+  emit({.op = DrawOp::draw_background_1, .dst = s, .map = mapYPos, .args = {mapXbpPos, mapXPos, backPos}});
 }
 
 // smoothies[1] draws background 2 at background 1's x position.
@@ -145,7 +142,7 @@ inline void draw_background_2(SDL_Surface *s, uint8_t **mapY2Pos, intptr_t mapX2
   emit({.op = DrawOp::draw_background_2,
         .dst = s,
         .map = mapY2Pos,
-        .args = Args{mapX2bpPos, mapX2Pos, backPos2, background2, smoothies_1, mapXbpPos, mapXPos}});
+        .args = {mapX2bpPos, mapX2Pos, backPos2, background2, smoothies_1, mapXbpPos, mapXPos}});
 }
 
 inline void draw_background_2_blend(SDL_Surface *s, uint8_t **mapY2Pos, intptr_t mapX2bpPos,
@@ -153,7 +150,7 @@ inline void draw_background_2_blend(SDL_Surface *s, uint8_t **mapY2Pos, intptr_t
   emit({.op = DrawOp::draw_background_2_blend,
         .dst = s,
         .map = mapY2Pos,
-        .args = Args{mapX2bpPos, mapX2Pos, backPos2}});
+        .args = {mapX2bpPos, mapX2Pos, backPos2}});
 }
 
 // Draws from the position before the scroll by backMove3 (as the C function
@@ -163,13 +160,13 @@ inline void draw_background_3(SDL_Surface *s, uint8_t **mapY3Pos, intptr_t mapX3
   emit({.op = DrawOp::draw_background_3,
         .dst = s,
         .map = mapY3Pos,
-        .args = Args{mapX3bpPos, mapX3Pos, backPos3, backMove3}});
+        .args = {mapX3bpPos, mapX3Pos, backPos3, backMove3}});
 }
 
 // Draws the stars after moving them from where they are in `stars`.
 inline void update_and_draw_starfield(SDL_Surface *s, StarfieldStar const (&stars)[MAX_STARS],
                                       int move_speed) {
-  emit({.op = DrawOp::update_and_draw_starfield, .dst = s, .args = Args{move_speed}}, stars, sizeof stars);
+  emit({.op = DrawOp::update_and_draw_starfield, .dst = s, .args = {move_speed}}, stars, sizeof stars);
 }
 
 inline void JE_clr256(SDL_Surface *s) { emit({.op = DrawOp::JE_clr256, .dst = s}); }
@@ -179,7 +176,7 @@ inline void lava_filter(SDL_Surface *dst, SDL_Surface *src) {
 }
 
 inline void water_filter(SDL_Surface *dst, SDL_Surface *src, uint8_t hue) {
-  emit({.op = DrawOp::water_filter, .dst = dst, .src = src, .args = Args{hue}});
+  emit({.op = DrawOp::water_filter, .dst = dst, .src = src, .args = {hue}});
 }
 
 inline void iced_blur_filter(SDL_Surface *dst, SDL_Surface *src) {
@@ -194,7 +191,7 @@ inline void JE_filterScreen(SDL_Surface *s, int8_t col, int8_t brightness, bool 
                             bool explosion_transparent) {
   emit({.op = DrawOp::JE_filterScreen,
         .dst = s,
-        .args = Args{col, brightness, filtration_avail, explosion_transparent}});
+        .args = {col, brightness, filtration_avail, explosion_transparent}});
 }
 
 inline void showFlipped(SDL_Surface *dst, SDL_Surface *src) {
@@ -206,7 +203,7 @@ inline void showNormal(SDL_Surface *dst, SDL_Surface *src) {
 }
 
 inline void showHeadlight(SDL_Surface *dst, SDL_Surface *src, int16_t player_x, int16_t player_y) {
-  emit({.op = DrawOp::showHeadlight, .dst = dst, .src = src, .args = Args{player_x, player_y}});
+  emit({.op = DrawOp::showHeadlight, .dst = dst, .src = src, .args = {player_x, player_y}});
 }
 
 inline void JE_drawSP(SDL_Surface *s, superpixel_type const (&sp)[MAX_SUPERPIXELS]) {

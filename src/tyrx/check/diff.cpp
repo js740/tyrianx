@@ -170,8 +170,8 @@ extern "C" void __wrap_JE_setupExplosionLarge(bool enemyGround, uint8_t exploNum
   }
 
   tyrx::sim::Explosions e{};
-  std::ranges::copy(explosions, e.slots.begin());
-  std::ranges::copy(rep_explosions, e.repeating.begin());
+  std::ranges::copy(explosions, std::begin(e.slots));
+  std::ranges::copy(rep_explosions, std::begin(e.repeating));
   tyrx::sim::setup_explosion_large(e, enemyGround, exploNum, x, y);
 
   __real_JE_setupExplosionLarge(enemyGround, exploNum, x, y);
@@ -192,7 +192,7 @@ extern "C" void __wrap_JE_doSP(uint16_t x, uint16_t y, uint16_t num, uint8_t exp
   }
 
   tyrx::sim::Superpixels sp;
-  std::ranges::copy(superpixels, sp.slots.begin());
+  std::ranges::copy(superpixels, std::begin(sp.slots));
   sp.last = last_superpixel;
   MtState mt = mt_global;
   tyrx::sim::do_sp(sp, mt, x, y, num, explowidth, color);

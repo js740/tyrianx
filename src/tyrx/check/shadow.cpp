@@ -33,7 +33,6 @@
 #include "vclock.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cinttypes>
 #include <csetjmp>
 #include <cstdarg>
@@ -60,7 +59,8 @@ char const *const kSurfaceNames[3] = {"game_screen", "VGAScreen2", "VGAScreenSeg
 
 bool same_calls(DrawCall const& a, DrawList const& la, DrawCall const& b, DrawList const& lb) {
   return a.op == b.op && a.dst == b.dst && a.src == b.src && a.sheet.data == b.sheet.data &&
-         a.sheet.size == b.sheet.size && a.map == b.map && a.args == b.args && a.blob_size == b.blob_size &&
+         a.sheet.size == b.sheet.size && a.map == b.map && std::ranges::equal(a.args, b.args) &&
+         a.blob_size == b.blob_size &&
          std::memcmp(la.blob.data() + a.blob, lb.blob.data() + b.blob, a.blob_size) == 0;
 }
 
@@ -78,9 +78,9 @@ std::vector<size_t> surface_calls(DrawList const& list, SDL_Surface const *surfa
 }
 
 // "name count" lines for the kinds of calls counted.
-std::string summary(std::array<uint64_t, render::kDrawOps> const& counts) {
+std::string summary(uint64_t const (&counts)[render::kDrawOps]) {
   std::string s;
-  for (size_t op = 0; op < counts.size(); ++op) {
+  for (size_t op = 0; op < std::size(counts); ++op) {
     if (counts[op] != 0) {
       s += render::op_name(static_cast<DrawOp>(op));
       s += ' ';
@@ -482,8 +482,7 @@ class Shadow final : public port::Runner {
   size_t simulated_calls_ = SIZE_MAX;
   // The calls of each kind in shadow passes, and those made during the
   // simulation, for TYRX_SHADOW_CALLS.
-  using OpCounts = std::array<uint64_t, render::kDrawOps>;
-  OpCounts emitted_ = {}, during_simulation_ = {};
+  uint64_t emitted_[render::kDrawOps] = {}, during_simulation_[render::kDrawOps] = {};
   bool have_pre_ = false;
   char const *skip_reason_ = nullptr;
   char const *abort_reason_ = nullptr;

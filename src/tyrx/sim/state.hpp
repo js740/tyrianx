@@ -28,25 +28,23 @@
 
 #include "../gold/api.hpp"
 
-#include <array>
-
 namespace tyrx::sim {
 
 struct Explosions {
-  std::array<Explosion, MAX_EXPLOSIONS> slots;
-  std::array<rep_explosion_type, MAX_REPEATING_EXPLOSIONS> repeating;  // which set off explosions over ticks
+  Explosion slots[MAX_EXPLOSIONS];
+  rep_explosion_type repeating[MAX_REPEATING_EXPLOSIONS];  // which set off explosions over ticks
   uint16_t move;               // how far explosions that aren't fixed move down each tick
   int16_t follow_x, follow_y;  // how far the player moved, for explosions that follow the player
 };
 
 struct Superpixels {
-  std::array<superpixel_type, MAX_SUPERPIXELS> slots;
+  superpixel_type slots[MAX_SUPERPIXELS];
   unsigned int last;  // the slot of the last one created
 };
 
 struct Starfield {
-  std::array<StarfieldStar, MAX_STARS> stars;  // their positions are offsets into the screen
-  int speed;                                   // how much faster than their own speed all stars move
+  StarfieldStar stars[MAX_STARS];  // their positions are offsets into the screen
+  int speed;                       // how much faster than their own speed all stars move
 };
 
 // The game's modes and settings.
@@ -83,25 +81,25 @@ struct Cheats {
   bool constant_die;
   int8_t constant_last_x;
   bool super_pause;
-  std::array<bool, 10> global_flags;
+  bool global_flags[10];
 };
 
 // Where the game is: the episode, the level, and the items and data cubes found.
 struct Progress {
   uint8_t episode_num;
   uint8_t initial_episode_num;
-  std::array<bool, EPISODE_MAX> episode_avail;
+  bool episode_avail[EPISODE_MAX];
   uint8_t lvl_file_num;
-  std::array<char, 11> level_name;
-  std::array<char, 11> last_level_name;
+  char level_name[11];
+  char last_level_name[11];
   bool load_level_ok;
-  std::array<uint16_t, 4> cube_list;
+  uint16_t cube_list[4];
   uint16_t cube_max;
   uint16_t last_cube_max;
-  std::array<std::array<uint8_t, 10>, 9> item_avail;
-  std::array<uint8_t, 9> item_avail_max;
+  uint8_t item_avail[9][10];
+  uint8_t item_avail_max[9];
   uint16_t editor_level;
-  std::array<uint8_t, 100> editor_item_avail;
+  uint8_t editor_item_avail[100];
   uint8_t secret_hint;
   bool use_last_bank;
   bool trent_win;
@@ -118,7 +116,7 @@ struct Random {
 };
 
 struct Sound {
-  std::array<uint8_t, 8> queue;  // the samples to play at the end of the tick, one per channel
+  uint8_t queue[8];  // the samples to play at the end of the tick, one per channel
   bool music_fade;
   uint16_t temp_volume;  // the music's volume while it fades
   uint8_t level_song;
@@ -131,8 +129,8 @@ struct Display {
   bool explosion_transparent;
 
   // The smoothies, effects on parts of the screen.
-  std::array<bool, 9> smoothies;
-  std::array<uint8_t, 9> smoothie_data;
+  bool smoothies[9];
+  uint8_t smoothie_data[9];
   bool any_smoothies;
 
   // Flashes, warnings and texts.
@@ -144,14 +142,14 @@ struct Display {
   uint8_t warning_sound_delay;
   bool level_warning_display;
   uint8_t level_warning_lines;
-  std::array<std::array<char, 61>, 10> level_warning_text;
+  char level_warning_text[10][61];
   uint16_t text_erase;
   uint8_t display_time;
   uint16_t neat;
   uint8_t star_show_vga_special_code;
   bool star_active;
 
-  std::array<boss_bar_t, 2> boss_bars;
+  boss_bar_t boss_bars[2];
   bool port_config_change, port_config_done;
 };
 
@@ -178,7 +176,7 @@ struct Map {
 
 struct Level {
   // The level's events, which some events change, and where the level is in them.
-  std::array<JE_EventRecType, EVENT_MAXIMUM> events;
+  JE_EventRecType events[EVENT_MAXIMUM];
   uint16_t max_event, event_loc;  // the number of events, and the next one
   uint16_t cur_loc;               // how far the level has scrolled, which events wait for
   uint16_t return_loc;            // where a jump back goes, if return_active
@@ -188,7 +186,7 @@ struct Level {
 
   // Random enemies.
   bool enemies_active;
-  std::array<uint16_t, 40> enemy_types;
+  uint16_t enemy_types[40];
   uint16_t enemy_types_max, enemy_frequency;
 
   bool enemy_continual_damage;
@@ -204,8 +202,8 @@ struct Level {
 
   // Where the map screen goes after the level.
   uint16_t map_origin, map_pnum;
-  std::array<uint8_t, 5> map_planet, map_section;
-  std::array<uint8_t, 10> new_pl;
+  uint8_t map_planet[5], map_section[5];
+  uint8_t new_pl[10];
 };
 
 struct Ending {
@@ -222,17 +220,17 @@ struct Ending {
 };
 
 struct Input {
-  std::array<bool, 4> button;  // fire, left sidekick, right sidekick, fire mode
-  bool fire_button_held;       // for the special weapon, which fires once per press
+  bool button[4];         // fire, left sidekick, right sidekick, fire mode
+  bool fire_button_held;  // for the special weapon, which fires once per press
 };
 
 struct Players {
-  std::array<Player, 2> slots;
+  Player slots[2];
 
-  std::array<uint8_t, 11> shot_repeat;     // ticks until each kind of shot can fire again
-  std::array<uint8_t, 11> shot_multi_pos;  // the pattern each kind of shot fires next
-  unsigned power, last_power, power_add;   // the generator's power, as last drawn, and gained per tick
-  uint8_t shield_wait, shield_cost;        // ticks until the shield recharges, and the power it takes
+  uint8_t shot_repeat[11];                // ticks until each kind of shot can fire again
+  uint8_t shot_multi_pos[11];             // the pattern each kind of shot fires next
+  unsigned power, last_power, power_add;  // the generator's power, as last drawn, and gained per tick
+  uint8_t shield_wait, shield_cost;       // ticks until the shield recharges, and the power it takes
   uint8_t charge_wait, charge_level, charge_max, charge_gr, charge_gr_wait;  // the charge weapon
   uint8_t damage_rate;        // the most armor that a collision takes
   uint16_t armor_ship_delay;  // ticks until the low-armor ship shows again
@@ -251,8 +249,8 @@ struct Players {
 
 struct Specials {
   uint8_t wait, next_wait;
-  std::array<std::array<uint8_t, 21>, 2> sf_current_code;  // the keys of each player's special moves so far
-  std::array<uint8_t, 2> sf_executed;
+  uint8_t sf_current_code[2][21];  // the keys of each player's special moves so far
+  uint8_t sf_executed[2];
   bool spray;
 
   // The special weapon.
@@ -268,21 +266,21 @@ struct Specials {
 };
 
 struct Enemies {
-  std::array<JE_SingleEnemyType, 100> slots;
-  std::array<uint8_t, 100> status;  // 1 for a free slot, 0 for an enemy, 2 for one without armor
-  uint16_t on_screen;               // how many were updated in the tick
-  uint16_t total, killed;           // for the destruction ratio
-  uint16_t offset;                  // enemyOffset
+  JE_SingleEnemyType slots[100];
+  uint8_t status[100];     // 1 for a free slot, 0 for an enemy, 2 for one without armor
+  uint16_t on_screen;      // how many were updated in the tick
+  uint16_t total, killed;  // for the destruction ratio
+  uint16_t offset;         // enemyOffset
 };
 
 struct PlayerShots {
-  std::array<PlayerShotDataType, MAX_PWEAPON + 1> slots;
-  std::array<uint8_t, MAX_PWEAPON> ttl;  // ticks each shot has left, 0 for a free slot
+  PlayerShotDataType slots[MAX_PWEAPON + 1];
+  uint8_t ttl[MAX_PWEAPON];  // ticks each shot has left, 0 for a free slot
 };
 
 struct EnemyShots {
-  std::array<EnemyShotType, ENEMY_SHOT_MAX> slots;
-  std::array<bool, ENEMY_SHOT_MAX> available;  // whether each slot is free
+  EnemyShotType slots[ENEMY_SHOT_MAX];
+  bool available[ENEMY_SHOT_MAX];  // whether each slot is free
 };
 
 // The C code's scratch global temp2, which most code writes before reading

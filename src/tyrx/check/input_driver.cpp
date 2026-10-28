@@ -27,7 +27,6 @@
 #include "vclock.hpp"
 
 #include <stdint.h>
-#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <initializer_list>
@@ -161,7 +160,7 @@ class InputDriver {
       return;
     }
     pushed_tick_ = next_tick;
-    for (size_t i = 0; i < kKeys.size(); ++i) {
+    for (size_t i = 0; i < std::size(kKeys); ++i) {
       set_key(kKeys[i], key_down(i, next_tick));
     }
     if (press_rewind_) {
@@ -208,7 +207,8 @@ class InputDriver {
     bool const smoothie = t < 500 && t % 100 == 60;
     bool const skip = t >= 500 && t < 503;
     bool const nort = t == 20 && mix(seed_ ^ mix(level_first_tick_)) % 4 == 0;
-    SDL_Scancode const digit = kSmoothieKeys[mix(seed_ ^ mix(level_first_tick_ + t)) % kSmoothieKeys.size()];
+    SDL_Scancode const digit =
+        kSmoothieKeys[mix(seed_ ^ mix(level_first_tick_ + t)) % std::size(kSmoothieKeys)];
     bool const command = press_commands_ && next_tick % 300 == 150;  // as above
     set_key(kCommandModifier, debug || smoothie || command);
     set_key(SDL_SCANCODE_F10, debug);
@@ -233,11 +233,11 @@ class InputDriver {
 
   // Backspace+F12+Scroll Lock with 2-9 toggles smoothies[0-7], with 0
   // smoothies[8].
-  static constexpr std::array kSmoothieKeys = {
+  static constexpr SDL_Scancode kSmoothieKeys[] = {
       SDL_SCANCODE_2, SDL_SCANCODE_3, SDL_SCANCODE_4, SDL_SCANCODE_5, SDL_SCANCODE_6,
       SDL_SCANCODE_7, SDL_SCANCODE_8, SDL_SCANCODE_9, SDL_SCANCODE_0,
   };
-  static constexpr std::array kCheatKeys = {
+  static constexpr SDL_Scancode kCheatKeys[] = {
       SDL_SCANCODE_F10, SDL_SCANCODE_F12, SDL_SCANCODE_SCROLLLOCK, SDL_SCANCODE_F2,        SDL_SCANCODE_F6,
       SDL_SCANCODE_F7,  SDL_SCANCODE_F4,  SDL_SCANCODE_F9,         SDL_SCANCODE_BACKSLASH, SDL_SCANCODE_SLASH,
   };
@@ -247,7 +247,7 @@ class InputDriver {
   // down for one tick in every 200.  Menu and pause are never pressed.  The
   // game sees the new state at its next poll_joystick().
   void push_joystick(uint64_t tick) {
-    auto const down = [tick, this](size_t i) { return key_down(kKeys.size() + i, tick); };
+    auto const down = [tick, this](size_t i) { return key_down(std::size(kKeys) + i, tick); };
     SDL_JoystickSetVirtualAxis(joystick_, 0, axis_value(down(0), down(1)));  // left, right
     SDL_JoystickSetVirtualAxis(joystick_, 1, axis_value(down(2), down(3)));  // up, down
     SDL_JoystickSetVirtualButton(joystick_, 0, down(4));                     // fire
@@ -260,7 +260,9 @@ class InputDriver {
   // left and right buttons are held, in runs like the keys' (with seeds of
   // their own).  Motion goes out once per tick, as relative motion.
   void push_mouse(uint64_t tick) {
-    auto const down = [tick, this](size_t i) { return key_down(kKeys.size() + kJoystickInputs + i, tick); };
+    auto const down = [tick, this](size_t i) {
+      return key_down(std::size(kKeys) + kJoystickInputs + i, tick);
+    };
     int const xrel = (down(1) - down(0)) * kMouseStep, yrel = (down(3) - down(2)) * kMouseStep;
     if (xrel != 0 || yrel != 0) {
       SDL_Event ev{};
@@ -318,7 +320,7 @@ class InputDriver {
     return mix(key_seed ^ run) % 3 == 0;
   }
 
-  static constexpr std::array kKeys = {
+  static constexpr SDL_Scancode kKeys[] = {
       SDL_SCANCODE_UP,    SDL_SCANCODE_DOWN,   SDL_SCANCODE_LEFT,  SDL_SCANCODE_RIGHT,
       SDL_SCANCODE_SPACE, SDL_SCANCODE_RETURN, SDL_SCANCODE_LCTRL, SDL_SCANCODE_LALT,
   };

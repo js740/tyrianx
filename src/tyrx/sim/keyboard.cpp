@@ -24,6 +24,8 @@
 
 #include "sim.hpp"
 
+#include <algorithm>
+
 #include <cassert>
 
 namespace tyrx::sim {
@@ -100,7 +102,7 @@ void edit_ship(State& state, DrawRecord& record, int i, bool& edited) {
     player.items.generator = extraShips[z + 6];
     // Armor
     player.items.shield = extraShips[z + 8];
-    state.players.shot_multi_pos.fill(0);
+    std::ranges::fill(state.players.shot_multi_pos, 0);
 
     if (player.weapon_mode > port_configs(state)) {
       player.weapon_mode = 1;

@@ -25,7 +25,6 @@
 
 #include "../gold/api.hpp"
 
-#include <array>
 #include <string>
 #include <variant>
 #include <vector>
@@ -42,12 +41,12 @@ struct TextWindow {          // JE_drawTextWindow
 };
 struct Shield {  // JE_drawShield
   bool two;      // two-player HUD
-  std::array<unsigned, 2> shield;
+  unsigned shield[2];
   unsigned shield_max;
 };
 struct Armor {  // JE_drawArmor
   bool two;
-  std::array<unsigned, 2> armor;
+  unsigned armor[2];
 };
 struct WipeShieldArmor {  // JE_wipeShieldArmorBars
   bool one;               // one-player HUD
