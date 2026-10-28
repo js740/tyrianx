@@ -17,12 +17,14 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | [`gold/`](gold/README.md) | `tyrx::gold` | The C game, the reference, as seen from C++: its declarations, the state registry, hashing, snapshots, its memory, and the globals that hold the C++ game's state |
 | [`check/`](check/README.md) | `tyrx::check` | What runs the C game deterministically and compares C++ code with it: the hash log, synthetic input, the virtual clock, the shadow tick, call-by-call checks and round trips |
 | [`check/draw/`](check/draw/README.md) | `tyrx::check::draw` | Recording the C code's draw lists, and checking them |
-| [`port/`](port/README.md) | `tyrx::port` | The C level tick ported to C++ as it is, line by line, working on the C globals and the C++ game's state, with its simulation and drawing separated |
-| [`sim/`](sim/README.md) | `tyrx::sim` | The C++ game's state, and game logic that owns its state |
+| [`port/`](port/README.md) | `tyrx::port` | The level tick's drawing, from the draw record that its simulation keeps, and its frame |
+| [`sim/`](sim/README.md) | `tyrx::sim` | The C++ game's state, and the game logic: the level tick's simulation |
 | [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs, and draw lists |
 
-The C++ game is `port/`, `sim/` and `render/`: `port/` is the C code as it is,
-and shrinks as its code is restructured into `sim/` and `render/`. `gold/` and
+The C++ game is `port/`, `sim/` and `render/`: the C code's level tick was
+ported to `port/` as it is, line by line, and then restructured into `sim/`,
+which simulates it; `port/` keeps its drawing, from the record that the
+simulation keeps, which moves on to `render/`. `gold/` and
 `check/` are the scaffolding that attaches the C++ game to the C game and
 checks it against it.
 

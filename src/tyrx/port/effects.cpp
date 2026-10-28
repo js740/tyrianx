@@ -43,33 +43,6 @@ void superpixels_draw(SuperpixelsDrawn const& d) {
   draw::JE_drawSP(surface(d.screen), before);
 }
 
-// The filter is drawn with the filter and brightness from before the fade
-// moves on.
-void filter_screen_tick() {
-  auto& levelFilter = state().display.filter;
-  auto& levelFilterNew = state().display.filter_new;
-  auto& levelBrightness = state().display.brightness;
-  auto& levelBrightnessChg = state().display.brightness_chg;
-  auto& filterFade = state().display.filter_fade;
-  auto& filterFadeStart = state().display.filter_fade_start;
-  draw_record().filter = FilterDrawn{draw_record().screen, levelFilter, levelBrightness};
-
-  if (!filterFade) {
-    return;
-  }
-
-  levelBrightness += levelBrightnessChg;
-  if ((filterFadeStart && levelBrightness < -14) || levelBrightness > 14) {
-    levelBrightnessChg = -levelBrightnessChg;
-    filterFadeStart = false;
-    levelFilter = levelFilterNew;
-  }
-  if (!filterFadeStart && levelBrightness == 0) {
-    filterFade = false;
-    levelBrightness = -99;
-  }
-}
-
 void filter_screen_draw(FilterDrawn const& d) {
   auto& filtrationAvail = state().display.filtration_avail;
   auto& explosionTransparent = state().display.explosion_transparent;

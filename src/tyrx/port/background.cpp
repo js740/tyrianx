@@ -28,59 +28,12 @@
 
 namespace tyrx::port {
 
-// draw_background_1 (the scrolling is in the level loop), or JE_clr256.
-void background_1_tick(Surface screen, bool clr) {
-  auto& backPos = state().map.back_pos;
-  auto& mapYPos = state().map.map_y_pos;
-  auto& mapXPos = state().map.map_x_pos;
-  auto& mapXbpPos = state().map.map_x_bp_pos;
-  draw_record().background_1 = Background1Drawn{screen, clr, mapYPos, mapXbpPos, mapXPos, backPos};
-}
-
 void background_1_draw(Background1Drawn const& d) {
   if (d.clr) {
     draw::JE_clr256(surface(d.screen));
   }
   else {
     draw::draw_background_1(surface(d.screen), d.mapYPos, d.mapXbpPos, d.mapXPos, d.backPos);
-  }
-}
-
-// draw_background_2, or draw_background_2_blend.
-void background_2_tick(Surface screen, bool blend, std::optional<Background2Drawn>& drawn) {
-  auto& smoothies = state().display.smoothies;
-  auto& backPos2 = state().map.back_pos2;
-  auto& backMove2 = state().map.back_move2;
-  auto& mapY2 = state().map.map_y2;
-  auto& mapY2Pos = state().map.map_y2_pos;
-  auto& mapXPos = state().map.map_x_pos;
-  auto& mapX2Pos = state().map.map_x2_pos;
-  auto& mapXbpPos = state().map.map_x_bp_pos;
-  auto& mapX2bpPos = state().map.map_x2_bp_pos;
-  auto& map2YDelay = state().map.map2_y_delay;
-  auto& map2YDelayMax = state().map.map2_y_delay_max;
-  auto& background2 = state().map.background2;
-  if (map2YDelayMax > 1 && backMove2 < 2) {
-    backMove2 = (map2YDelay == 1) ? 1 : 0;
-  }
-
-  drawn = Background2Drawn{screen,    blend,    mapY2Pos,         mapX2bpPos,
-                           mapX2Pos,  backPos2, background2 != 0, smoothies[1] != 0,
-                           mapXbpPos, mapXPos};
-
-  if (--map2YDelay != 0) {
-    return;
-  }
-
-  // Set Movement of background
-  map2YDelay = map2YDelayMax;
-
-  backPos2 += backMove2;
-
-  if (backPos2 > 27) {
-    backPos2 -= 28;
-    mapY2--;
-    mapY2Pos -= 14;  // Map Width
   }
 }
 
@@ -94,37 +47,8 @@ void background_2_draw(Background2Drawn const& d) {
   }
 }
 
-// draw_background_3, which scrolls before drawing.
-void background_3_tick(Surface screen, std::optional<Background3Drawn>& drawn) {
-  auto& backPos3 = state().map.back_pos3;
-  auto& backMove3 = state().map.back_move3;
-  auto& mapY3 = state().map.map_y3;
-  auto& mapY3Pos = state().map.map_y3_pos;
-  auto& mapX3Pos = state().map.map_x3_pos;
-  auto& mapX3bpPos = state().map.map_x3_bp_pos;
-  drawn = Background3Drawn{screen, mapY3Pos, mapX3bpPos, mapX3Pos, backPos3, backMove3};
-
-  // Movement of background
-  backPos3 += backMove3;
-
-  if (backPos3 > 27) {
-    backPos3 -= 28;
-    mapY3--;
-    mapY3Pos -= 15;  // Map Width
-  }
-}
-
 void background_3_draw(Background3Drawn const& d) {
   draw::draw_background_3(surface(d.screen), d.mapY3Pos, d.mapX3bpPos, d.mapX3Pos, d.backPos3, d.backMove3);
-}
-
-// Port of JE_checkSmoothies.
-void check_smoothies() {
-  auto& processorType = state().game.processor_type;
-  auto& smoothies = state().display.smoothies;
-  auto& anySmoothies = state().display.any_smoothies;
-  anySmoothies = (processorType > 2 && (smoothies[1 - 1] || smoothies[2 - 1])) ||
-                 (processorType > 1 && (smoothies[3 - 1] || smoothies[4 - 1] || smoothies[5 - 1]));
 }
 
 // update_and_draw_starfield.  The stars move as they are drawn
