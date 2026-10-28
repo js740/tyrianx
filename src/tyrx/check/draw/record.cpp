@@ -19,7 +19,7 @@
 
 #include "record.hpp"
 
-#include "../../port/draw.hpp"
+#include "../../render/tick/draw.hpp"
 #include "../../runtime.hpp"
 
 #include <cinttypes>
@@ -344,7 +344,7 @@ class Recorder {
   }
 
   bool begin(DrawCall const& call, void const *blob, std::size_t blob_size) {
-    if (DrawList *shadow_list = port::draw::target()) {
+    if (DrawList *shadow_list = render::draw::target()) {
       if (depth_ > 0) {
         return false;
       }
@@ -374,7 +374,7 @@ class Recorder {
 
   void end() {
     depth_ = 0;
-    if (check_ && port::draw::target() == nullptr) {
+    if (check_ && render::draw::target() == nullptr) {
       SDL_Surface const *dst = list_.calls.back().dst;
       bool const watched = dst == game_screen || dst == VGAScreen2 || dst == VGAScreenSeg;
       audit_.sync(watched ? dst : nullptr);

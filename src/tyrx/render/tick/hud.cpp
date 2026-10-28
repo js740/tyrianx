@@ -23,15 +23,16 @@
 // (JE_inGameDisplays in mainint.c).
 
 #include "draw.hpp"
-#include "port.hpp"
+#include "tick.hpp"
 
 #include <array>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 #include <string>
 
-namespace tyrx::port {
+namespace tyrx::render {
 
 namespace {
 
@@ -81,7 +82,7 @@ void hud_draw(hud::Draw const& draw) {
 
     void operator()(hud::Shield const& d) const {
       if (d.two) {
-        for (uint i = 0; i < COUNTOF(d.shield); ++i) {
+        for (uint i = 0; i < std::size(d.shield); ++i) {
           dbar3(screen, 270, 60 + 134 * i, roundf(d.shield[i] * 0.8f), 144);
         }
       }
@@ -96,7 +97,7 @@ void hud_draw(hud::Draw const& draw) {
 
     void operator()(hud::Armor const& d) const {
       if (d.two) {
-        for (uint i = 0; i < COUNTOF(d.armor); ++i) {
+        for (uint i = 0; i < std::size(d.armor); ++i) {
           dbar3(screen, 307, 60 + 134 * i, roundf(d.armor[i] * 0.8f), 224);
         }
       }
@@ -194,12 +195,12 @@ void boss_bar_draw(BossBarsDrawn const& d) {
 
 // JE_inGameDisplays: only draws, from state that nothing changes later in the
 // tick.
-void in_game_displays_draw(SDL_Surface *screen) {
-  auto& twoPlayerMode = state().game.two_player_mode;
-  auto& onePlayerAction = state().game.one_player_action;
-  auto& galagaMode = state().game.galaga_mode;
-  auto& youAreCheating = state().cheats.you_are_cheating;
-  auto& player = state().players.slots;
+void in_game_displays_draw(sim::State const& state, SDL_Surface *screen) {
+  auto const& twoPlayerMode = state.game.two_player_mode;
+  auto const& onePlayerAction = state.game.one_player_action;
+  auto const& galagaMode = state.game.galaga_mode;
+  auto const& youAreCheating = state.cheats.you_are_cheating;
+  auto const& player = state.players.slots;
   char stemp[21];
   char tempstr[256];
 
@@ -245,7 +246,7 @@ void in_game_displays_draw(SDL_Surface *screen) {
   }
 
   // Super Bombs!!
-  for (unsigned i = 0; i < COUNTOF(player); ++i) {
+  for (unsigned i = 0; i < std::size(player); ++i) {
     int x = (i == 0) ? 30 : 270;
     for (unsigned j = player[i].superbombs; j > 0; --j) {
       draw::blit_sprite2(screen, x, 160, spriteSheet9, 304);
@@ -258,4 +259,4 @@ void in_game_displays_draw(SDL_Surface *screen) {
   }
 }
 
-}  // namespace tyrx::port
+}  // namespace tyrx::render

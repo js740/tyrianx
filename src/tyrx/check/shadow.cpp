@@ -23,9 +23,9 @@
 #include "../gold/memory.hpp"
 #include "../gold/sim_state.hpp"
 #include "../gold/state.hpp"
-#include "../port/draw.hpp"
 #include "../port/level.hpp"
 #include "../port/port.hpp"
+#include "../render/tick/draw.hpp"
 #include "../runtime.hpp"
 #include "draw/record.hpp"
 #include "framelog.hpp"
@@ -322,7 +322,7 @@ class Shadow final : public port::Runner {
     vclock_set_quiet(true);
     pass_list_ = {};
     simulated_calls_ = SIZE_MAX;
-    port::draw::target() = &pass_list_;
+    render::draw::target() = &pass_list_;
     port::runner_target() = this;
     active_ = true;
     bool const completed = setjmp(abort_jump) == 0;
@@ -332,7 +332,7 @@ class Shadow final : public port::Runner {
     }
     active_ = false;
     port::runner_target() = nullptr;
-    port::draw::target() = nullptr;
+    render::draw::target() = nullptr;
     port::state_target() = nullptr;
     gold::write_sim_state(sim_state_);
     DrawList shadow_list = std::move(pass_list_);
@@ -476,7 +476,7 @@ class Shadow final : public port::Runner {
   bool enabled_ = false;
   bool active_ = false;
   sim::State sim_state_;
-  // The pass's draw list, which the C++ code draws into (port/draw.hpp), and
+  // The pass's draw list, which the C++ code draws into (render/tick/draw.hpp), and
   // how many of its calls the simulation made (all, until drawing begins).
   DrawList pass_list_;
   std::size_t simulated_calls_ = SIZE_MAX;

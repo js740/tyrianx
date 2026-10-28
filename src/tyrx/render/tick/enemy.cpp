@@ -25,9 +25,9 @@
 // drawn enemy as the update drew it.
 
 #include "draw.hpp"
-#include "port.hpp"
+#include "tick.hpp"
 
-namespace tyrx::port {
+namespace tyrx::render {
 
 namespace {
 
@@ -74,4 +74,4 @@ void enemies_draw(EnemiesDrawn const& d) {
   }
 }
 
-}  // namespace tyrx::port
+}  // namespace tyrx::render

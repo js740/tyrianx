@@ -36,7 +36,7 @@
 //                           with their C++ ports in render/
 //
 // While a shadow pass runs the C++ level tick (../shadow.hpp), calls to the C
-// primitives go to the list the C++ code draws into (port/draw.hpp) instead.
+// primitives go to the list the C++ code draws into (render/tick/draw.hpp) instead.
 //------------------------------------------------------------------------------
 
 #pragma once

@@ -22,11 +22,11 @@
 // the simulation goes on to change; the drawing gets that position.
 
 #include "draw.hpp"
-#include "port.hpp"
+#include "tick.hpp"
 
 #include <algorithm>
 
-namespace tyrx::port {
+namespace tyrx::render {
 
 void background_1_draw(Background1Drawn const& d) {
   if (d.clr) {
@@ -55,14 +55,14 @@ void background_3_draw(Background3Drawn const& d) {
 // (sim::update_starfield), so the drawing gets them as they were before (as the
 // C code records them), moved back.  Their speed is still the one they moved
 // by, as only events change it, and they come before.
-void starfield_draw(SDL_Surface *screen) {
-  int const move_speed = state().starfield.speed;
+void starfield_draw(sim::State const& state, SDL_Surface *screen) {
+  int const move_speed = state.starfield.speed;
   StarfieldStar before[MAX_STARS];
-  std::ranges::copy(state().starfield.stars, before);
+  std::ranges::copy(state.starfield.stars, before);
   for (StarfieldStar& star : before) {
     star.position -= (star.speed + move_speed) * screen->pitch;
   }
   draw::update_and_draw_starfield(screen, before, move_speed);
 }
 
-}  // namespace tyrx::port
+}  // namespace tyrx::render

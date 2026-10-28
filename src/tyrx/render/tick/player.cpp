@@ -24,9 +24,9 @@
 // and charge).
 
 #include "draw.hpp"
-#include "port.hpp"
+#include "tick.hpp"
 
-namespace tyrx::port {
+namespace tyrx::render {
 
 namespace {
 
@@ -168,4 +168,4 @@ void player_draw(sim::VisiblePlayer const& p) {
   }
 }
 
-}  // namespace tyrx::port
+}  // namespace tyrx::render

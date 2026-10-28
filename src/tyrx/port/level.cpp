@@ -51,14 +51,20 @@ void star_show_vga_present() {
 struct RunnerHost final : sim::Host {
   void in_game_help_ahead() override { port::in_game_help_ahead(); }
   void c_loop(void (*loop)()) override { port::c_loop(loop); }
-  int pitch(Surface s) override { return surface(s)->pitch; }
+  int pitch(Surface s) override { return render::surface(s)->pitch; }
 };
+
+// The record of the tick being simulated, or last simulated.
+DrawRecord& draw_record() {
+  static DrawRecord record;
+  return record;
+}
 
 }  // namespace
 
 void draw_so_far() {
   DrawRecord& r = draw_record();
-  draw_tick(r);
+  render::draw_tick(state(), r);
   Surface const screen = r.screen;
   r = DrawRecord{};
   r.screen = screen;
@@ -66,9 +72,9 @@ void draw_so_far() {
 
 void c_loop(void (*loop)()) {
   DrawRecord& r = draw_record();
-  VGAScreen = surface(r.screen);
+  VGAScreen = render::surface(r.screen);
   runner_target()->c_loop(loop);
-  r.screen = surface_name(VGAScreen);
+  r.screen = render::record_surface(VGAScreen);
 }
 
 LevelLocals& level_locals() {
@@ -82,10 +88,10 @@ LevelPass level_pass() {
   RunnerHost host;
   bool frame = false;
   LevelPass const next = sim::level_tick(state(), level_locals(), r, host, frame);
-  VGAScreen = surface(r.screen);
+  VGAScreen = render::surface(r.screen);
   if (next != LevelPass::unsupported) {
     drawing_begins();
-    draw_tick(r);
+    render::draw_tick(state(), r);
     if (frame) {
       star_show_vga_present();
     }

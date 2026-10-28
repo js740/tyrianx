@@ -17,17 +17,22 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-// The draw record of a level tick, which the simulation keeps
-// (../sim/draw_record.hpp), and the surfaces it names.
-//------------------------------------------------------------------------------
+// The drawing of a level tick, after its simulation (../../sim/level.cpp):
+// the draw calls of the C code's level loop, in its order, from the game state
+// at the end of the tick and the draw record (../../sim/draw_record.hpp), added
+// to a draw list (draw.hpp).
 
 #pragma once
 
-#include "../gold/api.hpp"
-#include "../sim/draw_record.hpp"
+#include "../../gold/api.hpp"
+#include "../../sim/sim.hpp"
 
-namespace tyrx::port {
+#include <cassert>
+
+namespace tyrx::render {
+
+// The C globals that sim::State holds are hidden here (../../sim/hidden.hpp).
+using namespace hidden;
 
 namespace hud = sim::hud;
 using sim::Background1Drawn, sim::Background2Drawn, sim::Background3Drawn, sim::BossBarsDrawn, sim::Copy,
@@ -48,8 +53,8 @@ inline SDL_Surface *surface(Surface s) {
   return nullptr;
 }
 
-// The name of a surface that VGAScreen points at.
-inline Surface surface_name(SDL_Surface *s) {
+// The record's name for a surface that VGAScreen points at.
+inline Surface record_surface(SDL_Surface *s) {
   if (s == game_screen) {
     return Surface::game_screen;
   }
@@ -60,10 +65,33 @@ inline Surface surface_name(SDL_Surface *s) {
   return Surface::vga_screen_seg;
 }
 
-// The record of the tick being simulated, or last simulated.
-DrawRecord& draw_record();
+// Draws the tick, after its simulation, from the state at its end.
+void draw_tick(sim::State const& state, DrawRecord const& r);
 
-// Draws the tick, after its simulation.
-void draw_tick(DrawRecord const& r);
+// The parts' drawing, which draw_tick runs in the C code's order.
 
-}  // namespace tyrx::port
+// background.cpp
+void background_1_draw(Background1Drawn const& d);  // draw_background_1, or JE_clr256
+void background_2_draw(Background2Drawn const& d);  // draw_background_2, or _blend
+void background_3_draw(Background3Drawn const& d);  // draw_background_3
+void starfield_draw(sim::State const& state, SDL_Surface *screen);
+
+// effects.cpp
+void superpixels_draw(sim::State const& state, SuperpixelsDrawn const& d);
+void filter_screen_draw(sim::State const& state, FilterDrawn const& d);
+
+// enemy.cpp
+void enemies_draw(EnemiesDrawn const& d);
+
+// hud.cpp
+void hud_draw(hud::Draw const& draw);
+void boss_bar_draw(BossBarsDrawn const& d);
+void in_game_displays_draw(sim::State const& state, SDL_Surface *screen);  // JE_inGameDisplays
+
+// player.cpp
+void player_draw(sim::VisiblePlayer const& p);
+
+// shots.cpp
+void player_shots_draw(PlayerShotsDrawn const& d);
+
+}  // namespace tyrx::render
