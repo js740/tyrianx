@@ -46,6 +46,7 @@ build_arch() {  # $1 = arm64 | x86_64
     make clean >/dev/null
     make -j"$(sysctl -n hw.ncpu)" \
         CC="cc -arch $1 -mmacosx-version-min=10.13" \
+        CXX="c++ -arch $1 -mmacosx-version-min=10.13" \
         WITH_NETWORK=false \
         SDL_CPPFLAGS="-I$FW/Headers -F$FW_DIR" \
         SDL_LDFLAGS="-F$FW_DIR -Wl,-rpath,@executable_path/../Frameworks" \

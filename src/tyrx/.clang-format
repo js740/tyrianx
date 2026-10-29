@@ -1,0 +1,52 @@
+# Formatting for the C++ code in src/tyrx (the C sources are not formatted).
+# Needs clang-format 15 or later.  Run: clang-format -i $(find src/tyrx -name '*.[ch]pp')
+BasedOnStyle: Google
+ColumnLimit: 110
+
+# East const: `T const& x`, `char const *s`.
+QualifierAlignment: Right
+
+# Pointers attach to the name, references to the type: `char const *s`, `T const& x`.
+DerivePointerAlignment: false
+PointerAlignment: Right
+ReferenceAlignment: Left
+
+# Braces around every if/else/loop body; opening braces on the same line,
+# except after a control statement that wraps, so the body stands out from
+# the wrapped condition; `else` (and `catch`) on the line after the closing
+# brace.
+InsertBraces: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: MultiLine
+  AfterEnum: false
+  AfterExternBlock: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# Keep include groups as written.
+IncludeBlocks: Preserve
+
+# Declarations in a run of consecutive lines align their names.  A blank line
+# or a comment ends the run: where types differ in length by more than about
+# a dozen characters, a blank line keeps the long one from padding out its
+# neighbors.
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false

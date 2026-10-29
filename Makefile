@@ -11,6 +11,10 @@ endif
 # true, false, or auto (true if pkg-config can find SDL2_net)
 WITH_NETWORK := auto
 
+# off or on (also build the validation of the C++ game against the C game in
+# src/tyrx/validate; requires GCC 16+ for C++26 reflection)
+TYRX_VALIDATE ?= off
+
 ################################################################################
 
 # see https://www.gnu.org/prep/standards/html_node/Makefile-Conventions.html
@@ -18,6 +22,14 @@ WITH_NETWORK := auto
 SHELL = /bin/sh
 
 CC ?= gcc
+# make's own default C++ compiler is g++, whatever CC is.  Pair a Clang CC with
+# clang++ instead: MSYS2's CLANG environments have no g++.
+ifeq ($(origin CXX), default)
+    ifneq ($(findstring clang, $(shell $(CC) --version 2>/dev/null)), )
+        CXX := clang++
+    endif
+endif
+CXX ?= g++
 INSTALL ?= install
 PKG_CONFIG ?= pkg-config
 WINDRES ?= windres
@@ -58,6 +70,14 @@ SRCS := $(wildcard src/*.c)
 OBJS := $(SRCS:src/%.c=obj/%.o)
 DEPS := $(SRCS:src/%.c=obj/%.d)
 
+# The C++ game (src/tyrx), and with TYRX_VALIDATE its validation (src/tyrx/validate).
+TYRX_SRCS := $(filter-out src/tyrx/validate/%,$(wildcard src/tyrx/*.cpp src/tyrx/*/*.cpp src/tyrx/*/*/*.cpp))
+ifeq ($(TYRX_VALIDATE), on)
+    TYRX_SRCS += $(wildcard src/tyrx/validate/*.cpp src/tyrx/validate/*/*.cpp)
+endif
+OBJS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.o)
+DEPS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.d)
+
 ###
 
 ifeq ($(WITH_NETWORK), auto)
@@ -92,6 +112,10 @@ CFLAGS ?= -pedantic \
           $(WNO_FORMAT_TRUNCATION) \
           -Wno-missing-field-initializers \
           -O2
+CXXFLAGS ?= -Wall \
+            -Wextra \
+            -Wno-missing-field-initializers \
+            -O2
 LDFLAGS ?=
 LDLIBS ?=
 
@@ -112,6 +136,8 @@ ALL_CPPFLAGS = -DTARGET_$(PLATFORM) \
                $(CPPFLAGS)
 ALL_CFLAGS = -std=iso9899:1999 \
              $(CFLAGS)
+ALL_CXXFLAGS = -std=c++23 \
+               $(CXXFLAGS)
 ALL_LDFLAGS = $(SDL_LDFLAGS) \
               $(LDFLAGS)
 ALL_LDLIBS = -lm \
@@ -128,6 +154,9 @@ debug : CPPFLAGS += -UNDEBUG
 debug : CFLAGS += -Werror
 debug : CFLAGS += -O0
 debug : CFLAGS += -g3
+debug : CXXFLAGS += -Werror
+debug : CXXFLAGS += -O0
+debug : CXXFLAGS += -g3
 debug : all
 
 .PHONY : installdirs
@@ -172,15 +201,35 @@ clean :
 	rm -f $(DEPS)
 	rm -f $(RES)
 	rm -f $(TARGET)
+	rm -rf obj/tyrx
+	rm -f obj/.tyrx_validate_*
 
 $(TARGET) : $(OBJS) $(RES)
-	$(CC) $(ALL_CFLAGS) $(ALL_LDFLAGS) -o $@ $^ $(ALL_LDLIBS)
+	$(CXX) $(ALL_CXXFLAGS) $(ALL_LDFLAGS) -o $@ $(OBJS) $(RES) $(ALL_LDLIBS)
 
 -include $(DEPS)
+
+# Relink when TYRX_VALIDATE changes, since it changes which objects are linked.
+TYRX_STAMP := obj/.tyrx_validate_$(TYRX_VALIDATE)
+$(TYRX_STAMP) :
+	@mkdir -p "$(dir $@)"
+	@rm -f obj/.tyrx_validate_*
+	@touch $@
+$(TARGET) : $(TYRX_STAMP)
 
 obj/%.o : src/%.c
 	@mkdir -p "$(dir $@)"
 	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -c -o $@ $<
+
+# -MP adds an empty rule for each header, so deleting one doesn't break the build.
+obj/tyrx/%.o : src/tyrx/%.cpp
+	@mkdir -p "$(dir $@)"
+	$(CXX) $(ALL_CPPFLAGS) -MP $(ALL_CXXFLAGS) -c -o $@ $<
+
+# The validation is C++26, for its reflection.
+obj/tyrx/validate/%.o : src/tyrx/validate/%.cpp
+	@mkdir -p "$(dir $@)"
+	$(CXX) $(ALL_CPPFLAGS) -MP $(ALL_CXXFLAGS) -std=c++26 -freflection -c -o $@ $<
 
 obj/resources.o : visualc/resources.rc visualc/tyrian.ico
 	@mkdir -p "$(dir $@)"
