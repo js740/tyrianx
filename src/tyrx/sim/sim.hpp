@@ -27,6 +27,7 @@
 
 #include "../c/api.hpp"
 #include "hidden.hpp"
+#include "hud.hpp"
 #include "state.hpp"
 #include "visible.hpp"
 
@@ -68,6 +69,18 @@ void do_sp(Superpixels& superpixels, MtState& mt, uint16_t x, uint16_t y, uint16
 // varz.c: the superpixels' update in JE_drawSP, which moves and fades them.
 // Returns the slots of those it updated, which the drawing draws.
 std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels);
+
+// The HUD's gauges and messages (hud.cpp), which log them in the HUD's log.
+void hud_shield(State const& state, HudLog& hud);             // JE_drawShield
+void hud_armor(State& state, HudLog& hud);                    // JE_drawArmor, which limits the armor to 28
+void hud_wipe_shield_armor(State const& state, HudLog& hud);  // JE_wipeShieldArmorBars
+void hud_port_config(State const& state, HudLog& hud);        // JE_drawPortConfigButtons
+void hud_text_window(State& state, HudLog& hud,
+                     char const *text);                  // JE_drawTextWindow, which sets textErase
+void hud_options(State& state, HudLog& hud);             // JE_drawOptions, which sets up the sidekicks
+void hud_option_level(State const& state, HudLog& hud);  // JE_drawOptionLevel
+void hud_charge_level(State const& state, HudLog& hud, uint8_t color);
+void hud_sidekick_ammo(HudLog& hud, int y, int ammo_max, int ammo, bool discharged);
 
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.
