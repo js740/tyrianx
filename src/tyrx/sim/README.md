@@ -83,6 +83,9 @@ The files:
   limits the players' armor, `hud_text_window` (`JE_drawTextWindow`) sets when
   the message is erased, and `hud_options` (`JE_drawOptions`) sets up the
   sidekicks.
+  The C code draws the shields and armor with `VGAScreen` set to the HUD's
+  surface and leaves it at `game_screen` after, where the rest of the tick then
+  draws; the game logic sets the draw record's surface there.
 - `enemy.cpp`: `make_enemy` (`JE_makeEnemy`) makes an enemy in a slot, and
   `new_enemy` (`JE_newEnemy`) in the first free slot of a layer's.
   `update_enemies` (`JE_drawEnemy`, which "actually does a whole lot more than
@@ -103,6 +106,23 @@ The files:
   (`player_shot_move_and_draw`), and has them hit the enemies they collide
   with (`hit_enemy`) or set off chain reactions. It returns the shots it
   drew, for the tick's drawing.
+- `player.cpp`: `update_players` runs the players' part of the level loop:
+  their collisions with enemies (`JE_playerCollide`), which pick items up or
+  damage both, then their movement, firing and sidekicks
+  (`JE_mainGamePlayerFunctions` and `JE_playerMovement`), and the map's
+  sideways scrolling, which follows them. It returns the players it drew, for
+  the tick's drawing. It reads the raw input from the C globals and the demo
+  file, as the C code does, in one place (`Movement::read_input`).
+  `damage_player` (`JE_playerDamage`) damages a player's shield and armor, and
+  `get_ship_info` (`JE_getShipInfo`) sets up the ships.
+- `special.cpp`: the special moves: `sf_codes` (`JE_SFCodes`) follows the
+  players' input through the ships' codes, and `do_special_shot`
+  (`JE_doSpecialShot`) sets the specials off and runs those that last.
+- `draw_record.hpp` and `visible.hpp`: what the tick's simulation records for
+  its drawing (`DrawRecord`): which parts were drawn, on which surface, and the
+  values that the simulation goes on to change after the C code drew them.
+  The record names the surfaces (`Surface`), and keeps the one that the C
+  code's `VGAScreen` points at.
 
 The code here does what the C code does, in its order, but takes its state
 explicitly, has C++ names, and is split into functions where the C code nests

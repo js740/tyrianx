@@ -26,9 +26,18 @@
 
 #include <stdint.h>
 #include <bitset>
+#include <optional>
 #include <vector>
 
 namespace tyrx::sim {
+
+// The surfaces that the C code's level tick draws on, which its VGAScreen
+// points at one of.
+enum class Surface : uint8_t {
+  vga_screen_seg,  // VGAScreenSeg, the HUD's, which the playing area is copied onto at the end
+  game_screen,     // game_screen
+  vga_screen2,     // VGAScreen2, for the smoothies
+};
 
 // The explosions visible in a tick, for its drawing: the slots of those still
 // on screen after the update moved them, and the last position and frame of
@@ -61,6 +70,62 @@ struct VisiblePlayerShot {
   int32_t  y;
   uint16_t sprite_frame;  // over 60000 for special shots
   bool     shadow;
+};
+
+// A player as JE_playerMovement drew it, each part on the surface it was
+// drawn on.
+struct VisiblePlayer {
+  uint16_t       ship_gr;
+  Sprite2_array *ship_gr_ptr;
+  struct Trail {  // at the end of a level
+    Surface screen;
+
+    int32_t x;
+
+    std::vector<int> trail_y;
+  };
+  std::optional<Trail> trail;
+  struct InsertCoin {  // in demos
+    Surface screen;
+  };
+  std::optional<InsertCoin> insert_coin;
+  struct Ship {
+    Surface  screen;
+    int32_t  x;
+    int32_t  y;
+    int32_t  sprite;
+    uint16_t map_x2_ofs;
+    bool     background2;
+    bool     super_wild;
+    bool     invulnerable;
+  };
+  std::optional<Ship> ship;
+  struct SpecialIcon {
+    Surface screen;
+    bool    ready;
+  };
+  std::optional<SpecialIcon> special_icon;
+  struct Zinglon {
+    Surface screen;
+    int32_t x;
+    uint8_t width;
+  };
+  std::optional<Zinglon> zinglon;
+  struct Charge {
+    Surface screen;
+    int32_t x;
+    int32_t y;
+    int32_t sprite;
+  };
+  std::optional<Charge> charge;
+  struct Sidekick {
+    Surface  screen;
+    int32_t  x;
+    int32_t  y;
+    uint32_t sprite;
+    uint32_t style;
+  };
+  std::optional<Sidekick> sidekicks[2];
 };
 
 }  // namespace tyrx::sim
