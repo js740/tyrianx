@@ -31,6 +31,7 @@
 #include <stdint.h>
 #include <cstddef>
 #include <cstdio>
+#include <memory>
 #include <meta>
 #include <span>
 #include <string>
@@ -247,9 +248,43 @@ std::span<StateBlock const> state_blocks();
 // Blocks of hashed classes, in state_blocks() order.
 std::span<StateBlock const *const> hashed_blocks();
 
+// Registers memory that the C code allocates at run time (e.g. the joystick
+// array) as a block of a class that is not hashed, so that snapshots of that
+// class include it.  Must be called before the first snapshot.
+void register_heap_block(std::string_view name, StateClass cls, void *addr, size_t size);
+
 // Hashes of every hashed block, in hashed_blocks() order.
 std::vector<uint64_t> block_hashes();
 
 void dump_state(std::FILE *out);
+
+//------------------------------------------------------------------------------
+// Snapshots
+//------------------------------------------------------------------------------
+
+// A copy of the registered blocks of some classes, taken at a tick boundary,
+// that can be written back.  Restoring is only valid within the level the
+// snapshot was taken in: pointers are copied as they are, and some point into
+// data that is loaded per level (e.g. sprite sheets).
+class Snapshot {
+ public:
+  // Copies the blocks of the classes `include` selects.  Blocks that are
+  // unchanged since `previous` (captured with the same `include`) share its
+  // copies, so consecutive snapshots cost only what changed.
+  static Snapshot capture(bool (*include)(StateClass), Snapshot const *previous = nullptr);
+  void            restore() const;
+
+  // Bytes copied by this snapshot rather than shared with the previous one.
+  size_t unshared_size() const { return unshared_size_; }
+
+ private:
+  struct Copy {
+    StateBlock const *block;
+
+    std::shared_ptr<std::byte const[]> bytes;
+  };
+  std::vector<Copy> copies_;
+  size_t            unshared_size_ = 0;
+};
 
 }  // namespace tyrx::validate

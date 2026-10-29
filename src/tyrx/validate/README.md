@@ -11,10 +11,11 @@ It attaches itself to the game during static initialization, as the game's
 | File | What it does |
 |---|---|
 | `runtime.cpp` | The validation's hooks, and the exits |
-| `state.cpp` | The state registry (`registry.inc`, `untracked.txt`), hashing and dumping of the C state |
+| `state.cpp` | The state registry (`registry.inc`, `untracked.txt`), hashing, dumping and snapshots of the C state |
 | `hashlog.cpp` | The per-tick state hash log and state dumps |
 | `vclock.cpp` | The virtual clock |
 | `input_driver.cpp` | Seeded synthetic input |
+| `roundtrip.cpp` | The round-trip test of snapshots |
 
 ## Runtime controls (environment variables)
 
@@ -31,11 +32,13 @@ It attaches itself to the game during static initialization, as the game's
 | `TYRX_INPUT_ARCADE=1` | With `TYRX_INPUT_SEED`: play one-player arcade games |
 | `TYRX_INPUT_MOUSE=1` | With `TYRX_INPUT_SEED`: also move the mouse and press its buttons |
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick |
+| `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that the validation initiates return a status that names the first
 check that failed:
 - 3: pointers that the hashes couldn't describe
+- 4: round trips (`TYRX_ROUNDTRIP`)
 
 ## State registry
 
@@ -44,7 +47,7 @@ Every writable global and static of the C objects has a `StateClass`.
 `TYRX_SIM(X)` expands to `X(symbol)` for every gameplay symbol, and so on.
 `untracked.txt` lists the rest by object. `tools/check_c_state_registry.py`
 runs at link time and fails if a symbol is in neither or if registered state is
-`static`, so a newly added global can't silently go missing from the hashes.
+`static`, so a newly added global can't silently go missing from snapshots.
 With `--by-object`, it prints the classification object by object.
 
 The classes that matter most:
@@ -152,7 +155,7 @@ one-player games, the mouse moves player 1 along with the keys.
 `TYRX_INPUT_JOYSTICK=1` replaces any real joysticks with one virtual joystick
 (SDL's virtual joystick driver, with the default assignments) and drives its
 stick, fire and sidekick buttons along with the keys, plus a fire-mode change
-every 200 ticks. Joystick runs are deterministic, but
+every 200 ticks. Joystick runs are deterministic and survive round trips, but
 with `TYRX_INPUT_MIDTICK=1` they diverge at the first tick: `JE_playerMovement`
 reads the joystick directly (`poll_joystick`) in the middle of the tick.
 
@@ -168,4 +171,37 @@ reads the joystick directly (`poll_joystick`) in the middle of the tick.
   demo-stop checks), with key repeat timed by the wall clock. The virtual clock
   only advances between ticks, so the repeat timer is deterministic here but
   not in real play.
+
+## Snapshots and the round-trip test
+
+`Snapshot` (`state.hpp`) copies the registered blocks of chosen classes and
+writes them back. A snapshot is valid only within the level it was taken in,
+because pointers into per-level data (such as sprite sheets) are copied as-is.
+
+The C code allocates the joystick array (`joystick`), which holds each
+joystick's previous state and repeat timer, at startup. `register_heap_block`
+adds it to snapshots as input state once `init_joysticks` has run.
+
+`TYRX_ROUNDTRIP=K[,P]` tests whether snapshots hold everything a tick depends
+on. Every P ticks (default 10×K), outside demos, it does the following:
+1. Snapshots the game state and the input state.
+2. Runs K ticks.
+3. Restores the snapshot.
+4. Replays those K ticks, requiring the same hashes as the first time, at the
+   top of each tick and at the end.
+
+Any state left out of the registry shows up as a mismatch that names the
+differing blocks. Exits that the validation initiates return status 4 if any
+replay differed or no round trip completed. A run with round trips logs the same
+hashes as one without:
+
+```sh
+tools/run_headless.sh ./opentyrian DATA plain.log input 1 20000
+tools/run_headless.sh ./opentyrian DATA rt.log input 1 20000 TYRX_ROUNDTRIP=50,200
+# tyrx roundtrip: 98 round trips of 50 ticks, 4900 ticks replayed, 0 mismatched, ...
+tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
+```
+
+Demos are skipped because their input comes from a file whose read position
+isn't part of the snapshot.
 

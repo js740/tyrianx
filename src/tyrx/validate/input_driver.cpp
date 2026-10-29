@@ -22,6 +22,7 @@
 #include "../c/api.hpp"
 #include "../env.hpp"
 #include "runtime.hpp"
+#include "state.hpp"
 #include "vclock.hpp"
 
 #include <stdint.h>
@@ -90,6 +91,15 @@ class InputDriver {
   // Called by __wrap_init_joysticks with the virtual joystick it opened.
   void set_joystick(SDL_Joystick *handle) { joystick_ = handle; }
 
+  // The game's key state was restored, so push the next tick's keys again.
+  // The virtual joystick isn't part of the game state, so it still holds the
+  // input of the tick before the restore; at the top of the tick, it is put
+  // back as the tick first saw it.
+  void on_snapshot_restored() {
+    pushed_tick_ = UINT64_MAX;
+    joystick_stale_ = joystick_ != nullptr;
+  }
+
   // Called at the top of each level tick, before it runs.
   void on_level_tick() {
     last_tick_ms_ = vclock_now();
@@ -98,6 +108,16 @@ class InputDriver {
       level_first_tick_ = current_tick();
       between_levels_ = false;
     }
+    if (joystick_stale_ && !midtick_) {
+      // The first tick of a level ran with everything released.
+      if (current_tick() == level_first_tick_) {
+        release_joystick();
+      }
+      else {
+        push_joystick(current_tick());
+      }
+    }
+    joystick_stale_ = false;
     if (midtick_) {
       push_input(current_tick() + 1);
     }
@@ -349,6 +369,7 @@ class InputDriver {
   bool          midtick_;
   bool          wants_joystick_;
   SDL_Joystick *joystick_ = nullptr;
+  bool          joystick_stale_ = false;
   bool          between_levels_ = true;
   bool          level_ended_ = false;
   uint64_t      level_first_tick_ = 0;
@@ -386,6 +407,12 @@ void input_driver_level_tick() {
   }
 }
 
+void input_driver_snapshot_restored() {
+  if (InputDriver *d = input_driver()) {
+    d->on_snapshot_restored();
+  }
+}
+
 }  // namespace tyrx::validate
 
 // Linked with -Wl,--wrap=JE_itemScreen, so the driver knows when the shop menu
@@ -417,15 +444,21 @@ extern "C" bool __wrap_gameplaySelect(void) {
   return true;
 }
 
-// Linked with -Wl,--wrap=init_joysticks.  With TYRX_INPUT_JOYSTICK, the game
-// gets one virtual joystick with the default assignments in place of any real
-// ones, even with --no-joystick.  deinit_joysticks closes it as usual.
+// Linked with -Wl,--wrap=init_joysticks, to register the joystick array, which
+// holds each joystick's previous state and repeat timer, as input state.  With
+// TYRX_INPUT_JOYSTICK, the game gets one virtual joystick with the default
+// assignments in place of any real ones, even with --no-joystick.
+// deinit_joysticks closes it as usual.
 extern "C" void __real_init_joysticks(void);
 
 extern "C" void __wrap_init_joysticks(void) {
   tyrx::validate::InputDriver *const d = tyrx::validate::input_driver();
   if (d == nullptr || !d->wants_joystick()) {
     __real_init_joysticks();
+    if (joysticks > 0) {
+      tyrx::validate::register_heap_block("joystick[]", tyrx::validate::StateClass::input, joystick,
+                                          joysticks * sizeof *joystick);
+    }
     return;
   }
 
@@ -446,5 +479,7 @@ extern "C" void __wrap_init_joysticks(void) {
   joystick = static_cast<Joystick *>(std::calloc(1, sizeof *joystick));
   joystick[0].handle = handle;
   reset_joystick_assignments(0);
+  tyrx::validate::register_heap_block("joystick[]", tyrx::validate::StateClass::input, joystick,
+                                      sizeof *joystick);
   d->set_joystick(handle);
 }

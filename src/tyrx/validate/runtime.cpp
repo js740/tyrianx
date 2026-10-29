@@ -24,6 +24,7 @@
 #include "../game.hpp"
 #include "hashlog.hpp"
 #include "input_driver.hpp"
+#include "roundtrip.hpp"
 #include "state.hpp"
 
 #include <cinttypes>
@@ -40,6 +41,9 @@ namespace {
   int status = EXIT_SUCCESS;
   if (unresolved_pointers()) {
     status = 3;
+  }
+  else if (round_trip_failed()) {
+    status = 4;
   }
   std::exit(status);
 }
@@ -60,6 +64,7 @@ class Runtime final : public Validation {
 
   void level_start() override {
     ++level_count_;
+    round_trip_level_start();
     if (playDemo && exit_after_demos_ >= 0 && ++demo_count_ > exit_after_demos_) {
       exit_run();
     }
@@ -70,12 +75,18 @@ class Runtime final : public Validation {
     if (exit_after_ticks_ >= 0 && (long)tick_ >= exit_after_ticks_) {
       exit_run();
     }
+    tick_ = round_trip_begin_tick(tick_);  // may restore a snapshot and go back
     input_driver_level_tick();
 
     std::vector<uint64_t> hashes;
-    if (hashlog_enabled()) {
+    if (hashlog_enabled() || round_trip_active()) {
       hashes = block_hashes();
     }
+    if (round_trip_end_tick(tick_, hashes)) {
+      ++tick_;  // replayed ticks are not logged or dumped again
+      return;
+    }
+
     hashlog_tick(tick_, hashes);
     ++tick_;
   }

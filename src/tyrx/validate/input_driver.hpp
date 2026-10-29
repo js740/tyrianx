@@ -53,4 +53,7 @@ void input_driver_level_tick();
 // Called when a level has ended.
 void input_driver_level_ended();
 
+// Called when the game's key state has been restored from a snapshot.
+void input_driver_snapshot_restored();
+
 }  // namespace tyrx::validate
