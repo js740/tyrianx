@@ -57,6 +57,11 @@ namespace {
   std::exit(status);
 }
 
+[[noreturn]] void fail(char const *why) {
+  std::fprintf(stderr, "tyrx: %s\n", why);
+  std::exit(EXIT_FAILURE);
+}
+
 class Runtime final : public Validation {
  public:
   Runtime() {
@@ -72,6 +77,16 @@ class Runtime final : public Validation {
       std::fprintf(stderr,
                    "tyrx: %" PRIu64 " pointers in hashed state did not point into a registered block\n", n);
     }
+  }
+
+  bool cxx_game() override {
+    if (env("TYRX_CXX_TICK") == nullptr) {
+      return false;
+    }
+    if (env("TYRX_SHADOW") != nullptr || env("TYRX_DRAWLIST_CHECK") != nullptr) {
+      fail("TYRX_CXX_TICK doesn't run with TYRX_SHADOW or TYRX_DRAWLIST_CHECK");
+    }
+    return true;
   }
 
   void level_start() override {
@@ -112,7 +127,18 @@ class Runtime final : public Validation {
     draw::drawlist_level_ended();
   }
 
+  // The C++ game's pass works on the State, and the C globals it holds the
+  // state of are scrambled until it is written back.
+  void pass_begins(sim::State const& state) override {
+    check_bound_pointers(state);
+    scramble_bound_globals();
+    pass_active_ = true;
+  }
+
+  void pass_ends() override { pass_active_ = false; }
+
   uint64_t tick() const { return tick_; }
+  bool     pass_active() const { return pass_active_; }
 
  private:
   long exit_after_demos_ = -1;
@@ -121,6 +147,7 @@ class Runtime final : public Validation {
   uint64_t tick_ = 0;
   unsigned level_count_ = 0;
   long     demo_count_ = 0;
+  bool     pass_active_ = false;
 };
 
 Runtime& runtime() {
@@ -137,5 +164,7 @@ Runtime& runtime() {
 }  // namespace
 
 uint64_t current_tick() { return runtime().tick(); }
+
+bool cxx_pass_active() { return runtime().pass_active() || shadow_active(); }
 
 }  // namespace tyrx::validate

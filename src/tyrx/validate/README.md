@@ -8,10 +8,11 @@ It checks the C++ game against it tick by tick.
 
 It attaches itself to the game during static initialization, as the game's
 `Validation` (`../game.hpp`, `runtime.cpp`), and the game's hooks run it.
+The C code runs the levels unless `TYRX_CXX_TICK=1`.
 
 | File | What it does |
 |---|---|
-| `runtime.cpp` | The validation's hooks, and the exits |
+| `runtime.cpp` | The validation's hooks, `TYRX_CXX_TICK`, and the exits |
 | `state.cpp` | The state registry (`registry.inc`, `untracked.txt`), hashing, dumping and snapshots of the C state |
 | `hashlog.cpp` | The per-tick state hash log and state dumps |
 | `vclock.cpp` | The virtual clock |
@@ -27,6 +28,7 @@ It attaches itself to the game during static initialization, as the game's
 
 | Variable | Effect |
 |---|---|
+| `TYRX_CXX_TICK=1` | Run the levels with the C++ game, in place of the C code's level loop (`../game.hpp`) |
 | `TYRX_HASHLOG=FILE` | Per-tick hash of every hashed block, plus level-start markers |
 | `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N |
 | `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
@@ -46,6 +48,9 @@ It attaches itself to the game during static initialization, as the game's
 | `TYRX_SHADOW_CALLS=1` | With `TYRX_SHADOW`: count the draw calls that C++ code made, and those drawn during the simulation, by kind |
 | `TYRX_FRAMELOG=FILE` | A hash of each frame presented, with its tick |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
+
+`TYRX_CXX_TICK` doesn't run with the checks that run the C code's ticks
+(`TYRX_SHADOW`, `TYRX_DRAWLIST_CHECK`).
 
 Exits that the validation initiates return a status that names the first
 check that failed:
@@ -228,6 +233,11 @@ tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
 Demos are skipped because their input comes from a file whose read position
 isn't part of the snapshot.
 
+With `TYRX_CXX_TICK=1`, the C++ game reads its `State` from the C globals that
+a round trip restored, so the round trip also checks that the `State`, the level
+data and the input are all that the C++ game depends on. The runs above give
+the same hash logs with it as without it.
+
 ## The shadow tick
 
 `TYRX_SHADOW=1` (with `TYRX_VCLOCK`) checks the C++ level tick
@@ -273,4 +283,27 @@ same frames write the same log, so `cmp` compares them. The logs of two builds
 differ outside the levels: the title screen shows the build's version, and the
 screens between the demos present more frames in a release build than in a
 debug build.
+
+## The C++ game in place of the C code
+
+With `TYRX_CXX_TICK=1`, the C++ game runs the levels (`../game.hpp`), as it
+does in the game's own build. A run plays the same with it as without it if
+their hash logs and frame logs are the same:
+
+```sh
+tools/run_headless.sh ./opentyrian DATA c.log demos TYRX_FRAMELOG=c.frames
+tools/run_headless.sh ./opentyrian DATA x.log demos TYRX_FRAMELOG=x.frames TYRX_CXX_TICK=1
+cmp c.log x.log && cmp c.frames x.frames
+```
+
+The demos play the same, and so do the synthetic runs of the shadow suite above
+(seeds 1-7 with the cheats and with the commands, input during the tick, arcade
+and two-player games) and six runs that open the pause screen, the help and the
+menu (`TYRX_INPUT_SCREENS`), which the C++ game runs with the `State` in the C
+globals: 838,538 ticks and 967,108 frames.
+
+While a pass of the C++ game runs, the C globals that its `State` holds are
+scrambled, so that C code that still used them would go wrong visibly, and a
+C drawing primitive called outside the C loops stops the program
+(`draw/README.md`).
 

@@ -51,5 +51,7 @@ for the whole tick, such as sprite data or settings. The in-game menu
 `memcpy`, which the first check would report; synthetic play doesn't open them.
 
 The C++ game doesn't call the C primitives: it adds its calls to a draw list
-of its own (`../../render/tick/draw.hpp`). While the shadow tick's pass of it
-runs (`../shadow.hpp`), a call to one stops the program.
+of its own (`../../render/tick/draw.hpp`). While a pass of it runs, either
+the shadow tick's (`../shadow.hpp`) or its own (`TYRX_CXX_TICK=1`), a call to
+one stops the program, except in the C loops it runs (the pause screen, the
+in-game menu and help).

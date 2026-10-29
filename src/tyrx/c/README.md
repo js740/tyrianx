@@ -11,6 +11,11 @@ is how C++ code sees the C game:
 - `mirror.hpp`: which member of a C struct each member of the C++ structs in
   `sim::State` maps to, and copying between them.
 
+The C++ game (`../game.hpp`) reads its `State` from the C globals when a level
+starts and after C code that works on them has run (the pause screen, the
+in-game menu and help), and writes it back after each pass, for the C code
+that runs between ticks and after the level.
+
 The C++ structs (`sim::Event` for `JE_EventRecType`, and so on) have their own
 names, types and order, and are copied member by member by the field lists in
 `mirror.hpp`. A member that doesn't copy as it is has a conversion: a

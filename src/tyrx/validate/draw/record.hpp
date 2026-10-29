@@ -35,8 +35,8 @@
 //                           reproduces them, both with the C primitives and
 //                           with their C++ ports in render/
 //
-// The C++ game doesn't call the C primitives: while the shadow tick's pass of
-// it runs (../shadow.hpp), a call to one aborts.
+// The C++ game doesn't call the C primitives: while one of its passes runs,
+// either the shadow tick's (../shadow.hpp) or its own, a call to one aborts.
 //------------------------------------------------------------------------------
 
 #pragma once

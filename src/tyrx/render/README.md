@@ -24,8 +24,9 @@ at the end of the tick and from the draw record that the simulation keeps
 (`../sim/draw_record.hpp`), in the C code's order, with a function for each
 part (`X_draw`, in the file of the same subject). The `draw::` functions
 (`tick/draw.hpp`) add the same calls as the C primitives record to the draw
-list that the code running the tick passes them. The validation's shadow
-tick compares each pass's list with the C tick's.
+list that the code running the tick passes them. The C++ game (`../game.hpp`)
+draws its list as the pass goes. The validation's shadow tick compares each
+pass's list with the C tick's.
 
 The record holds only what the state at the end of the tick no longer shows:
 which parts were drawn, on which surface, and values that the simulation went on

@@ -21,6 +21,7 @@
 
 #include "../c/api.hpp"
 #include "../env.hpp"
+#include "../game.hpp"
 #include "input_driver.hpp"
 #include "runtime.hpp"
 #include "state.hpp"
@@ -119,6 +120,7 @@ uint64_t round_trip_begin_tick(uint64_t tick) {
       rt.recorded.push_back(block_hashes());
       rt.snapshot.restore();
       input_driver_snapshot_restored();
+      game_c_state_restored();
       rt.replaying = true;
       return rt.start_tick;
     }
