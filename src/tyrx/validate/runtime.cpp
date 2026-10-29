@@ -80,7 +80,7 @@ class Runtime final : public Validation {
     ++tick_;
   }
 
-  void level_ended() override {}
+  void level_ended() override { input_driver_level_ended(); }
 
   uint64_t tick() const { return tick_; }
 
