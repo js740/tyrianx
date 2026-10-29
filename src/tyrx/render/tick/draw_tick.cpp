@@ -1,0 +1,233 @@
+//------------------------------------------------------------------------------
+// Tyrian X: A modern C++ cross-platform port of Tyrian
+// Copyright (C) The Tyrian X Development Team
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+//------------------------------------------------------------------------------
+
+// The drawing of a level tick, after its simulation: the draw calls of the C
+// code's level loop, in its order, from the game state at the end of the tick
+// and the draw record (draw_record.hpp).
+
+#include "draw.hpp"
+#include "tick.hpp"
+
+#include <cstdio>
+
+namespace tyrx::render {
+
+namespace {
+
+// The shots drawn stay as they are, and in their slots, for the rest of the
+// tick.
+void enemy_shots_draw(DrawList& list, sim::State const& state, EnemyShotsDrawn const& d) {
+  auto const& enemyShot = state.enemy_shots.slots;
+  for (int z = 0; z < ENEMY_SHOT_MAX; z++) {
+    if (!d.drawn[z]) {
+      continue;
+    }
+
+    if (enemyShot[z].sprite >= 500) {
+      draw::blit_sprite2(list, surface(d.screen), enemyShot[z].x, enemyShot[z].y, spriteSheet12,
+                         enemyShot[z].sprite + enemyShot[z].frame - 500);
+    }
+    else {
+      draw::blit_sprite2(list, surface(d.screen), enemyShot[z].x, enemyShot[z].y, spriteSheet8,
+                         enemyShot[z].sprite + enemyShot[z].frame);
+    }
+  }
+}
+
+// Explosions that ended may have had their slots taken, so those are drawn
+// from the record.
+void explosions_draw(DrawList& list, sim::State const& state, ExplosionsDrawn const& d) {
+  auto const& explosionTransparent = state.display.explosion_transparent;
+  auto        e = d.visible.ended.begin();
+  for (int j = 0; j < MAX_EXPLOSIONS; j++) {
+    if (!d.visible.slots[j]) {
+      continue;
+    }
+
+    sim::Explosion const& explosion = state.explosions.slots[j];
+    int16_t               x = explosion.x, y = explosion.y;
+    uint16_t              sprite = explosion.sprite;
+    if (e != d.visible.ended.end() && e->slot == j) {
+      x = e->x, y = e->y, sprite = e->sprite;
+      ++e;
+    }
+    if (explosionTransparent) {
+      draw::blit_sprite2_blend(list, surface(d.screen), x, y, explosionSpriteSheet, sprite + 1);
+    }
+    else {
+      draw::blit_sprite2(list, surface(d.screen), x, y, explosionSpriteSheet, sprite + 1);
+    }
+  }
+}
+
+void copy_draw(DrawList& list, std::optional<Copy> const& copy,
+               void (*filter)(DrawList&, SDL_Surface *, SDL_Surface *)) {
+  if (copy) {
+    filter(list, surface(copy->dst), surface(copy->src));
+  }
+}
+
+void darken_draw(DrawList& list, std::optional<Darkened> const& d) {
+  if (d) {
+    draw::JE_darkenBackground(list, surface(d->screen), d->neat);
+  }
+}
+
+template <typename T, typename Draw>
+void draw_if(DrawList& list, std::optional<T> const& drawn, Draw draw) {
+  if (drawn) {
+    draw(list, *drawn);
+  }
+}
+
+}  // namespace
+
+void draw_tick(DrawList& list, sim::State const& state, DrawRecord const& r) {
+  auto const& processorType = state.game.processor_type;
+  auto const& smoothie_data = state.display.smoothie_data;
+  auto const& warningCol = state.display.warning_col;
+  auto const& starShowVGASpecialCode = state.display.star_show_vga_special_code;
+  auto const& levelTimerCountdown = state.level.timer_countdown;
+  auto const& player = state.players.slots;
+  // The HUD, on its own surface, whose drawing commutes with the playing
+  // area's until the playing area is copied onto it at the end.
+  for (hud::Draw const& d : r.hud.draws) {
+    hud_draw(list, d);
+  }
+
+  // --- BACKGROUNDS ---
+  draw_if(list, r.background_1, background_1_draw);
+  if (r.starfield) {
+    starfield_draw(list, state, surface(*r.starfield));
+  }
+  copy_draw(list, r.iced_blur_1, draw::iced_blur_filter);
+  draw_if(list, r.background_2_under, background_2_draw);
+  copy_draw(list, r.lava_1, draw::lava_filter);
+  if (r.water) {
+    draw::water_filter(list, surface(r.water->dst), surface(r.water->src), smoothie_data[1]);
+  }
+
+  // -----------------------Ground Enemy------------------------
+  draw_if(list, r.ground_enemies, enemies_draw);
+  draw_if(list, r.ground_enemies_2, enemies_draw);
+  copy_draw(list, r.lava_2, draw::lava_filter);
+  darken_draw(list, r.darken_1);
+  draw_if(list, r.background_2_over_1, background_2_draw);
+  darken_draw(list, r.darken_2);
+  draw_if(list, r.background_3_over_2, background_3_draw);
+  copy_draw(list, r.iced_blur_2, draw::iced_blur_filter);
+  copy_draw(list, r.blur, draw::blur_filter);
+  draw_if(list, r.sky_enemies_under, enemies_draw);
+  draw_if(list, r.background_3_over_0, background_3_draw);
+  draw_if(list, r.top_enemies_under, enemies_draw);
+
+  // Player Shot Images
+  draw_if(list, r.player_shots, player_shots_draw);
+
+  // --------PLAYER DRAW+MOVEMENT---------
+  for (sim::VisiblePlayer const& p : r.players) {
+    player_draw(list, p);
+  }
+
+  // Draw Enemy Shots
+  if (r.enemy_shots) {
+    enemy_shots_draw(list, state, *r.enemy_shots);
+  }
+  draw_if(list, r.background_3_over_1, background_3_draw);
+  draw_if(list, r.top_enemies_over, enemies_draw);
+  draw_if(list, r.sky_enemies_over, enemies_draw);
+
+  // ---------------------------- Draw Explosions ----------------------------
+  if (r.explosions) {
+    explosions_draw(list, state, *r.explosions);
+  }
+  draw_if(list, r.background_2_over_2, background_2_draw);
+
+  // -------------------------Warning---------------------------
+  if (r.warning) {
+    SDL_Surface *const screen = surface(*r.warning);
+    draw::fill_rectangle_xy(list, screen, 24, 181, 138, 183, warningCol);
+    draw::fill_rectangle_xy(list, screen, 175, 181, 287, 183, warningCol);
+    draw::fill_rectangle_xy(list, screen, 24, 0, 287, 3, warningCol);
+
+    draw::JE_outText(list, screen, 140, 178, "WARNING", 7, (warningCol % 16) / 2);
+  }
+
+  // -------      DEbug      ---------
+  if (r.debug) {
+    SDL_Surface *const screen = surface(r.debug->screen);
+    draw::JE_outText(list, screen, 30, 70, r.debug->text[0].c_str(), 4, 0);
+    draw::JE_outText(list, screen, 30, 80, r.debug->text[1].c_str(), 4, 0);
+    draw::JE_outText(list, screen, 30, 90, r.debug->text[2].c_str(), 6, 0);
+    draw::JE_outText(list, screen, 45, 175, r.debug->text[3].c_str(), 15, 3);
+  }
+
+  if (r.message) {
+    draw::JE_outTextAndDarken(list, surface(r.message->screen), 90, 10, miscText[59], 15,
+                              (uint8_t)r.message->flash - 8, FONT_SHAPES);
+  }
+
+  // --------  Level Timer    ---------
+  if (r.level_timer) {
+    SDL_Surface *const screen = surface(*r.level_timer);
+
+    char buffer[256];
+    draw::JE_textShade(list, screen, 140, 6, miscText[66], 7, (levelTimerCountdown % 20) / 3, FULL_SHADE);
+    std::snprintf(buffer, sizeof(buffer), "%.1f", levelTimerCountdown / 100.0f);
+    draw::JE_dString(list, screen, 100, 2, buffer, SMALL_FONT_SHAPES);
+  }
+
+  // GAME OVER
+  if (r.game_over) {
+    draw::JE_dString(list, surface(*r.game_over), 120, 60, miscText[21], FONT_SHAPES);  // game over
+  }
+
+  // Test
+  if (r.superpixels) {
+    superpixels_draw(list, state, *r.superpixels);
+  }
+
+  // Filtration
+  if (r.filter) {
+    filter_screen_draw(list, state, *r.filter);
+  }
+
+  draw_if(list, r.boss_bars, boss_bar_draw);
+
+  if (r.in_game_displays) {
+    in_game_displays_draw(list, state, surface(*r.in_game_displays));
+  }
+
+  if (!r.show) {
+    return;
+  }
+
+  // JE_starShowVGA
+  if (starShowVGASpecialCode == 1) {
+    draw::showFlipped(list, VGAScreenSeg, game_screen);
+  }
+  else if (starShowVGASpecialCode == 2 && processorType >= 2) {
+    draw::showHeadlight(list, VGAScreenSeg, game_screen, player[0].x, player[0].y);
+  }
+  else {
+    draw::showNormal(list, VGAScreenSeg, game_screen);
+  }
+}
+
+}  // namespace tyrx::render
