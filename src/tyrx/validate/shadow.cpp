@@ -25,6 +25,7 @@
 #include "../level.hpp"
 #include "bindings.hpp"
 #include "draw/record.hpp"
+#include "framelog.hpp"
 #include "input_record.hpp"
 #include "memory.hpp"
 #include "runtime.hpp"
@@ -591,6 +592,7 @@ void   __real_free_sprite2s(Sprite2_array *);
 void   __real_JE_pauseGame(void);
 void   __real_JE_doInGameSetup(void);
 void   __real_JE_showVGA(void);
+void   __real_scale_and_render_screen(SDL_Surface *);
 void   __real_handleSdlEvents(void);
 size_t __real_fileReadAtMost(File *, void *, size_t);
 void   __real_fileReadExactly(File *, void *, size_t);
@@ -670,12 +672,21 @@ void __wrap_JE_doInGameSetup(void) {
 }
 
 // The C++ level pass presents and polls by itself, so a call from C code
-// means a screen of its own (pause, menu, help).
+// means a screen of its own (pause, menu, help).  Each frame presented goes in
+// the frame log (TYRX_FRAMELOG) too.
 void __wrap_JE_showVGA(void) {
   if (tyrx::validate::shadow_active()) {
     tyrx::validate::shadow_abort("another screen presented");
   }
+  tyrx::validate::framelog_frame();
   __real_JE_showVGA();
+}
+
+// The level loop scales the frames it presents itself, as the C++ level tick
+// does, without JE_showVGA.  They go in the frame log too.
+void __wrap_scale_and_render_screen(SDL_Surface *src_surface) {
+  tyrx::validate::framelog_frame();
+  __real_scale_and_render_screen(src_surface);
 }
 
 // Input record replays play recorded input, and leave the events for after

@@ -116,7 +116,7 @@ ifeq ($(TYRX_VALIDATE), on)
                   showHeadlight showFlipped showNormal update_and_draw_starfield JE_drawSP JE_clr256
     # what the shadow tick replays or suppresses (validate/shadow.cpp)
     TYRX_WRAPS += multiSamplePlay play_song set_volume push_joysticks_as_keyboard poll_joystick \
-                  JE_loadCompShapes free_sprite2s JE_pauseGame JE_doInGameSetup JE_showVGA handleSdlEvents \
+                  JE_loadCompShapes free_sprite2s JE_pauseGame JE_doInGameSetup JE_showVGA scale_and_render_screen handleSdlEvents \
                   fileReadAtMost fileReadExactly
     # the input record's queries, for replays (validate/input_record.cpp)
     TYRX_WRAPS += keyboardHasInput hasInput keyboardClearInput mouseClearInput mouseGetRelativePosition
