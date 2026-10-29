@@ -38,6 +38,7 @@ It attaches itself to the game during static initialization, as the game's
 | `TYRX_INPUT_ARCADE=1` | With `TYRX_INPUT_SEED`: play one-player arcade games |
 | `TYRX_INPUT_MOUSE=1` | With `TYRX_INPUT_SEED`: also move the mouse and press its buttons |
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick |
+| `TYRX_INPUT_SCREENS=1` | With `TYRX_INPUT_SEED`: also open and close the pause screen, the in-game help and menu |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots |
 | `TYRX_DRAWLIST=FILE` | Write each level tick's draw calls to FILE ([draw](draw/README.md)) |
 | `TYRX_DRAWLIST_CHECK=1` | Check that the draw lists are complete and reproduce each tick ([draw](draw/README.md)) |
@@ -171,6 +172,15 @@ stick, fire and sidekick buttons along with the keys, plus a fire-mode change
 every 200 ticks. Joystick runs are deterministic and survive round trips, but
 with `TYRX_INPUT_MIDTICK=1` they diverge at the first tick: `JE_playerMovement`
 reads the joystick directly (`poll_joystick`) in the middle of the tick.
+
+`TYRX_INPUT_SCREENS=1` opens the screens that a level can open, each with its
+own loop, in turn every 1000 ticks: the pause screen (P), the in-game help (F1)
+and the in-game menu (Escape). The help closes at the next key; while the pause
+screen or the menu is open (the wrappers of `JE_pauseGame` and
+`JE_doInGameSetup` tell the driver), the driver presses only Escape, which
+closes them. The shadow tick skips the ticks that open them. Round trips
+(below) don't run with it: those keys go out as the virtual clock advances,
+which a round trip doesn't restore.
 
 ### Caveats
 

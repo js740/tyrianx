@@ -36,6 +36,9 @@
 //   TYRX_INPUT_JOYSTICK=1   also play with a virtual joystick (stick, fire,
 //                           sidekicks, and fire-mode change every 200 ticks),
 //                           which replaces any real ones
+//   TYRX_INPUT_SCREENS=1    also open the pause screen, the in-game help and
+//                           the in-game menu, in turn every 1000 ticks, and
+//                           close them (not with TYRX_ROUNDTRIP)
 //------------------------------------------------------------------------------
 
 #pragma once
@@ -55,5 +58,8 @@ void input_driver_level_ended();
 
 // Called when the game's key state has been restored from a snapshot.
 void input_driver_snapshot_restored();
+
+// Called as the pause screen or the in-game menu opens and closes.
+void input_driver_screen(bool open);
 
 }  // namespace tyrx::validate
