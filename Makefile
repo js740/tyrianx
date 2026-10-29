@@ -31,6 +31,8 @@ ifeq ($(origin CXX), default)
 endif
 CXX ?= g++
 INSTALL ?= install
+NM ?= nm
+PYTHON ?= python3
 PKG_CONFIG ?= pkg-config
 WINDRES ?= windres
 
@@ -93,6 +95,17 @@ ifeq ($(WITH_NETWORK), true)
     EXTRA_CPPFLAGS += -DWITH_NETWORK
 endif
 
+# The validation's link-time wrapping: -Wl,--wrap=SYMBOL sends the C code's
+# calls to __wrap_SYMBOL, which can call __real_SYMBOL.
+ifeq ($(TYRX_VALIDATE), on)
+    # the virtual clock (validate/vclock.cpp)
+    TYRX_WRAPS += SDL_GetTicks SDL_Delay time
+    # the synthetic input (validate/input_driver.cpp)
+    TYRX_WRAPS += JE_itemScreen
+    comma := ,
+    EXTRA_LDFLAGS += $(foreach symbol,$(TYRX_WRAPS),-Wl$(comma)--wrap=$(symbol))
+endif
+
 OPENTYRIAN_VERSION := $(shell $(VCS_IDREV) 2>/dev/null && \
                               touch src/opentyrian_version.h)
 ifneq ($(OPENTYRIAN_VERSION), )
@@ -139,6 +152,7 @@ ALL_CFLAGS = -std=iso9899:1999 \
 ALL_CXXFLAGS = -std=c++23 \
                $(CXXFLAGS)
 ALL_LDFLAGS = $(SDL_LDFLAGS) \
+              $(EXTRA_LDFLAGS) \
               $(LDFLAGS)
 ALL_LDLIBS = -lm \
              $(SDL_LDLIBS) \
@@ -206,6 +220,16 @@ clean :
 
 $(TARGET) : $(OBJS) $(RES)
 	$(CXX) $(ALL_CXXFLAGS) $(ALL_LDFLAGS) -o $@ $(OBJS) $(RES) $(ALL_LDLIBS)
+
+ifeq ($(TYRX_VALIDATE), on)
+# Check that every writable symbol of the C objects is classified.
+TYRX_REGISTRY := src/tyrx/validate/registry.inc src/tyrx/validate/untracked.txt
+$(TARGET) : | obj/tyrx/validate/registry.ok
+obj/tyrx/validate/registry.ok : $(SRCS:src/%.c=obj/%.o) $(TYRX_REGISTRY) tools/check_c_state_registry.py
+	NM=$(NM) CXX='$(CXX)' $(PYTHON) tools/check_c_state_registry.py $(TYRX_REGISTRY) $(SRCS:src/%.c=obj/%.o)
+	@mkdir -p $(dir $@)
+	@touch $@
+endif
 
 -include $(DEPS)
 

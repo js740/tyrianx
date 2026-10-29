@@ -1,0 +1,50 @@
+# Data symbols of the C objects that Tyrian X neither hashes nor snapshots, by
+# object.  Each line is OBJECT CLASS SYMBOL..., where '*' stands for every
+# symbol of OBJECT that is not classified otherwise, and an indented line
+# continues the previous one.  Checked by tools/check_c_state_registry.py, along
+# with c_state_registry.inc.
+
+arg_parse         other    *
+config            audio    midiPort soundEffects
+config            config   smoothScroll
+config            input    dosKeySettings inputDevice inputDevice1 inputDevice2 inputDevice_
+                           jConfigure joyButtonAssign keySettings
+config            io       opentyrian_config saveFiles saveLevel versionNum
+config            render   gammaCorrection
+demo              input    demoKeys demoKeysWait
+demo              io       demoFile
+demo              ui       demoNum
+destruct          other    *
+editship          render   extraShapes
+file              io       *
+fonthand          ui       textGlowBrightness textGlowFont
+game_menu         ui       *
+helptext          ui       *
+joystick          input    *
+lds_play          audio    *
+loudness          audio    *
+mainint           ui       downgradeCost performSave upgradeCost
+menus             ui       *
+mouse             input    *
+musmast           ui       songBuy
+network           net      *
+nortsong          audio    fxVolume soundSampleCount soundSamples tyrMusicVolume
+nortsong          timing   frameCount2End frameCountEnd framePeriod frameSpeed
+opentyr           other    *
+opl               audio    *
+palette           render   *
+pcxmast           render   *
+picload           render   *
+sprite            render   *
+starlib           ui       *
+tyrian2           input    quit
+tyrian2           other    game_hooks
+tyrian2           ui       tempStr
+varz              scratch  b temp temp3 tempDat tempDat2 tempDat3 tempW x y
+varz              timing   debug debugHist debugHistCount debugTime lastDebugTime
+varz              ui       editShip1 editShip2 loadDestruct moveTyrianLogoUp quitRequested
+                           skipStarShowVGA
+vga_palette       render   *
+video             render   *
+video_scale       render   *
+video_scale_hqNx  render   *

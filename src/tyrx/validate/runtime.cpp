@@ -22,9 +22,14 @@
 #include "../c/api.hpp"
 #include "../env.hpp"
 #include "../game.hpp"
+#include "hashlog.hpp"
+#include "input_driver.hpp"
+#include "state.hpp"
 
+#include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
 
 namespace tyrx::validate {
 
@@ -32,7 +37,11 @@ namespace {
 
 [[noreturn]] void exit_run() {
   std::fflush(nullptr);
-  std::exit(EXIT_SUCCESS);
+  int status = EXIT_SUCCESS;
+  if (unresolved_pointers()) {
+    status = 3;
+  }
+  std::exit(status);
 }
 
 class Runtime final : public Validation {
@@ -42,16 +51,32 @@ class Runtime final : public Validation {
     exit_after_ticks_ = env_long("TYRX_EXIT_AFTER_TICKS", -1);
   }
 
+  ~Runtime() {
+    if (uint64_t const n = unresolved_pointers()) {
+      std::fprintf(stderr,
+                   "tyrx: %" PRIu64 " pointers in hashed state did not point into a registered block\n", n);
+    }
+  }
+
   void level_start() override {
+    ++level_count_;
     if (playDemo && exit_after_demos_ >= 0 && ++demo_count_ > exit_after_demos_) {
       exit_run();
     }
+    hashlog_level_start(level_count_, tick_);
   }
 
   void level_tick() override {
     if (exit_after_ticks_ >= 0 && (long)tick_ >= exit_after_ticks_) {
       exit_run();
     }
+    input_driver_level_tick();
+
+    std::vector<uint64_t> hashes;
+    if (hashlog_enabled()) {
+      hashes = block_hashes();
+    }
+    hashlog_tick(tick_, hashes);
     ++tick_;
   }
 
@@ -64,6 +89,7 @@ class Runtime final : public Validation {
   long exit_after_ticks_ = -1;
 
   uint64_t tick_ = 0;
+  unsigned level_count_ = 0;
   long     demo_count_ = 0;
 };
 
