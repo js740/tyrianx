@@ -17,6 +17,7 @@ It attaches itself to the game during static initialization, as the game's
 | `input_driver.cpp` | Seeded synthetic input |
 | `roundtrip.cpp` | The round-trip test of snapshots |
 | [`draw/`](draw/README.md) | Recording the C code's draw lists, and checking them |
+| `bindings.cpp` | The checks of the C++ game's `State` against the C globals that hold it (`../c/README.md`) |
 
 ## Runtime controls (environment variables)
 

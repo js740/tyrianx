@@ -20,7 +20,8 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 | Directory | Namespace | What it holds |
 |---|---|---|
 | `.` | `tyrx` | `game.cpp`: the C++ game's hooks into the C code |
-| `c/` | | The C game as seen from C++: its declarations (`c/api.hpp`) |
+| [`c/`](c/README.md) | `tyrx::c` | The C game as seen from C++: its declarations, and copying the C++ game's state to and from the C globals |
+| [`sim/`](sim/README.md) | `tyrx::sim` | The C++ game's state |
 | [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs, and draw lists |
 | [`validate/`](validate/README.md) | `tyrx::validate` | With `TYRX_VALIDATE=on`: the state registry, hashing and snapshots of the C game, and deterministic runs |
 

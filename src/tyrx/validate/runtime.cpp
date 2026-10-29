@@ -22,6 +22,7 @@
 #include "../c/api.hpp"
 #include "../env.hpp"
 #include "../game.hpp"
+#include "bindings.hpp"
 #include "draw/record.hpp"
 #include "hashlog.hpp"
 #include "input_driver.hpp"
@@ -57,6 +58,9 @@ class Runtime final : public Validation {
   Runtime() {
     exit_after_demos_ = env_long("TYRX_EXIT_AFTER_DEMOS", -1);
     exit_after_ticks_ = env_long("TYRX_EXIT_AFTER_TICKS", -1);
+    if (!bindings_complete()) {
+      std::exit(EXIT_FAILURE);
+    }
   }
 
   ~Runtime() {
