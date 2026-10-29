@@ -102,6 +102,10 @@ ifeq ($(TYRX_VALIDATE), on)
     TYRX_WRAPS += SDL_GetTicks SDL_Delay time
     # the synthetic input (validate/input_driver.cpp)
     TYRX_WRAPS += JE_itemScreen gameplaySelect init_joysticks
+    # the input record's queries, joystick polls and event polling, for
+    # replays (validate/input_record.cpp)
+    TYRX_WRAPS += keyboardHasInput hasInput keyboardClearInput mouseClearInput mouseGetRelativePosition \
+                  push_joysticks_as_keyboard poll_joystick handleSdlEvents
     comma := ,
     EXTRA_LDFLAGS += $(foreach symbol,$(TYRX_WRAPS),-Wl$(comma)--wrap=$(symbol))
 endif

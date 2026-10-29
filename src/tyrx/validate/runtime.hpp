@@ -28,6 +28,7 @@
 // check that failed:
 //
 //   3  the hashes may be incomplete: some pointers could not be described
+//   4  a round trip failed (TYRX_ROUNDTRIP)
 
 #pragma once
 

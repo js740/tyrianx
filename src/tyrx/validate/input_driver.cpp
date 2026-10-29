@@ -21,7 +21,9 @@
 
 #include "../c/api.hpp"
 #include "../env.hpp"
+#include "input_record.hpp"
 #include "runtime.hpp"
+#include "state.hpp"
 #include "vclock.hpp"
 
 #include <stdint.h>
@@ -52,6 +54,10 @@ class InputDriver {
         wants_joystick_(env("TYRX_INPUT_JOYSTICK") != nullptr) {}
 
   void advance(uint32_t from, uint32_t to) {
+    // A replay plays recorded input.
+    if (input_record_replaying()) {
+      return;
+    }
     if (!focused_) {
       SDL_Event ev{};
       ev.type = SDL_WINDOWEVENT;
@@ -98,7 +104,7 @@ class InputDriver {
       level_first_tick_ = current_tick();
       between_levels_ = false;
     }
-    if (midtick_) {
+    if (midtick_ && !input_record_replaying()) {
       push_input(current_tick() + 1);
     }
   }
@@ -417,15 +423,21 @@ extern "C" bool __wrap_gameplaySelect(void) {
   return true;
 }
 
-// Linked with -Wl,--wrap=init_joysticks.  With TYRX_INPUT_JOYSTICK, the game
-// gets one virtual joystick with the default assignments in place of any real
-// ones, even with --no-joystick.  deinit_joysticks closes it as usual.
+// Linked with -Wl,--wrap=init_joysticks, to register the joystick array, which
+// holds each joystick's previous state and repeat timer, as input state.  With
+// TYRX_INPUT_JOYSTICK, the game gets one virtual joystick with the default
+// assignments in place of any real ones, even with --no-joystick.
+// deinit_joysticks closes it as usual.
 extern "C" void __real_init_joysticks(void);
 
 extern "C" void __wrap_init_joysticks(void) {
   tyrx::validate::InputDriver *const d = tyrx::validate::input_driver();
   if (d == nullptr || !d->wants_joystick()) {
     __real_init_joysticks();
+    if (joysticks > 0) {
+      tyrx::validate::register_heap_block("joystick[]", tyrx::validate::StateClass::input, joystick,
+                                          joysticks * sizeof *joystick);
+    }
     return;
   }
 
@@ -446,5 +458,7 @@ extern "C" void __wrap_init_joysticks(void) {
   joystick = static_cast<Joystick *>(std::calloc(1, sizeof *joystick));
   joystick[0].handle = handle;
   reset_joystick_assignments(0);
+  tyrx::validate::register_heap_block("joystick[]", tyrx::validate::StateClass::input, joystick,
+                                      sizeof *joystick);
   d->set_joystick(handle);
 }

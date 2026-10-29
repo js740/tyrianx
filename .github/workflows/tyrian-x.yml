@@ -43,8 +43,14 @@ jobs:
           tools/run_headless.sh ./opentyrian data cmd1.log input 1 10000 TYRX_INPUT_COMMANDS=1
           tools/run_headless.sh ./opentyrian data cmd2.log input 1 10000 TYRX_INPUT_COMMANDS=1 TYRX_INPUT_MIDTICK=1
           tools/compare_hashlogs.py cmd1.log cmd2.log
-      - name: Joystick play is deterministic
+      - name: Snapshots restore everything a tick depends on
+        run: |
+          tools/run_headless.sh ./opentyrian data rt.log input 1 10000 TYRX_ROUNDTRIP=7,13
+          tools/compare_hashlogs.py input1.log rt.log
+      - name: Joystick play is deterministic and survives round trips
         run: |
           tools/run_headless.sh ./opentyrian data joy1.log input 1 10000 TYRX_INPUT_JOYSTICK=1
           tools/run_headless.sh ./opentyrian data joy2.log input 1 10000 TYRX_INPUT_JOYSTICK=1
           tools/compare_hashlogs.py joy1.log joy2.log
+          tools/run_headless.sh ./opentyrian data joy-rt.log input 1 10000 TYRX_INPUT_JOYSTICK=1 TYRX_ROUNDTRIP=1,1
+          tools/compare_hashlogs.py joy1.log joy-rt.log

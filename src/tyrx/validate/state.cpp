@@ -23,7 +23,10 @@
 #include "registry.inc"
 
 #include <algorithm>
+#include <cassert>
 #include <cinttypes>
+#include <cstring>
+#include <deque>
 
 namespace tyrx::validate {
 
@@ -179,6 +182,15 @@ void Dumper::pointer(void const *p) {
   }
 }
 
+namespace {
+
+std::deque<StateBlock>& heap_blocks() {  // a deque, so blocks never move
+  static std::deque<StateBlock> blocks;
+  return blocks;
+}
+
+}  // namespace
+
 std::span<StateBlock const> state_blocks() {
   static std::vector<StateBlock> const blocks = resolve_blocks();
   return blocks;
@@ -197,12 +209,48 @@ std::span<StateBlock const *const> hashed_blocks() {
   return blocks;
 }
 
+void register_heap_block(std::string_view name, StateClass cls, void *addr, size_t size) {
+  assert(!is_hashed(cls));
+  heap_blocks().push_back({name, cls, addr, size});
+}
+
 void dump_state(std::FILE *out) {
   Dumper d(out);
   for (StateBlock const *b : hashed_blocks()) {
     d.push(b->name);
     b->dump(d, b->addr);
     d.pop();
+  }
+}
+
+Snapshot Snapshot::capture(bool (*include)(StateClass), Snapshot const *previous) {
+  Snapshot   s;
+  size_t     i = 0;  // index into previous->copies_
+  auto const copy = [&](StateBlock const& b) {
+    if (!include(b.cls)) {
+      return;
+    }
+    if (previous && i < previous->copies_.size() && previous->copies_[i].block == &b &&
+        std::memcmp(previous->copies_[i].bytes.get(), b.addr, b.size) == 0)
+    {
+      s.copies_.push_back(previous->copies_[i]);
+    }
+    else {
+      auto bytes = std::make_shared_for_overwrite<std::byte[]>(b.size);
+      std::memcpy(bytes.get(), b.addr, b.size);
+      s.copies_.push_back({&b, std::move(bytes)});
+      s.unshared_size_ += b.size;
+    }
+    ++i;
+  };
+  std::ranges::for_each(state_blocks(), copy);
+  std::ranges::for_each(heap_blocks(), copy);
+  return s;
+}
+
+void Snapshot::restore() const {
+  for (Copy const& c : copies_) {
+    std::memcpy(c.block->addr, c.bytes.get(), c.block->size);
   }
 }
 
