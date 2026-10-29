@@ -38,3 +38,13 @@ jobs:
           tools/run_headless.sh ./opentyrian data input1.log input 1 10000
           tools/run_headless.sh ./opentyrian data input2.log input 1 10000
           tools/compare_hashlogs.py input1.log input2.log
+      - name: Input is read only once per tick
+        run: |
+          tools/run_headless.sh ./opentyrian data cmd1.log input 1 10000 TYRX_INPUT_COMMANDS=1
+          tools/run_headless.sh ./opentyrian data cmd2.log input 1 10000 TYRX_INPUT_COMMANDS=1 TYRX_INPUT_MIDTICK=1
+          tools/compare_hashlogs.py cmd1.log cmd2.log
+      - name: Joystick play is deterministic
+        run: |
+          tools/run_headless.sh ./opentyrian data joy1.log input 1 10000 TYRX_INPUT_JOYSTICK=1
+          tools/run_headless.sh ./opentyrian data joy2.log input 1 10000 TYRX_INPUT_JOYSTICK=1
+          tools/compare_hashlogs.py joy1.log joy2.log

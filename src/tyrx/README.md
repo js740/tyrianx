@@ -46,4 +46,5 @@ to the game (`Validation`, in `game.hpp`) during static initialization.
   works for any function called across object files and needs no source
   changes. The validation wraps:
   - `SDL_GetTicks`, `SDL_Delay` and `time`, for the virtual clock;
-  - `JE_itemScreen`, for the synthetic input.
+  - `JE_itemScreen`, `gameplaySelect` and `init_joysticks`, for the synthetic
+    input.

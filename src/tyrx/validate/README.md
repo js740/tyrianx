@@ -24,6 +24,13 @@ It attaches itself to the game during static initialization, as the game's
 | `TYRX_DUMP_TICK=N`, `TYRX_DUMP=FILE` | Write every hashed field as `path = value` at tick N |
 | `TYRX_VCLOCK=1` | Virtual clock: `SDL_Delay` advances time instantly, and `time()` starts at a fixed epoch |
 | `TYRX_INPUT_SEED=S` | Deterministic synthetic keyboard input (needs `TYRX_VCLOCK`) |
+| `TYRX_INPUT_COMMANDS=1` | With `TYRX_INPUT_SEED`: also press a command every 300 ticks |
+| `TYRX_INPUT_MIDTICK=1` | With `TYRX_INPUT_SEED`: send input while ticks run, not between them |
+| `TYRX_INPUT_CHEATS=1` | With `TYRX_INPUT_SEED`: tour the game with its cheat keys |
+| `TYRX_INPUT_TWO_PLAYER=1` | With `TYRX_INPUT_SEED`: play two-player arcade games |
+| `TYRX_INPUT_ARCADE=1` | With `TYRX_INPUT_SEED`: play one-player arcade games |
+| `TYRX_INPUT_MOUSE=1` | With `TYRX_INPUT_SEED`: also move the mouse and press its buttons |
+| `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that the validation initiates return a status that names the first
@@ -96,8 +103,69 @@ the blocks that differ. Rerun both builds with `TYRX_DUMP_TICK=<tick>` and
 With `TYRX_INPUT_SEED=S` (and `TYRX_VCLOCK`), `input_driver.cpp` plays the game
 with seeded random keys.
 
+### Input that arrives during a tick
+
+Synthetic input normally arrives during the frame-pacing wait, between ticks.
+With `TYRX_INPUT_MIDTICK=1`, the same input arrives at the top of the tick
+before instead, after the game has polled events for that tick, which is where
+real input lands while the game is busy. `TYRX_INPUT_COMMANDS=1` adds a command
+every 300 ticks (Backspace+Minus, which cycles the level filter), so the run
+also exercises the pause/menu/cheat handling (`JE_mainKeyboardInput`).
+
+If the game reads input only once per tick, both runs log the same hashes:
+
+```sh
+tools/run_headless.sh ./opentyrian DATA a.log input 1 20000 TYRX_INPUT_COMMANDS=1
+tools/run_headless.sh ./opentyrian DATA b.log input 1 20000 TYRX_INPUT_COMMANDS=1 TYRX_INPUT_MIDTICK=1
+tools/compare_hashlogs.py a.log b.log
+```
+
+Upstream `level_loop` also polls events in the middle of each tick, before the
+game-over, demo-stop and pause/menu/cheat checks, so there the logs diverge at
+the first command. This branch removes those polls ("Poll events once per level
+loop iteration"), and CI checks that the logs match.
+
+### Touring more of the game
+
+`TYRX_INPUT_CHEATS=1` uses the game's own key commands to show more of it than
+random play, which rarely gets past the first level: in each level, it turns
+on the debug display at the level's tick 30 and off at tick 230, toggles a
+random smoothie (screen effect) every 100 ticks, and skips the level from tick
+500. In about one level in four, it also gives the player the Nort ship, with
+its weapons and the Astral Zone special, for the rest of the game. Between
+levels it moves to the next detail level, as the setup menu would, which
+changes what is drawn (blended backgrounds, darkening, transparent
+explosions), and to the next difficulty, from Wimp to Nortaneous. In 20,000
+ticks, a run visits about 25 levels.
+
+`TYRX_INPUT_TWO_PLAYER=1` plays two-player arcade games instead of the full
+game, and `TYRX_INPUT_ARCADE=1` one-player arcade games, in which pickups give
+special weapons that fire with the main weapon: the game-mode menu makes its
+choice right away (keys sent while it fades in can be lost, so the driver can't
+reliably move to it), and between levels the driver plays the next level.
+Player 2's controller is the mouse: with `TYRX_INPUT_MOUSE=1`, the driver moves
+it and holds its left and right buttons in seeded runs, as it does the keys, so
+player 2 moves, fires and uses its sidekicks; without it, player 2 doesn't
+move, but its ship, gauges and sidekicks are still simulated and drawn. In
+one-player games, the mouse moves player 1 along with the keys.
+
+`TYRX_INPUT_JOYSTICK=1` replaces any real joysticks with one virtual joystick
+(SDL's virtual joystick driver, with the default assignments) and drives its
+stick, fire and sidekick buttons along with the keys, plus a fire-mode change
+every 200 ticks. Joystick runs are deterministic, but
+with `TYRX_INPUT_MIDTICK=1` they diverge at the first tick: `JE_playerMovement`
+reads the joystick directly (`poll_joystick`) in the middle of the tick.
+
 ### Caveats
 
-- Synthetic input arrives only during frame-pacing sleeps, so a comparison
-  shows that the simulation is unchanged for input that arrives between ticks.
+- Without `TYRX_INPUT_MIDTICK`, synthetic input arrives only during
+  frame-pacing sleeps, so a comparison shows that the simulation is unchanged
+  for input that arrives between ticks.
+- Synthetic mouse input (`TYRX_INPUT_MOUSE`) is only relative motion and the
+  left and right buttons.
+- Joysticks are read in the middle of a tick (`poll_joystick` in
+  `JE_playerMovement`, and `push_joysticks_as_keyboard` in the game-over and
+  demo-stop checks), with key repeat timed by the wall clock. The virtual clock
+  only advances between ticks, so the repeat timer is deterministic here but
+  not in real play.
 

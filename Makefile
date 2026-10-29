@@ -101,7 +101,7 @@ ifeq ($(TYRX_VALIDATE), on)
     # the virtual clock (validate/vclock.cpp)
     TYRX_WRAPS += SDL_GetTicks SDL_Delay time
     # the synthetic input (validate/input_driver.cpp)
-    TYRX_WRAPS += JE_itemScreen
+    TYRX_WRAPS += JE_itemScreen gameplaySelect init_joysticks
     comma := ,
     EXTRA_LDFLAGS += $(foreach symbol,$(TYRX_WRAPS),-Wl$(comma)--wrap=$(symbol))
 endif

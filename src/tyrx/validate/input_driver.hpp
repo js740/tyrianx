@@ -22,6 +22,20 @@
 // outside levels, a key every 350 ms that heads for the next level through the
 // menus; in levels, gameplay keys whose state is a function of the seed and the
 // tick.
+//
+//   TYRX_INPUT_COMMANDS=1   also press a command for one of every 300 ticks
+//                           (Backspace+Minus, which cycles the level filter)
+//   TYRX_INPUT_MIDTICK=1    send each tick's input at the top of the tick
+//                           before, while it runs, instead of during the
+//                           frame-pacing wait between them
+//   TYRX_INPUT_CHEATS=1     also tour the game with its cheat keys (see
+//                           push_cheats)
+//   TYRX_INPUT_TWO_PLAYER=1 play two-player arcade games
+//   TYRX_INPUT_ARCADE=1     play one-player arcade games
+//   TYRX_INPUT_MOUSE=1      also move the mouse and hold its buttons
+//   TYRX_INPUT_JOYSTICK=1   also play with a virtual joystick (stick, fire,
+//                           sidekicks, and fire-mode change every 200 ticks),
+//                           which replaces any real ones
 //------------------------------------------------------------------------------
 
 #pragma once
@@ -35,5 +49,8 @@ void input_driver_advance(uint32_t from, uint32_t to);
 
 // Called at the top of each level tick.
 void input_driver_level_tick();
+
+// Called when a level has ended.
+void input_driver_level_ended();
 
 }  // namespace tyrx::validate
