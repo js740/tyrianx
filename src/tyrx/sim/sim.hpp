@@ -21,7 +21,8 @@
 // on (state.hpp) instead of using the C globals, and records what the tick
 // draws instead of drawing (draw_record.hpp).
 //
-// Each function must match the C code it ports exactly.
+// Each function must match the C code it ports exactly, which the validation
+// checks tick by tick (../validate/shadow.hpp).
 
 #pragma once
 

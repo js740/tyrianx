@@ -4,6 +4,7 @@ With `make TYRX_VALIDATE=on`, this directory is linked into the game. It is
 C++26, for the reflection that it uses to walk the C and C++ types (GCC 16+).
 It sees the C game as the reference, the "gold" version: it runs it
 deterministically, hashes its state every tick, and records what it draws.
+It checks the C++ game against it tick by tick.
 
 It attaches itself to the game during static initialization, as the game's
 `Validation` (`../game.hpp`, `runtime.cpp`), and the game's hooks run it.
@@ -18,6 +19,8 @@ It attaches itself to the game during static initialization, as the game's
 | `roundtrip.cpp` | The round-trip test of snapshots |
 | [`draw/`](draw/README.md) | Recording the C code's draw lists, and checking them |
 | `bindings.cpp` | The checks of the C++ game's `State` against the C globals that hold it (`../c/README.md`) |
+| `shadow.cpp` | The shadow tick: the C++ level tick checked against the C tick |
+| `memory.cpp` | Saving and restoring all of the C code's writable data at once, for the shadow tick (`data_end.cpp` marks where it ends) |
 
 ## Runtime controls (environment variables)
 
@@ -37,6 +40,8 @@ It attaches itself to the game during static initialization, as the game's
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots |
 | `TYRX_DRAWLIST=FILE` | Write each level tick's draw calls to FILE ([draw](draw/README.md)) |
 | `TYRX_DRAWLIST_CHECK=1` | Check that the draw lists are complete and reproduce each tick ([draw](draw/README.md)) |
+| `TYRX_SHADOW=1` | Check the C++ level loop against the C code, tick by tick |
+| `TYRX_SHADOW_CALLS=1` | With `TYRX_SHADOW`: count the draw calls that C++ code made, and those drawn during the simulation, by kind |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that the validation initiates return a status that names the first
@@ -44,6 +49,7 @@ check that failed:
 - 3: pointers that the hashes couldn't describe
 - 4: round trips (`TYRX_ROUNDTRIP`)
 - 5: draw lists (`TYRX_DRAWLIST_CHECK`)
+- 6: the shadow tick (`TYRX_SHADOW`)
 
 ## State registry
 
@@ -209,4 +215,41 @@ tools/compare_hashlogs.py plain.log rt.log         # "identical: 20000 ticks"
 
 Demos are skipped because their input comes from a file whose read position
 isn't part of the snapshot.
+
+## The shadow tick
+
+`TYRX_SHADOW=1` (with `TYRX_VCLOCK`) checks the C++ level tick
+(`../level.hpp`) against the C code tick by tick. At the top of each level
+tick, after the C code has run the previous one, it:
+1. Saves all of the C code's writable data (`memory.hpp`: the C objects'
+   `.data` and `.bss`, which the linker places before the C++ objects', up to
+   the markers in `data_end.cpp`).
+2. Restores the data from the start of the previous tick, and points the
+   screen surfaces at copies of them as they were then.
+3. Runs `level_pass` on it, with the side effects that the C code has already
+   had suppressed: sound, music, presenting and polling. File reads (demo
+   input) get the data the C tick read, and joystick polls the joystick state
+   the C tick's polls left (the next tick's input has already arrived). The
+   pass draws into a draw list of its own (`../render/tick/draw.hpp`), and
+   works on a `sim::State` read from the C globals, which are scrambled until
+   the State is written back after the pass (`bindings.hpp`).
+4. Compares the hashed state, the draw list and the pixels with the C tick's
+   (`draw/`). The lists are compared surface by surface: for each surface, the
+   calls that draw on it or read it (copies and filters) must be the same, in
+   the same order. Calls that touch different surfaces commute. The pixels are
+   drawn from the C++ pass's list by the C++ ports (`../render/`), on copies of
+   the surfaces as they were at the start of the tick.
+5. Restores the data saved in step 1.
+
+Ticks in which the C code loaded sprites or opened the pause screen or the
+in-game menu aren't checked, nor are network games' ticks, and a pass that
+would open one, or present or poll in some other way, is abandoned. A summary
+goes to stderr at exit, and exits that the validation initiates return status
+6 if a tick differed. The five demos pass (18,528 ticks checked, 5
+skipped for sprite loading), and so do over 600,000 ticks of synthetic play:
+with seeds 1-7 with `TYRX_INPUT_CHEATS` or `TYRX_INPUT_COMMANDS`, and in
+one- and two-player arcade games, with the mouse moving player 2.
+
+`TYRX_SHADOW_CALLS=1` also prints the calls of each kind that the passes drew,
+and those drawn during the simulation.
 

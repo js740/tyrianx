@@ -21,4 +21,6 @@ relocated.
 
 With `TYRX_VALIDATE=on`, the validation checks (`../validate/bindings.hpp`):
 - at compile time, that each field list has every member of both structs;
-- at startup, that each member of the `State` has exactly one C global.
+- at startup, that each member of the `State` has exactly one C global;
+- on each pass of the C++ game, that no pointer in the `State` points into a
+  C global that it holds.

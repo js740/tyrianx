@@ -75,7 +75,10 @@ DEPS := $(SRCS:src/%.c=obj/%.d)
 # The C++ game (src/tyrx), and with TYRX_VALIDATE its validation (src/tyrx/validate).
 TYRX_SRCS := $(filter-out src/tyrx/validate/%,$(wildcard src/tyrx/*.cpp src/tyrx/*/*.cpp src/tyrx/*/*/*.cpp))
 ifeq ($(TYRX_VALIDATE), on)
-    TYRX_SRCS += $(wildcard src/tyrx/validate/*.cpp src/tyrx/validate/*/*.cpp)
+    # validate/data_end.cpp first: its data marks the end of the C objects' (validate/memory.cpp).
+    TYRX_SRCS := src/tyrx/validate/data_end.cpp \
+                 $(filter-out src/tyrx/validate/data_end.cpp,$(wildcard src/tyrx/validate/*.cpp src/tyrx/validate/*/*.cpp)) \
+                 $(TYRX_SRCS)
 endif
 OBJS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.o)
 DEPS += $(TYRX_SRCS:src/tyrx/%.cpp=obj/tyrx/%.d)
@@ -111,6 +114,10 @@ ifeq ($(TYRX_VALIDATE), on)
                   JE_darkenBackground draw_background_1 draw_background_2 draw_background_2_blend \
                   draw_background_3 JE_filterScreen lava_filter water_filter iced_blur_filter blur_filter \
                   showHeadlight showFlipped showNormal update_and_draw_starfield JE_drawSP JE_clr256
+    # what the shadow tick replays or suppresses (validate/shadow.cpp)
+    TYRX_WRAPS += multiSamplePlay play_song set_volume push_joysticks_as_keyboard poll_joystick \
+                  JE_loadCompShapes free_sprite2s JE_pauseGame JE_doInGameSetup JE_showVGA handleSdlEvents \
+                  fileReadAtMost fileReadExactly
     comma := ,
     EXTRA_LDFLAGS += $(foreach symbol,$(TYRX_WRAPS),-Wl$(comma)--wrap=$(symbol))
 endif

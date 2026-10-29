@@ -51,6 +51,7 @@ sprite sheets that it points to.
 The C code that runs between ticks and levels works on the C globals, which
 `../c/state.hpp` copies the `State` from and back to (`../c/README.md`).
 The C++ level tick works on the `State` that the code running it passes it.
+The validation's shadow tick runs the level tick on a `State` of its own.
 
 The `State` holds all the state that the validation's registry
 (`../validate/registry.inc`) classes as gameplay or presentation state. The
@@ -156,6 +157,8 @@ deeply or jumps (`goto`). It keeps in local variables what the C code keeps
 in scratch globals (`temp`, `b`, `tempW` and the like), as no code that runs
 after it reads them before writing them, except for `temp2`, which carries a
 value between functions and ticks, and is in the `State` (`Scratch`).
+The validation's shadow tick checks it against the C code tick by tick
+(`../validate/README.md`).
 
 Functions that need random numbers call the reentrant C generator
 (`mt_rand_r` etc.) on an `MtState` they are given; there is no C++ copy of it.
