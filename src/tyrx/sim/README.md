@@ -83,6 +83,20 @@ The files:
   limits the players' armor, `hud_text_window` (`JE_drawTextWindow`) sets when
   the message is erased, and `hud_options` (`JE_drawOptions`) sets up the
   sidekicks.
+- `enemy.cpp`: `make_enemy` (`JE_makeEnemy`) makes an enemy in a slot, and
+  `new_enemy` (`JE_newEnemy`) in the first free slot of a layer's.
+  `update_enemies` (`JE_drawEnemy`, which "actually does a whole lot more than
+  just drawing") updates a layer's enemies: each is animated, moves, fires and
+  launches enemies. It returns the enemies it drew, as they were before they
+  moved, for the tick's drawing. `hit_enemy` (from the level loop) is what a
+  player shot does to the enemy it hits: it damages or destroys it, with the
+  enemies linked to it.
+- `events.cpp`: `update_events` runs the level's events that the level has
+  reached (`JE_eventSystem`), and `event_jump` (`JE_eventJump`) jumps to a
+  position in the level. Besides the `State`, the events change the C code's
+  level data and resources, as the C code does: events 49 to 52 set the armor
+  and graphic of enemy type 0 (`enemyDat[0]`) for the enemy they create, event
+  5 loads the enemies' sprite sheets, and event 35 starts a song.
 
 The code here does what the C code does, in its order, but takes its state
 explicitly, has C++ names, and is split into functions where the C code nests

@@ -33,6 +33,7 @@
 
 #include <bitset>
 #include <span>
+#include <vector>
 
 namespace tyrx::sim {
 
@@ -69,6 +70,41 @@ void do_sp(Superpixels& superpixels, MtState& mt, uint16_t x, uint16_t y, uint16
 // varz.c: the superpixels' update in JE_drawSP, which moves and fades them.
 // Returns the slots of those it updated, which the drawing draws.
 std::bitset<MAX_SUPERPIXELS> update_superpixels(Superpixels& superpixels);
+
+// tyrian2.c: JE_makeEnemy, which makes enemy one of type e_dat_i (enemyDat),
+// with the sprites of shape table unique_shape_table_i if that is over 0.
+// Returns the slot's status (Enemies::status) for the enemy.
+uint8_t make_enemy(State& state, Enemy& enemy, uint16_t e_dat_i, int16_t unique_shape_table_i);
+
+// tyrian2.c: JE_newEnemy, which makes an enemy (make_enemy) in the first free
+// slot of the 25 from first.  Returns the slot + 1, or 0 if none was free.
+int new_enemy(State& state, int first, uint16_t e_dat_i, int16_t unique_shape_table_i);
+
+// tyrian2.c: JE_drawEnemy, which "actually does a whole lot more than just
+// drawing": the update of the 25 enemies before slot end, on a layer that has
+// scrolled map_x_ofs sideways and moved back_move down in the tick (kept in
+// the Map, as tempMapXOfs and tempBackMove).  Each is animated, moves, fires
+// and launches enemies.  Returns those on screen, as they were drawn.
+std::vector<VisibleEnemy> update_enemies(State& state, int end, uint16_t map_x_ofs, uint16_t back_move);
+
+// tyrian2.c: a player shot's hit on the enemy in slot b, in JE_main's level
+// loop ("Player Shot Images"), with the shot's damage and blast filter.  A
+// damage of 99 ices the enemy, and 250 or more passes through enemies
+// (Cheats::infinite_shot); the hit takes 99 to 0.  It damages or destroys
+// the enemy and the enemies linked to it, and a destruction leaves the
+// filter at 100.  The Zinglon's shot neither explodes nor makes sparks.
+// Returns the enemy's armor before the hit.
+int hit_enemy(State& state, int b, int16_t& damage, uint8_t& filter, bool zinglon, int shot_x, int shot_y,
+              uint8_t player_num);
+
+// tyrian2.c: the events' part of JE_main's level loop: runs the events that
+// the level has reached (JE_eventSystem).
+void update_events(State& state, HudLog& hud);
+
+// tyrian2.c: JE_eventJump, which jumps to the level position jump, or back
+// to where the last jump came from if jump is 65535, and to the first event
+// at or after it.
+void event_jump(Level& level, uint16_t jump);
 
 // The HUD's gauges and messages (hud.cpp), which log them in the HUD's log.
 void hud_shield(State const& state, HudLog& hud);             // JE_drawShield
