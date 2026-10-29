@@ -25,6 +25,7 @@
 #include "../level.hpp"
 #include "bindings.hpp"
 #include "draw/record.hpp"
+#include "framelog.hpp"
 #include "memory.hpp"
 #include "runtime.hpp"
 #include "state.hpp"
@@ -663,11 +664,13 @@ void __wrap_JE_doInGameSetup(void) {
 }
 
 // The C++ level pass presents and polls by itself, so a call from C code
-// means a screen of its own (pause, menu, help).
+// means a screen of its own (pause, menu, help).  Each frame presented goes in
+// the frame log (TYRX_FRAMELOG) too.
 void __wrap_JE_showVGA(void) {
   if (tyrx::validate::shadow_active()) {
     tyrx::validate::shadow_abort("another screen presented");
   }
+  tyrx::validate::framelog_frame();
   __real_JE_showVGA();
 }
 

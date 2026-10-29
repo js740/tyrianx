@@ -21,6 +21,7 @@ It attaches itself to the game during static initialization, as the game's
 | `bindings.cpp` | The checks of the C++ game's `State` against the C globals that hold it (`../c/README.md`) |
 | `shadow.cpp` | The shadow tick: the C++ level tick checked against the C tick |
 | `memory.cpp` | Saving and restoring all of the C code's writable data at once, for the shadow tick (`data_end.cpp` marks where it ends) |
+| `framelog.cpp` | The frame log |
 
 ## Runtime controls (environment variables)
 
@@ -42,6 +43,7 @@ It attaches itself to the game during static initialization, as the game's
 | `TYRX_DRAWLIST_CHECK=1` | Check that the draw lists are complete and reproduce each tick ([draw](draw/README.md)) |
 | `TYRX_SHADOW=1` | Check the C++ level loop against the C code, tick by tick |
 | `TYRX_SHADOW_CALLS=1` | With `TYRX_SHADOW`: count the draw calls that C++ code made, and those drawn during the simulation, by kind |
+| `TYRX_FRAMELOG=FILE` | A hash of each frame presented, with its tick |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that the validation initiates return a status that names the first
@@ -252,4 +254,13 @@ one- and two-player arcade games, with the mouse moving player 2.
 
 `TYRX_SHADOW_CALLS=1` also prints the calls of each kind that the passes drew,
 and those drawn during the simulation.
+
+## Comparing frames
+
+`TYRX_FRAMELOG=FILE` writes a line per frame presented (`JE_showVGA`): the
+tick, and a hash of the screen's pixels and the palette. Two runs that show the
+same frames write the same log, so `cmp` compares them. The logs of two builds
+differ outside the levels: the title screen shows the build's version, and the
+screens between the demos present more frames in a release build than in a
+debug build.
 
