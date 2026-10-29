@@ -26,6 +26,7 @@
 #include "bindings.hpp"
 #include "draw/record.hpp"
 #include "framelog.hpp"
+#include "input_driver.hpp"
 #include "input_record.hpp"
 #include "memory.hpp"
 #include "runtime.hpp"
@@ -660,7 +661,9 @@ void __wrap_JE_pauseGame(void) {
     tyrx::validate::shadow_abort("pause screen");
   }
   tyrx::validate::shadow_skip_tick("pause screen");
+  tyrx::validate::input_driver_screen(true);
   __real_JE_pauseGame();
+  tyrx::validate::input_driver_screen(false);
 }
 
 void __wrap_JE_doInGameSetup(void) {
@@ -668,7 +671,9 @@ void __wrap_JE_doInGameSetup(void) {
     tyrx::validate::shadow_abort("in-game menu");
   }
   tyrx::validate::shadow_skip_tick("in-game menu");
+  tyrx::validate::input_driver_screen(true);
   __real_JE_doInGameSetup();
+  tyrx::validate::input_driver_screen(false);
 }
 
 // The C++ level pass presents and polls by itself, so a call from C code

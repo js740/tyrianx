@@ -52,6 +52,7 @@ jobs:
           tools/run_headless.sh ./opentyrian data shadow.log demos TYRX_SHADOW=1
           tools/run_headless.sh ./opentyrian data shadow-cheats.log input 1 10000 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
           tools/run_headless.sh ./opentyrian data shadow-2p.log input 1 10000 TYRX_INPUT_TWO_PLAYER=1 TYRX_INPUT_MOUSE=1 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
+          tools/run_headless.sh ./opentyrian data shadow-screens.log input 2 10000 TYRX_INPUT_SCREENS=1 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
       - name: Snapshots restore everything a tick depends on
         run: |
           tools/run_headless.sh ./opentyrian data rt.log input 1 10000 TYRX_ROUNDTRIP=7,13
