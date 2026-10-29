@@ -45,4 +45,14 @@ struct VisibleExplosions {
   std::vector<EndedExplosion> ended;
 };
 
+// An enemy as it was drawn, before it moved.
+struct VisibleEnemy {
+  int16_t        x;
+  int16_t        y;
+  uint16_t       sprite;  // sprites[frame - 1]
+  uint8_t        filter;
+  uint8_t        size;
+  Sprite2_array *sprite_sheet;
+};
+
 }  // namespace tyrx::sim
