@@ -77,6 +77,12 @@ The files:
 - `superpixel.cpp`: `do_sp` (`JE_doSP`) creates superpixels, and
   `update_superpixels` moves and fades them and returns those it updated.
 - `starfield.cpp`: `update_starfield` moves the stars.
+- `hud.cpp`: the HUD's gauges and messages (`JE_drawShield`, `JE_drawArmor`
+  and so on), which the game logic logs as it changes them (`hud.hpp`), for
+  the tick's drawing. Some do game logic too: `hud_armor` (`JE_drawArmor`)
+  limits the players' armor, `hud_text_window` (`JE_drawTextWindow`) sets when
+  the message is erased, and `hud_options` (`JE_drawOptions`) sets up the
+  sidekicks.
 
 The code here does what the C code does, in its order, but takes its state
 explicitly, has C++ names, and is split into functions where the C code nests
