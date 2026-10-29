@@ -55,4 +55,12 @@ struct VisibleEnemy {
   Sprite2_array *sprite_sheet;
 };
 
+// A player shot as it was drawn.
+struct VisiblePlayerShot {
+  int32_t  x;
+  int32_t  y;
+  uint16_t sprite_frame;  // over 60000 for special shots
+  bool     shadow;
+};
+
 }  // namespace tyrx::sim

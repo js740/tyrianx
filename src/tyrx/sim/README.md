@@ -97,6 +97,12 @@ The files:
   level data and resources, as the C code does: events 49 to 52 set the armor
   and graphic of enemy type 0 (`enemyDat[0]`) for the enemy they create, event
   5 loads the enemies' sprite sheets, and event 35 starts a song.
+- `player_shot.cpp`: `create_player_shot` (`player_shot_create`) fires a
+  weapon, and `set_player_shot_direction` (`player_shot_set_direction`) turns
+  a linked weapon's shot. `update_player_shots` moves the player shots
+  (`player_shot_move_and_draw`), and has them hit the enemies they collide
+  with (`hit_enemy`) or set off chain reactions. It returns the shots it
+  drew, for the tick's drawing.
 
 The code here does what the C code does, in its order, but takes its state
 explicitly, has C++ names, and is split into functions where the C code nests

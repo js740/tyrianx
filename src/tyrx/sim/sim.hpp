@@ -118,6 +118,21 @@ void hud_option_level(State const& state, HudLog& hud);  // JE_drawOptionLevel
 void hud_charge_level(State const& state, HudLog& hud, uint8_t color);
 void hud_sidekick_ammo(HudLog& hud, int y, int ammo_max, int ammo, bool discharged);
 
+// tyrian2.c: the player shots' update in JE_main's level loop ("Player Shot
+// Images"): each moves (player_shot_move_and_draw, in shots.c), then hits
+// the enemies it collides with (hit_enemy), or sets off a chain reaction.
+// Returns the shots drawn.
+std::vector<VisiblePlayerShot> update_player_shots(State& state);
+
+// shots.c: player_shot_create, which fires player player_num's weapon wp_num
+// from port port_num's bay bay_i at (px, py), if there is power for it.
+// Returns the slot of the last shot made, or MAX_PWEAPON if one couldn't be.
+int16_t create_player_shot(State& state, uint16_t port_num, unsigned bay_i, uint16_t px, uint16_t py,
+                           uint16_t mouse_x, uint16_t mouse_y, uint16_t wp_num, uint8_t player_num);
+
+// shots.c: player_shot_set_direction, which turns a linked weapon's shot.
+void set_player_shot_direction(PlayerShot& shot, unsigned weapon_id, float direction);
+
 // backgrnd.c: the stars' update in update_and_draw_starfield, which moves
 // them down a screen whose rows are pitch bytes apart.
 void update_starfield(Starfield& starfield, int pitch);
