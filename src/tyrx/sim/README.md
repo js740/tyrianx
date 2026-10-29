@@ -1,7 +1,7 @@
-# sim: the C++ game's state
+# sim: the C++ game's state, and the game logic
 
 `sim/` has the C++ game's state, the state that the C globals hold in the C
-game, in structures.
+game, in structures, and the game logic that works on it.
 
 ## The game state
 
@@ -58,3 +58,35 @@ game logic uses these from the C globals:
 - The raw input that the tick reads, the scratch globals that its code writes
   before reading (`temp`, `tempW` and the like), the screens and sprites, the
   settings and the sound.
+
+## The game logic
+
+Each function here takes the state it works on explicitly: the subsystems it
+works on, or the whole `State` for game logic that works on many (the
+enemies). The level and episode data that it reads are in the C globals
+(`enemyDat`, `weapons`). `hidden.hpp` hides the C globals that the `State`
+holds, and the random number generator's functions that use them, from code
+here and in `../render/`, so using one by mistake doesn't compile.
+
+The files:
+- `explosion.cpp`: `setup_explosion` (`JE_setupExplosion`) takes the explosion
+  slots it fills in, and `setup_explosion_large` (`JE_setupExplosionLarge`) the
+  `Explosions`. In the level loop, `update_repeating_explosions` sets off the
+  repeating explosions' explosions, and `update_explosions` moves the
+  explosions and returns the ones visible in the tick for its drawing.
+- `superpixel.cpp`: `do_sp` (`JE_doSP`) creates superpixels, and
+  `update_superpixels` moves and fades them and returns those it updated.
+- `starfield.cpp`: `update_starfield` moves the stars.
+
+The code here does what the C code does, in its order, but takes its state
+explicitly, has C++ names, and is split into functions where the C code nests
+deeply or jumps (`goto`). It keeps in local variables what the C code keeps
+in scratch globals (`temp`, `b`, `tempW` and the like), as no code that runs
+after it reads them before writing them, except for `temp2`, which carries a
+value between functions and ticks, and is in the `State` (`Scratch`).
+
+Functions that need random numbers call the reentrant C generator
+(`mt_rand_r` etc.) on an `MtState` they are given; there is no C++ copy of it.
+The level tick gives them the `State`'s. A function must draw the same values
+in the same order as the C code. Including the `MtState` in the compared
+state checks that.
