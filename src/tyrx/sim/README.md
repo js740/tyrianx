@@ -51,6 +51,7 @@ sprite sheets that it points to.
 The C code that runs between ticks and levels works on the C globals, which
 `../c/state.hpp` copies the `State` from and back to (`../c/README.md`).
 The C++ level tick works on the `State` that the code running it passes it.
+The C++ game (`../game.hpp`) owns the game's `State` during a level.
 The validation's shadow tick runs the level tick on a `State` of its own.
 
 The `State` holds all the state that the validation's registry

@@ -1,13 +1,16 @@
 # Tyrian X: OpenTyrian's levels in C++
 
-Tyrian X is to run the game's levels in C++, in namespace `tyrx`, on a game
-state of its own, with the same results as OpenTyrian's C code, tick for tick
-and pixel for pixel.
+Tyrian X runs the game's levels in C++, in namespace `tyrx`, on a game state of
+its own, with the same results as OpenTyrian's C code, tick for tick and pixel
+for pixel. The C code still runs everything outside the levels (the menus, the
+shop, loading), on its own globals.
 
 There are two builds:
 - `make`: the game, C and C++23.
+  The C++ game runs the levels.
 - `make TYRX_VALIDATE=on`: the game and its validation (`validate/`, C++26,
   GCC 16+ for reflection).
+  The C code runs the levels unless `TYRX_CXX_TICK=1`.
 
 Every C object is the same in both builds. The C code's changes for Tyrian X
 are the hooks below.
@@ -19,7 +22,7 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 
 | Directory | Namespace | What it holds |
 |---|---|---|
-| `.` | `tyrx` | `game.cpp`: the C++ game's hooks into the C code; `level.cpp`: one pass of the level loop, its simulation, drawing and frame |
+| `.` | `tyrx` | `game.cpp`: the C++ game, which runs the levels in place of the C code's level loop; `level.cpp`: one pass of the level loop, its simulation, drawing and frame |
 | [`c/`](c/README.md) | `tyrx::c` | The C game as seen from C++: its declarations, and copying the C++ game's state to and from the C globals |
 | [`sim/`](sim/README.md) | `tyrx::sim` | The C++ game's state, and the game logic: the level tick's simulation |
 | [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs, draw lists, and the level tick's drawing from its draw record |
@@ -43,6 +46,8 @@ to the game (`Validation`, in `game.hpp`) during static initialization.
   once per tick.
 - **State access**: the C++ code reads and writes the C globals directly,
   through their declarations (`c/api.hpp`).
+  The state that the C++ game keeps in its own `sim::State` is copied from the
+  C globals when a level starts and back after each pass (`c/state.hpp`).
 - **Link-time wrapping** (validation only): `-Wl,--wrap=SYMBOL` sends the C
   code's calls to `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. It
   works for any function called across object files and needs no source

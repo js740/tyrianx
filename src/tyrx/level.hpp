@@ -23,7 +23,7 @@
 // (sim::level_tick) is complete before anything is drawn: it keeps a record
 // for the drawing (sim/draw_record.hpp), from which render::draw_tick draws
 // the tick into a draw list, and then the frame is presented and events are
-// polled.
+// polled.  The C++ game runs the passes in place of the C code's (game.hpp).
 
 #pragma once
 

@@ -18,9 +18,12 @@
 //------------------------------------------------------------------------------
 
 // The validation of the C++ game against the C game, as the game's
-// Validation (../game.hpp): it runs the checks at the game's hooks, and ends
-// runs.  Configured by environment variables:
+// Validation (../game.hpp): it runs the checks at the game's hooks, decides
+// whether the C++ game runs the levels (TYRX_CXX_TICK=1) or the C code does,
+// and ends runs.  Configured by environment variables:
 //
+//   TYRX_CXX_TICK=1          run the levels with the C++ game, in place of the
+//                            C code's level loop
 //   TYRX_EXIT_AFTER_DEMOS=N  exit when demo playback starts for the N+1th time
 //   TYRX_EXIT_AFTER_TICKS=N  exit at the top of level tick N
 //
@@ -41,5 +44,9 @@ namespace tyrx::validate {
 
 // The number of level ticks run so far, i.e. the index of the next one.
 uint64_t current_tick();
+
+// Whether a pass of the C++ game, either the shadow tick's (shadow.hpp) or
+// the C++ game's own, is running, outside the C loops it runs.
+bool cxx_pass_active();
 
 }  // namespace tyrx::validate

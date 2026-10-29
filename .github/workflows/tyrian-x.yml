@@ -53,10 +53,22 @@ jobs:
           tools/run_headless.sh ./opentyrian data shadow-cheats.log input 1 10000 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
           tools/run_headless.sh ./opentyrian data shadow-2p.log input 1 10000 TYRX_INPUT_TWO_PLAYER=1 TYRX_INPUT_MOUSE=1 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
           tools/run_headless.sh ./opentyrian data shadow-screens.log input 2 10000 TYRX_INPUT_SCREENS=1 TYRX_INPUT_CHEATS=1 TYRX_SHADOW=1
+      - name: The C++ game plays as the C code does
+        run: |
+          tools/run_headless.sh ./opentyrian data c-demos.log demos TYRX_FRAMELOG="$PWD/c-demos.frames"
+          tools/run_headless.sh ./opentyrian data x-demos.log demos TYRX_FRAMELOG="$PWD/x-demos.frames" TYRX_CXX_TICK=1
+          tools/compare_hashlogs.py c-demos.log x-demos.log
+          cmp c-demos.frames x-demos.frames
+          tools/run_headless.sh ./opentyrian data c-screens.log input 1 10000 TYRX_INPUT_SCREENS=1 TYRX_INPUT_CHEATS=1 TYRX_FRAMELOG="$PWD/c-screens.frames"
+          tools/run_headless.sh ./opentyrian data x-screens.log input 1 10000 TYRX_INPUT_SCREENS=1 TYRX_INPUT_CHEATS=1 TYRX_FRAMELOG="$PWD/x-screens.frames" TYRX_CXX_TICK=1
+          tools/compare_hashlogs.py c-screens.log x-screens.log
+          cmp c-screens.frames x-screens.frames
       - name: Snapshots restore everything a tick depends on
         run: |
           tools/run_headless.sh ./opentyrian data rt.log input 1 10000 TYRX_ROUNDTRIP=7,13
           tools/compare_hashlogs.py input1.log rt.log
+          tools/run_headless.sh ./opentyrian data rt-cxx.log input 1 10000 TYRX_ROUNDTRIP=7,13 TYRX_CXX_TICK=1
+          tools/compare_hashlogs.py input1.log rt-cxx.log
       - name: Joystick play is deterministic and survives round trips
         run: |
           tools/run_headless.sh ./opentyrian data joy1.log input 1 10000 TYRX_INPUT_JOYSTICK=1
