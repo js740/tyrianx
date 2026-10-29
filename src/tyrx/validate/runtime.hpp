@@ -29,6 +29,8 @@
 //
 //   3  the hashes may be incomplete: some pointers could not be described
 //   4  a round trip failed (TYRX_ROUNDTRIP)
+//   5  a draw list was incomplete or didn't reproduce its tick
+//      (TYRX_DRAWLIST_CHECK)
 
 #pragma once
 
