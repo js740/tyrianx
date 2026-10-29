@@ -2,6 +2,8 @@
 
 `sim/` has the C++ game's state, the state that the C globals hold in the C
 game, in structures, and the game logic that works on it.
+Its level tick (`level_tick`) simulates a tick of the game's level loop, and
+records the tick's drawing for `../render/tick/` to draw.
 
 ## The game state
 
@@ -48,6 +50,7 @@ sprite sheets that it points to.
 
 The C code that runs between ticks and levels works on the C globals, which
 `../c/state.hpp` copies the `State` from and back to (`../c/README.md`).
+The C++ level tick works on the `State` that the code running it passes it.
 
 The `State` holds all the state that the validation's registry
 (`../validate/registry.inc`) classes as gameplay or presentation state. The
@@ -126,6 +129,26 @@ The files:
 - `enemy_shot.cpp`: `update_enemy_shots` moves the enemy shots and ends those
   that time out, leave the screen or hit a player. It returns the shots it
   drew.
+- `level.cpp`: `level_tick` runs one tick of the level loop (from the
+  `level_loop` label in `JE_main` to the jump back to it), in the C code's
+  order, without its frame: the HUD's gauges, the events, the backgrounds and
+  smoothies, the enemies, the player shots, the players, the enemy shots, the
+  explosions, the warning, the sound routine, the texts, game over and the
+  level's input, the superpixels, the filter and the boss bars, and the end of
+  the level. It records the tick's drawing in the draw record, and asks the
+  code running it (`Host`) for the C code's loops with their own drawing (the
+  pause screen, the in-game menu and help). Besides the `State`, it changes
+  the C code's sound and music, plays the sound queue, and reads the input for
+  stopping demos, pausing, the menu and the key commands from the C globals.
+  Network games' ticks run in C, so it has none of the C code's network
+  play.
+- `background.cpp`: the map's backgrounds (`background_1` to `background_3`),
+  which `draw_background_2` and `draw_background_3` scroll as they draw, and
+  `check_smoothies` (`JE_checkSmoothies`).
+- `keyboard.cpp`: `main_keyboard_input` (`JE_mainKeyboardInput`), the key
+  commands: edited ships, help, cheats, debug and screen settings, which read
+  the keys from the C globals, and set some of the C code's settings (the debug
+  display, the frame speed and the gamma).
 
 The code here does what the C code does, in its order, but takes its state
 explicitly, has C++ names, and is split into functions where the C code nests
