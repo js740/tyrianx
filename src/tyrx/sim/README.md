@@ -123,6 +123,9 @@ The files:
   values that the simulation goes on to change after the C code drew them.
   The record names the surfaces (`Surface`), and keeps the one that the C
   code's `VGAScreen` points at.
+- `enemy_shot.cpp`: `update_enemy_shots` moves the enemy shots and ends those
+  that time out, leave the screen or hit a player. It returns the shots it
+  drew.
 
 The code here does what the C code does, in its order, but takes its state
 explicitly, has C++ names, and is split into functions where the C code nests

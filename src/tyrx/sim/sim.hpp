@@ -151,6 +151,12 @@ void sf_codes(State& state, uint8_t player_num, int16_t px, int16_t py, int16_t 
 // it got through the shield.
 uint8_t damage_player(State& state, DrawRecord& record, Player& player, uint8_t damage);
 
+// tyrian2.c: the enemy shots' update in JE_main's level loop ("Draw Enemy
+// Shots"), which moves them and ends those that time out, leave the screen or
+// hit a player.  Returns those drawn, which stay in their slots for the rest
+// of the tick.
+std::bitset<ENEMY_SHOT_MAX> update_enemy_shots(State& state, DrawRecord& record);
+
 // tyrian2.c: the player shots' update in JE_main's level loop ("Player Shot
 // Images"): each moves (player_shot_move_and_draw, in shots.c), then hits
 // the enemies it collides with (hit_enemy), or sets off a chain reaction.
