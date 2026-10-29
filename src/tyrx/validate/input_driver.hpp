@@ -23,6 +23,7 @@
 // menus; in levels, gameplay keys whose state is a function of the seed and the
 // tick.
 //
+//   TYRX_INPUT_REWIND=1     also hold the rewind key for 40 of every 400 ticks
 //   TYRX_INPUT_COMMANDS=1   also press a command for one of every 300 ticks
 //                           (Backspace+Minus, which cycles the level filter)
 //   TYRX_INPUT_MIDTICK=1    send each tick's input at the top of the tick
