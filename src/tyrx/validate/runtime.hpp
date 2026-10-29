@@ -23,6 +23,11 @@
 //
 //   TYRX_EXIT_AFTER_DEMOS=N  exit when demo playback starts for the N+1th time
 //   TYRX_EXIT_AFTER_TICKS=N  exit at the top of level tick N
+//
+// Exits that the validation initiates return a status that names the first
+// check that failed:
+//
+//   3  the hashes may be incomplete: some pointers could not be described
 
 #pragma once
 

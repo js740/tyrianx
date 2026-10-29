@@ -1,0 +1,40 @@
+name: Tyrian X
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Tyrian X builds and validation
+    runs-on: ubuntu-latest
+    container: gcc:16-trixie   # the validation's C++26 reflection needs GCC 16
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            pkg-config curl unzip python3 libsdl2-dev libsdl2-net-dev
+      - name: Game build
+        run: make -j"$(nproc)" debug
+      - name: Validation build (includes state registry check)
+        run: make -j"$(nproc)" debug TYRX_VALIDATE=on
+      - name: Cache game data
+        uses: actions/cache@v6
+        with:
+          path: data
+          key: tyrian21-data-v1
+      - name: Get game data
+        run: ./get_data.sh data
+      - name: Demo playback is deterministic
+        run: |
+          tools/run_headless.sh ./opentyrian data demos1.log demos
+          tools/run_headless.sh ./opentyrian data demos2.log demos
+          tools/compare_hashlogs.py demos1.log demos2.log
+      - name: Synthetic-input play is deterministic
+        run: |
+          tools/run_headless.sh ./opentyrian data input1.log input 1 10000
+          tools/run_headless.sh ./opentyrian data input2.log input 1 10000
+          tools/compare_hashlogs.py input1.log input2.log

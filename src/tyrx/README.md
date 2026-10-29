@@ -21,7 +21,7 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 |---|---|---|
 | `.` | `tyrx` | `game.cpp`: the C++ game's hooks into the C code |
 | `c/` | | The C game as seen from C++: its declarations (`c/api.hpp`) |
-| [`validate/`](validate/README.md) | `tyrx::validate` | With `TYRX_VALIDATE=on`: the validation |
+| [`validate/`](validate/README.md) | `tyrx::validate` | With `TYRX_VALIDATE=on`: the state registry and hashing of the C game, and deterministic runs |
 
 The game code doesn't depend on `validate/`: the validation attaches itself
 to the game (`Validation`, in `game.hpp`) during static initialization.
@@ -41,3 +41,9 @@ to the game (`Validation`, in `game.hpp`) during static initialization.
   once per tick.
 - **State access**: the C++ code reads and writes the C globals directly,
   through their declarations (`c/api.hpp`).
+- **Link-time wrapping** (validation only): `-Wl,--wrap=SYMBOL` sends the C
+  code's calls to `__wrap_SYMBOL` in C++, which can call `__real_SYMBOL`. It
+  works for any function called across object files and needs no source
+  changes. The validation wraps:
+  - `SDL_GetTicks`, `SDL_Delay` and `time`, for the virtual clock;
+  - `JE_itemScreen`, for the synthetic input.
