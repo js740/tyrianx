@@ -102,6 +102,15 @@ ifeq ($(TYRX_VALIDATE), on)
     TYRX_WRAPS += SDL_GetTicks SDL_Delay time
     # the synthetic input (validate/input_driver.cpp)
     TYRX_WRAPS += JE_itemScreen gameplaySelect init_joysticks
+    # the drawing primitives, for the draw lists (validate/draw/wraps.cpp)
+    TYRX_WRAPS += blit_sprite blit_sprite_blend blit_sprite_hv_unsafe blit_sprite_hv blit_sprite_hv_blend \
+                  blit_sprite_dark blit_sprite2 blit_sprite2_clip blit_sprite2_blend blit_sprite2_darken \
+                  blit_sprite2_filter blit_sprite2_filter_clip blit_sprite2x2 blit_sprite2x2_clip \
+                  blit_sprite2x2_blend blit_sprite2x2_darken blit_sprite2x2_filter blit_sprite2x2_filter_clip \
+                  JE_pix JE_pix3 JE_rectangle fill_rectangle_xy JE_barShade JE_barBright draw_segmented_gauge \
+                  JE_darkenBackground draw_background_1 draw_background_2 draw_background_2_blend \
+                  draw_background_3 JE_filterScreen lava_filter water_filter iced_blur_filter blur_filter \
+                  showHeadlight showFlipped showNormal update_and_draw_starfield JE_drawSP JE_clr256
     comma := ,
     EXTRA_LDFLAGS += $(foreach symbol,$(TYRX_WRAPS),-Wl$(comma)--wrap=$(symbol))
 endif

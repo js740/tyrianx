@@ -22,6 +22,7 @@
 #include "../c/api.hpp"
 #include "../env.hpp"
 #include "../game.hpp"
+#include "draw/record.hpp"
 #include "hashlog.hpp"
 #include "input_driver.hpp"
 #include "roundtrip.hpp"
@@ -44,6 +45,9 @@ namespace {
   }
   else if (round_trip_failed()) {
     status = 4;
+  }
+  else if (draw::drawlist_check_failures()) {
+    status = 5;
   }
   std::exit(status);
 }
@@ -72,6 +76,7 @@ class Runtime final : public Validation {
   }
 
   void level_tick() override {
+    draw::drawlist_level_tick();
     if (exit_after_ticks_ >= 0 && (long)tick_ >= exit_after_ticks_) {
       exit_run();
     }
@@ -91,7 +96,10 @@ class Runtime final : public Validation {
     ++tick_;
   }
 
-  void level_ended() override { input_driver_level_ended(); }
+  void level_ended() override {
+    input_driver_level_ended();
+    draw::drawlist_level_ended();
+  }
 
   uint64_t tick() const { return tick_; }
 

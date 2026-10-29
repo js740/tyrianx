@@ -3,7 +3,7 @@
 With `make TYRX_VALIDATE=on`, this directory is linked into the game. It is
 C++26, for the reflection that it uses to walk the C and C++ types (GCC 16+).
 It sees the C game as the reference, the "gold" version: it runs it
-deterministically and hashes its state every tick.
+deterministically, hashes its state every tick, and records what it draws.
 
 It attaches itself to the game during static initialization, as the game's
 `Validation` (`../game.hpp`, `runtime.cpp`), and the game's hooks run it.
@@ -16,6 +16,7 @@ It attaches itself to the game during static initialization, as the game's
 | `vclock.cpp` | The virtual clock |
 | `input_driver.cpp` | Seeded synthetic input |
 | `roundtrip.cpp` | The round-trip test of snapshots |
+| [`draw/`](draw/README.md) | Recording the C code's draw lists, and checking them |
 
 ## Runtime controls (environment variables)
 
@@ -33,12 +34,15 @@ It attaches itself to the game during static initialization, as the game's
 | `TYRX_INPUT_MOUSE=1` | With `TYRX_INPUT_SEED`: also move the mouse and press its buttons |
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots |
+| `TYRX_DRAWLIST=FILE` | Write each level tick's draw calls to FILE ([draw](draw/README.md)) |
+| `TYRX_DRAWLIST_CHECK=1` | Check that the draw lists are complete and reproduce each tick ([draw](draw/README.md)) |
 | `TYRX_EXIT_AFTER_DEMOS=N`, `TYRX_EXIT_AFTER_TICKS=N` | End the run |
 
 Exits that the validation initiates return a status that names the first
 check that failed:
 - 3: pointers that the hashes couldn't describe
 - 4: round trips (`TYRX_ROUNDTRIP`)
+- 5: draw lists (`TYRX_DRAWLIST_CHECK`)
 
 ## State registry
 
