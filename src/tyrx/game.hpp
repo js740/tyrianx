@@ -23,7 +23,8 @@
 // State from the C globals when the level starts and after C code that works
 // on them has run (the pause screen, the in-game menu and help), and writes it
 // back after each pass, for the C code that runs between ticks and after the
-// level.  Network games' passes run in C.
+// level.  Network games' passes run in C.  It rewinds with TYRX_REWIND
+// (rewind.hpp).
 
 #pragma once
 

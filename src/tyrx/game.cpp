@@ -23,6 +23,7 @@
 #include "c/state.hpp"
 #include "level.hpp"
 #include "render/draw_list.hpp"
+#include "rewind.hpp"
 
 namespace tyrx {
 
@@ -46,6 +47,7 @@ class Game final : public Runner {
     c::read_state(state_);
     owned_ = true;
     locals_ = {};
+    rewind_level_start();
   }
 
   void c_state_restored() { owned_ = false; }
@@ -59,6 +61,7 @@ class Game final : public Runner {
       c::read_state(state_);
       owned_ = true;
     }
+    rewind_before_pass(state_, locals_);
 
     pass_begins();
     sim::LevelPass const pass = tyrx::level_pass(state_, locals_, list_, *this);

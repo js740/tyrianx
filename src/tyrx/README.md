@@ -5,6 +5,8 @@ its own, with the same results as OpenTyrian's C code, tick for tick and pixel
 for pixel. The C code still runs everything outside the levels (the menus, the
 shop, loading), on its own globals.
 
+New features work on the C++ game's state: rewind, so far.
+
 There are two builds:
 - `make`: the game, C and C++23.
   The C++ game runs the levels.
@@ -22,7 +24,7 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 
 | Directory | Namespace | What it holds |
 |---|---|---|
-| `.` | `tyrx` | `game.cpp`: the C++ game, which runs the levels in place of the C code's level loop; `level.cpp`: one pass of the level loop, its simulation, drawing and frame |
+| `.` | `tyrx` | `game.cpp`: the C++ game, which runs the levels in place of the C code's level loop; `level.cpp`: one pass of the level loop, its simulation, drawing and frame; `rewind.cpp`: rewind on its state |
 | [`c/`](c/README.md) | `tyrx::c` | The C game as seen from C++: its declarations, and copying the C++ game's state to and from the C globals |
 | [`sim/`](sim/README.md) | `tyrx::sim` | The C++ game's state, and the game logic: the level tick's simulation |
 | [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs, draw lists, and the level tick's drawing from its draw record |
@@ -57,3 +59,38 @@ to the game (`Validation`, in `game.hpp`) during static initialization.
     input;
   - the drawing primitives, for the draw lists;
   - the functions whose effects the shadow tick replays or suppresses.
+
+## Runtime controls (environment variables)
+
+| Variable | Effect |
+|---|---|
+| `TYRX_REWIND=TICKS` | Rewind by holding a key (see below) |
+| `TYRX_REWIND_KEY=NAME` | The rewind key, as an SDL scancode name (default Backspace) |
+
+With `TYRX_VALIDATE=on`, the validation adds its own
+([`validate/README.md`](validate/README.md)): `TYRX_CXX_TICK=1` runs the
+levels with the C++ game, which rewinds only then, and the others run the
+checks.
+
+## Rewind
+
+With `TYRX_REWIND=TICKS`, the C++ game keeps its `State` from the start of each
+of the last TICKS passes (`rewind.hpp`), about 64 KB each. 350 ticks is about
+10 seconds at Normal speed. Holding the rewind key steps back one tick per
+frame: each pass drops the newest state and restores the one before it, and
+then simulates and draws one tick from there. Input isn't restored, so
+releasing the key resumes play with the keys actually held. Rewind is off in
+demos and network games, and the states are dropped when a level starts.
+
+```sh
+TYRX_REWIND=350 ./opentyrian
+```
+
+Backspace is also the modifier for the game's debug key combinations (e.g.
+Backspace+1 changes the game speed); those still work while rewinding.
+
+The `State` doesn't hold `enemyDat[0]`, the level data that events 49 to 52
+change for the enemies they create (`sim/README.md`), but each of those events
+changes it again before using it. Round trips with the C++ game
+(`validate/README.md`) check that the `State`, the level data and the input
+are all that a tick depends on.

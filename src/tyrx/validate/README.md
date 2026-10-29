@@ -41,6 +41,7 @@ The C code runs the levels unless `TYRX_CXX_TICK=1`.
 | `TYRX_INPUT_MOUSE=1` | With `TYRX_INPUT_SEED`: also move the mouse and press its buttons |
 | `TYRX_INPUT_JOYSTICK=1` | With `TYRX_INPUT_SEED`: also play with a virtual joystick |
 | `TYRX_INPUT_SCREENS=1` | With `TYRX_INPUT_SEED`: also open and close the pause screen, the in-game help and menu |
+| `TYRX_INPUT_REWIND=1` | With `TYRX_INPUT_SEED`: also hold the rewind key for 40 of every 400 ticks |
 | `TYRX_ROUNDTRIP=K[,P]` | Round-trip test of snapshots |
 | `TYRX_DRAWLIST=FILE` | Write each level tick's draw calls to FILE ([draw](draw/README.md)) |
 | `TYRX_DRAWLIST_CHECK=1` | Check that the draw lists are complete and reproduce each tick ([draw](draw/README.md)) |
@@ -51,6 +52,7 @@ The C code runs the levels unless `TYRX_CXX_TICK=1`.
 
 `TYRX_CXX_TICK` doesn't run with the checks that run the C code's ticks
 (`TYRX_SHADOW`, `TYRX_DRAWLIST_CHECK`).
+`TYRX_REWIND` needs `TYRX_CXX_TICK` here, and doesn't run with round trips.
 
 Exits that the validation initiates return a status that names the first
 check that failed:
@@ -307,3 +309,8 @@ scrambled, so that C code that still used them would go wrong visibly, and a
 C drawing primitive called outside the C loops stops the program
 (`draw/README.md`).
 
+## Rewind
+
+Rewind (`../rewind.hpp`) works on the C++ game's `State`. For testing,
+`TYRX_INPUT_REWIND=1` makes the synthetic input hold the rewind key for 40 of
+every 400 ticks, and two runs with the same seed log the same hashes.

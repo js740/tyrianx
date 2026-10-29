@@ -21,6 +21,7 @@
 
 #include "../c/api.hpp"
 #include "../env.hpp"
+#include "../rewind.hpp"
 #include "roundtrip.hpp"
 #include "runtime.hpp"
 #include "state.hpp"
@@ -47,12 +48,17 @@ class InputDriver {
  public:
   explicit InputDriver(long seed)
       : seed_(static_cast<uint64_t>(seed)),
+        press_rewind_(env("TYRX_INPUT_REWIND") != nullptr),
         press_commands_(env("TYRX_INPUT_COMMANDS") != nullptr),
         press_cheats_(env("TYRX_INPUT_CHEATS") != nullptr),
         move_mouse_(env("TYRX_INPUT_MOUSE") != nullptr),
         midtick_(env("TYRX_INPUT_MIDTICK") != nullptr),
         press_screens_(env("TYRX_INPUT_SCREENS") != nullptr),
         wants_joystick_(env("TYRX_INPUT_JOYSTICK") != nullptr) {
+    if (press_rewind_ && press_commands_ && rewind_key() == kCommandModifier) {
+      std::fprintf(stderr, "tyrx: TYRX_INPUT_COMMANDS is ignored with TYRX_INPUT_REWIND\n");
+      press_commands_ = false;
+    }
     // The keys that close the screens go out as the virtual clock advances,
     // which a round trip doesn't restore.
     if (press_screens_ && round_trip_enabled()) {
@@ -157,6 +163,9 @@ class InputDriver {
     pushed_tick_ = next_tick;
     for (size_t i = 0; i < std::size(kKeys); ++i) {
       set_key(kKeys[i], key_down(i, next_tick));
+    }
+    if (press_rewind_) {
+      set_key(rewind_key(), next_tick % 400 >= 360);
     }
     if (press_commands_) {
       // Backspace+Minus cycles the level filter (JE_mainKeyboardInput): a
@@ -356,7 +365,7 @@ class InputDriver {
         key(k, false);
       }
     }
-    for (SDL_Scancode k : {kCommandModifier, SDL_SCANCODE_MINUS}) {
+    for (SDL_Scancode k : {rewind_key(), kCommandModifier, SDL_SCANCODE_MINUS}) {
       if (keysactive[k]) {
         key(k, false);
       }
@@ -391,6 +400,7 @@ class InputDriver {
   }
 
   uint64_t      seed_;
+  bool          press_rewind_;
   bool          press_commands_;
   bool          press_cheats_;
   bool          move_mouse_;

@@ -81,10 +81,16 @@ class Runtime final : public Validation {
 
   bool cxx_game() override {
     if (env("TYRX_CXX_TICK") == nullptr) {
+      if (env("TYRX_REWIND") != nullptr) {
+        fail("TYRX_REWIND needs TYRX_CXX_TICK");
+      }
       return false;
     }
     if (env("TYRX_SHADOW") != nullptr || env("TYRX_DRAWLIST_CHECK") != nullptr) {
       fail("TYRX_CXX_TICK doesn't run with TYRX_SHADOW or TYRX_DRAWLIST_CHECK");
+    }
+    if (env("TYRX_REWIND") != nullptr && round_trip_enabled()) {
+      fail("TYRX_REWIND doesn't run with TYRX_ROUNDTRIP");
     }
     return true;
   }
