@@ -18,14 +18,15 @@
 //------------------------------------------------------------------------------
 
 // The game logic of the level tick: each function takes the state it works
-// on (state.hpp) instead of using the C globals, and leaves what it draws
-// for the tick's drawing (visible.hpp).
+// on (state.hpp) instead of using the C globals, and records what the tick
+// draws instead of drawing (draw_record.hpp).
 //
 // Each function must match the C code it ports exactly.
 
 #pragma once
 
 #include "../c/api.hpp"
+#include "draw_record.hpp"
 #include "hidden.hpp"
 #include "hud.hpp"
 #include "state.hpp"
@@ -117,6 +118,38 @@ void hud_options(State& state, HudLog& hud);             // JE_drawOptions, whic
 void hud_option_level(State const& state, HudLog& hud);  // JE_drawOptionLevel
 void hud_charge_level(State const& state, HudLog& hud, uint8_t color);
 void hud_sidekick_ammo(HudLog& hud, int y, int ammo_max, int ammo, bool discharged);
+
+// tyrian2.c: the players' part of JE_main's level loop: their collisions
+// (JE_playerCollide), then their movement, firing, specials and sidekicks
+// (JE_mainGamePlayerFunctions and JE_playerMovement, in mainint.c), and the
+// map's sideways scrolling, which follows them.  Returns the players drawn.
+std::vector<VisiblePlayer> update_players(State& state, DrawRecord& record);
+
+// varz.c: JE_getShipInfo, which sets up the players' ships: their sprites,
+// armor, hit areas and generator.
+void get_ship_info(State& state);
+
+// varz.c: JE_portConfigs, the number of modes of the rear weapon.
+uint16_t port_configs(State const& state);
+
+// varz.c: JE_doSpecialShot, the specials of player player_num, whose armor
+// and shield pay for them: those set off by the special-move codes or the
+// fire button, and the flares and the Zinglon while they last.
+void do_special_shot(State& state, DrawRecord& record, uint8_t player_num, unsigned& armor, unsigned& shield,
+                     VisiblePlayer& visible);
+
+// mainint.c: JE_SFCodes, which follows player player_num's input (the
+// movement from (mouse_x, mouse_y) to (px, py), and the fire button) through
+// the ship's special-move codes.
+void sf_codes(State& state, uint8_t player_num, int16_t px, int16_t py, int16_t mouse_x, int16_t mouse_y);
+
+// varz.c: JE_playerDamage, which damages the player's shield, and its armor
+// if the damage gets through, and draws them in the HUD (which limits both
+// players' armor to 28).  The C code draws them with VGAScreen set to the
+// HUD's surface, and leaves it at game_screen after (its "side-effect of
+// game_screen"), where the rest of the tick then draws.  Returns the damage if
+// it got through the shield.
+uint8_t damage_player(State& state, DrawRecord& record, Player& player, uint8_t damage);
 
 // tyrian2.c: the player shots' update in JE_main's level loop ("Player Shot
 // Images"): each moves (player_shot_move_and_draw, in shots.c), then hits
