@@ -20,6 +20,7 @@
 #include "record.hpp"
 
 #include "../../env.hpp"
+#include "../shadow.hpp"
 
 #include <cinttypes>
 #include <cstdio>
@@ -277,7 +278,7 @@ class Recorder {
         std::fprintf(stderr, "tyrx: cannot write %s\n", path);
       }
     }
-    enabled_ = out_ != nullptr || check_;
+    enabled_ = out_ != nullptr || check_ || env("TYRX_SHADOW") != nullptr;
   }
 
   ~Recorder() {
@@ -341,6 +342,12 @@ class Recorder {
   }
 
   bool begin(DrawCall const& call, void const *blob, size_t blob_size) {
+    // The shadow tick's pass of the C++ game draws by adding calls to its draw
+    // list, and the C code that it calls mustn't draw either.
+    if (shadow_active()) {
+      std::fprintf(stderr, "tyrx drawlist: %s called during a C++ pass\n", render::op_name(call.op));
+      std::abort();
+    }
     if (!in_tick_) {
       return false;
     }

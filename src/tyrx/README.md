@@ -19,11 +19,11 @@ directory: `clang-format -i $(find src/tyrx -name '*.[ch]pp')`.
 
 | Directory | Namespace | What it holds |
 |---|---|---|
-| `.` | `tyrx` | `game.cpp`: the C++ game's hooks into the C code |
+| `.` | `tyrx` | `game.cpp`: the C++ game's hooks into the C code; `level.cpp`: one pass of the level loop, its simulation, drawing and frame |
 | [`c/`](c/README.md) | `tyrx::c` | The C game as seen from C++: its declarations, and copying the C++ game's state to and from the C globals |
 | [`sim/`](sim/README.md) | `tyrx::sim` | The C++ game's state, and the game logic: the level tick's simulation |
 | [`render/`](render/README.md) | `tyrx::render` | Drawing from explicit inputs, draw lists, and the level tick's drawing from its draw record |
-| [`validate/`](validate/README.md) | `tyrx::validate` | With `TYRX_VALIDATE=on`: the state registry, hashing and snapshots of the C game, and deterministic runs |
+| [`validate/`](validate/README.md) | `tyrx::validate` | With `TYRX_VALIDATE=on`: the state registry, hashing and snapshots of the C game, deterministic runs, and the checks of the C++ game against the C game |
 
 The game code doesn't depend on `validate/`: the validation attaches itself
 to the game (`Validation`, in `game.hpp`) during static initialization.
@@ -50,4 +50,5 @@ to the game (`Validation`, in `game.hpp`) during static initialization.
   - `SDL_GetTicks`, `SDL_Delay` and `time`, for the virtual clock;
   - `JE_itemScreen`, `gameplaySelect` and `init_joysticks`, for the synthetic
     input;
-  - the drawing primitives, for the draw lists.
+  - the drawing primitives, for the draw lists;
+  - the functions whose effects the shadow tick replays or suppresses.

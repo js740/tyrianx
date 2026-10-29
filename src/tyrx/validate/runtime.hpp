@@ -31,6 +31,7 @@
 //   4  a round trip failed (TYRX_ROUNDTRIP)
 //   5  a draw list was incomplete or didn't reproduce its tick
 //      (TYRX_DRAWLIST_CHECK)
+//   6  a shadow pass differed from its C tick (TYRX_SHADOW)
 
 #pragma once
 

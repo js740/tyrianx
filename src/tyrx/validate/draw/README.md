@@ -49,3 +49,7 @@ the tick, so it doesn't show that the list records inputs that stay the same
 for the whole tick, such as sprite data or settings. The in-game menu
 (`JE_inGameSetup`) and help (`JE_helpSystem`) save and restore the screen with
 `memcpy`, which the first check would report; synthetic play doesn't open them.
+
+The C++ game doesn't call the C primitives: it adds its calls to a draw list
+of its own (`../../render/tick/draw.hpp`). While the shadow tick's pass of it
+runs (`../shadow.hpp`), a call to one stops the program.

@@ -12,7 +12,9 @@ the call. `execute.cpp` draws a call with the ports. The level tick's drawing
 (`tick/`) builds the list of a tick (`tick/draw.hpp`).
 
 The validation checks the ports by replaying the C code's recorded draw lists
-with them (`TYRX_DRAWLIST_CHECK`, `../validate/draw/README.md`).
+with them (`TYRX_DRAWLIST_CHECK`, `../validate/draw/README.md`). Its shadow
+tick checks whole frames: the pixels drawn from the C++ level tick's list
+against those the C code drew.
 
 ## The level tick's drawing
 
@@ -22,7 +24,8 @@ at the end of the tick and from the draw record that the simulation keeps
 (`../sim/draw_record.hpp`), in the C code's order, with a function for each
 part (`X_draw`, in the file of the same subject). The `draw::` functions
 (`tick/draw.hpp`) add the same calls as the C primitives record to the draw
-list that the code running the tick passes them.
+list that the code running the tick passes them. The validation's shadow
+tick compares each pass's list with the C tick's.
 
 The record holds only what the state at the end of the tick no longer shows:
 which parts were drawn, on which surface, and values that the simulation went on
@@ -51,3 +54,9 @@ order. The HUD's surface is only copied onto at the end of the tick, so
 | Smoothie filters, darkening | The surfaces, and the darkening's level |
 | Warning, level timer, game over, in-game displays | Nothing but the surface; for the debug display and the bonus message, the texts and the flash |
 | HUD (`hud.cpp`) | A log of the shield, armor, weapon power, power bar, sidekick, charge and ammo gauges and messages as drawn, from the level tick, the players, events and key commands |
+
+Nothing is drawn during the simulation of a C++ level tick: `TYRX_SHADOW_CALLS`
+counts no calls before the drawing begins in the shadow tick's runs. Nor does
+C code that the tick calls draw with the C primitives, outside the C loops
+with their own drawing (the pause screen, the in-game menu and help): the
+validation stops the program if it does.

@@ -28,6 +28,7 @@
 #include "input_driver.hpp"
 #include "input_record.hpp"
 #include "roundtrip.hpp"
+#include "shadow.hpp"
 #include "state.hpp"
 
 #include <cinttypes>
@@ -51,6 +52,9 @@ namespace {
   else if (draw::drawlist_check_failures()) {
     status = 5;
   }
+  else if (shadow_mismatches()) {
+    status = 6;
+  }
   std::exit(status);
 }
 
@@ -72,6 +76,7 @@ class Runtime final : public Validation {
   }
 
   void level_start() override {
+    shadow_level_start();
     ++level_count_;
     round_trip_level_start();
     if (playDemo && exit_after_demos_ >= 0 && ++demo_count_ > exit_after_demos_) {
@@ -81,6 +86,7 @@ class Runtime final : public Validation {
   }
 
   void level_tick() override {
+    shadow_level_tick();
     draw::drawlist_level_tick();
     if (exit_after_ticks_ >= 0 && (long)tick_ >= exit_after_ticks_) {
       exit_run();
@@ -104,6 +110,7 @@ class Runtime final : public Validation {
 
   void level_ended() override {
     input_driver_level_ended();
+    shadow_level_ended();
     draw::drawlist_level_ended();
   }
 
